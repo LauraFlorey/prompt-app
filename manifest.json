@@ -1,0 +1,102 @@
+{
+  "name": "AI Prompt Generator",
+  "short_name": "PromptGen",
+  "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, mood/color controls, and advanced parameters",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities", "design"],
+  "lang": "en-US",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "assets/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Prompt",
+      "short_name": "New",
+      "description": "Create a new prompt",
+      "url": "./index.html?action=new",
+      "icons": [{ "src": "assets/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Prompt Library",
+      "short_name": "Library",
+      "description": "View saved prompts",
+      "url": "./index.html?action=library",
+      "icons": [{ "src": "assets/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Style References",
+      "short_name": "Sref",
+      "description": "Manage style references",
+      "url": "./index.html?action=sref",
+      "icons": [{ "src": "assets/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AI Prompt Generator main interface"
+    },
+    {
+      "src": "assets/screenshot-narrow.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AI Prompt Generator mobile interface"
+    }
+  ]
+}

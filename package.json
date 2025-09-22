@@ -1,0 +1,94 @@
+{
+  "name": "ai-prompt-generator",
+  "version": "1.1.0",
+  "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, and advanced parameters",
+  "main": "electron-main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish=never",
+    "serve": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "ai",
+    "prompt",
+    "generator",
+    "midjourney",
+    "dalle",
+    "stable-diffusion",
+    "sref",
+    "style-reference",
+    "flux",
+    "ideogram",
+    "sora",
+    "electron",
+    "pwa"
+  ],
+  "author": {
+    "name": "AI Prompt Generator",
+    "email": "contact@example.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.aipromptgenerator.app",
+    "productName": "AI Prompt Generator",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "app.js",
+      "electron-main.js",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Utility",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
