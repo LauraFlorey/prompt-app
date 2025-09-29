@@ -1,5 +1,5 @@
 // Service Worker for AI Prompt Generator PWA
-const CACHE_NAME = 'ai-prompt-generator-v1.1.0';
+const CACHE_NAME = 'ai-prompt-generator-v2.0.0';
 const urlsToCache = [
     './',
     './index.html',

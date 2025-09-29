@@ -5,9 +5,21 @@ class PromptGenerator {
         this.uploadedDocuments = JSON.parse(localStorage.getItem('uploadedDocuments')) || [];
         this.manualInformation = localStorage.getItem('manualInformation') || '';
         this.srefLibrary = JSON.parse(localStorage.getItem('srefLibrary')) || [];
+        this.textNotes = JSON.parse(localStorage.getItem('textNotes')) || [];
+        
+        // LLM Integration settings
+        this.llmSettings = JSON.parse(localStorage.getItem('llmSettings')) || {
+            enabled: false,
+            apiUrl: 'http://localhost:11434/api',
+            model: 'llama3.1:8b',
+            timeout: 10000
+        };
         
         // Initialize tooltip explanations
         this.tooltipExplanations = this.initTooltipExplanations();
+        
+        // Initialize prompt templates
+        this.promptTemplates = this.initPromptTemplates();
         
         this.init();
     }
@@ -23,88 +35,168 @@ class PromptGenerator {
 
     setupEventListeners() {
         // Form submission
-        document.getElementById('promptForm').addEventListener('submit', (e) => {
+        const promptForm = document.getElementById('promptForm');
+        if (promptForm) {
+            promptForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.generatePrompt();
         });
+        }
 
         // Clear form
-        document.getElementById('clearForm').addEventListener('click', () => {
+        const clearForm = document.getElementById('clearForm');
+        if (clearForm) {
+            clearForm.addEventListener('click', () => {
             this.clearForm();
         });
+        }
 
         // Save prompt to library
-        document.getElementById('savePrompt').addEventListener('click', () => {
+        const savePrompt = document.getElementById('savePrompt');
+        if (savePrompt) {
+            savePrompt.addEventListener('click', () => {
             this.savePromptToLibrary();
         });
+        }
 
         // Copy output
-        document.getElementById('copyOutput').addEventListener('click', () => {
+        const copyOutput = document.getElementById('copyOutput');
+        if (copyOutput) {
+            copyOutput.addEventListener('click', () => {
             this.copyToClipboard();
         });
+        }
 
-        // File upload
-        const fileInput = document.getElementById('fileInput');
-        const uploadZone = document.getElementById('uploadZone');
+        // Download output
+        const downloadOutput = document.getElementById('downloadOutput');
+        if (downloadOutput) {
+            downloadOutput.addEventListener('click', () => {
+                this.downloadOutput();
+            });
+        }
 
-        fileInput.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target.files);
-        });
+        // Save to library (from output)
+        const saveToLibrary = document.getElementById('saveToLibrary');
+        if (saveToLibrary) {
+            saveToLibrary.addEventListener('click', () => {
+                this.savePromptToLibrary();
+            });
+        }
 
-        // Drag and drop functionality
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
+        // Export all prompts
+        const exportAllPrompts = document.getElementById('exportAllPrompts');
+        if (exportAllPrompts) {
+            exportAllPrompts.addEventListener('click', () => {
+                this.showExportAllModal();
+            });
+        }
 
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('dragover');
-        });
+        // Batch operations
+        const batchOperations = document.getElementById('batchOperations');
+        if (batchOperations) {
+            batchOperations.addEventListener('click', () => {
+                this.showBatchOperationsModal();
+            });
+        }
 
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
-            this.handleFileUpload(e.dataTransfer.files);
-        });
+        // File upload - these elements are now dynamic, handled in showAddItemForm
+        // Original file upload setup moved to dynamic form creation
 
-        uploadZone.addEventListener('click', () => {
-            fileInput.click();
-        });
+        // Manual information save - moved to unified interface
+        // Original manual info save moved to dynamic form creation
 
-        // Manual information save
-        document.getElementById('saveManualInfo').addEventListener('click', () => {
-            this.saveManualInformation();
-        });
+        // Clear library - moved to unified interface as clearAllLibrary
+        // Original clear library moved to unified interface
 
-        // Clear library
-        document.getElementById('clearLibrary').addEventListener('click', () => {
-            this.clearPromptLibrary();
-        });
-
-        // URL fetching
-        document.getElementById('fetchUrlBtn').addEventListener('click', () => {
-            this.fetchWebContent();
-        });
-
-        // Enter key support for URL input
-        document.getElementById('urlInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.fetchWebContent();
-            }
-        });
+        // URL fetching - moved to dynamic form creation in showAddItemForm
+        // Original URL fetch setup moved to dynamic form creation
 
         // Sref functionality
-        document.getElementById('saveSref').addEventListener('click', () => {
-            this.saveSrefToLibrary();
-        });
+        const saveSref = document.getElementById('saveSref');
+        if (saveSref) {
+            saveSref.addEventListener('click', () => {
+                this.saveSrefToLibrary();
+            });
+        }
 
-        document.getElementById('clearSref').addEventListener('click', () => {
-            this.clearSrefForm();
-        });
+        const clearSref = document.getElementById('clearSref');
+        if (clearSref) {
+            clearSref.addEventListener('click', () => {
+                this.clearSrefForm();
+            });
+        }
 
-        document.getElementById('clearSrefLibrary').addEventListener('click', () => {
-            this.clearSrefLibrary();
-        });
+        const clearSrefLibrary = document.getElementById('clearSrefLibrary');
+        if (clearSrefLibrary) {
+            clearSrefLibrary.addEventListener('click', () => {
+                this.clearSrefLibrary();
+            });
+        }
+
+        // Template buttons
+        setTimeout(() => {
+            document.querySelectorAll('[data-template]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const templateType = e.target.getAttribute('data-template');
+                    this.applyTemplate(templateType);
+                });
+            });
+        }, 100);
+
+        // Real-time validation and form enhancement
+        setTimeout(() => {
+            this.setupRealTimeValidation();
+            this.setupFormEnhancements();
+        }, 150);
+
+        // Unified library functionality - wait for DOM to be ready
+        setTimeout(() => {
+            const addItemType = document.getElementById('addItemType');
+            if (addItemType) {
+                addItemType.addEventListener('change', (e) => {
+                    this.showAddItemForm(e.target.value);
+                });
+            }
+        }, 100);
+
+        // Wait for all DOM elements to be ready
+        setTimeout(() => {
+            const unifiedSearchInput = document.getElementById('unifiedSearchInput');
+            if (unifiedSearchInput) {
+                unifiedSearchInput.addEventListener('input', (e) => {
+                    this.performUnifiedSearch(e.target.value);
+                });
+            }
+
+            // Search filter checkboxes
+            ['searchPrompts', 'searchDocuments', 'searchSref', 'searchNotes'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', () => {
+                        const searchInput = document.getElementById('unifiedSearchInput');
+                        if (searchInput) {
+                            this.performUnifiedSearch(searchInput.value);
+                        }
+                    });
+                }
+            });
+
+            // LLM Settings
+            const llmSettingsBtn = document.getElementById('llmSettingsBtn');
+            if (llmSettingsBtn) {
+                llmSettingsBtn.addEventListener('click', () => {
+                    this.showLLMSettings();
+                });
+            }
+
+            // Clear all library
+            const clearAllLibrary = document.getElementById('clearAllLibrary');
+            if (clearAllLibrary) {
+                clearAllLibrary.addEventListener('click', () => {
+                    this.clearAllLibrary();
+                });
+            }
+        }, 200);
     }
 
     generatePrompt() {
@@ -149,15 +241,562 @@ class PromptGenerator {
     }
 
     validateForm(formData) {
+        const errors = [];
+        const warnings = [];
+        
+        // Required field validation
         const requiredFields = ['model', 'type', 'startingPrompt'];
         const missingFields = requiredFields.filter(field => !formData[field]);
         
         if (missingFields.length > 0) {
-            alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
-            return false;
+            errors.push(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+        
+        // Starting prompt validation
+        if (formData.startingPrompt) {
+            if (formData.startingPrompt.length < 3) {
+                errors.push('Starting prompt must be at least 3 characters long');
+            } else if (formData.startingPrompt.length > 2000) {
+                warnings.push('Starting prompt is very long (>2000 chars) - consider shortening for better results');
+            }
+            
+            // Check for common issues
+            if (formData.startingPrompt.includes('  ')) {
+                warnings.push('Starting prompt contains multiple spaces - consider cleaning up');
+            }
+        }
+        
+        // Model-specific validation
+        if (formData.model && formData.type) {
+            const validationResult = this.validateModelTypeCombination(formData.model, formData.type);
+            if (validationResult.error) {
+                errors.push(validationResult.error);
+            }
+            if (validationResult.warning) {
+                warnings.push(validationResult.warning);
+            }
+        }
+        
+        // Style reference validation
+        if (formData.srefUrl) {
+            if (!this.isValidUrl(formData.srefUrl)) {
+                errors.push('Style reference URL is not valid');
+            }
+            
+            if (formData.srefWeight) {
+                const weight = parseInt(formData.srefWeight);
+                if (isNaN(weight) || weight < 0 || weight > 1000) {
+                    errors.push('Style reference weight must be between 0 and 1000');
+                }
+            }
+        }
+        
+        // Display validation results
+        if (errors.length > 0 || warnings.length > 0) {
+            this.showValidationResults(errors, warnings);
+            return errors.length === 0; // Allow submission if only warnings
         }
         
         return true;
+    }
+
+    validateModelTypeCombination(model, type) {
+        const incompatibleCombinations = {
+            'gpt4': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'claude': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'gemini': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'llama': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'midjourney': ['text-to-text'],
+            'dalle3': ['text-to-text'],
+            'stable-diffusion': ['text-to-text'],
+            'flux1': ['text-to-text']
+        };
+        
+        if (incompatibleCombinations[model] && incompatibleCombinations[model].includes(type)) {
+            return {
+                error: `${model} doesn't support ${type} prompts. Consider changing the model or prompt type.`,
+                warning: null
+            };
+        }
+        
+        // Check for optimal combinations
+        const optimalCombinations = {
+            'text-to-image': ['midjourney', 'dalle3', 'stable-diffusion', 'flux1', 'ideogram2'],
+            'text-to-text': ['gpt4', 'claude', 'gemini', 'llama'],
+            'text-to-video': ['sora', 'veo2', 'runway', 'pika', 'luma-dream']
+        };
+        
+        if (optimalCombinations[type] && !optimalCombinations[type].includes(model)) {
+            return {
+                error: null,
+                warning: `${model} may not be optimal for ${type}. Consider using: ${optimalCombinations[type].join(', ')}`
+            };
+        }
+        
+        return { error: null, warning: null };
+    }
+
+    showValidationResults(errors, warnings) {
+        let message = '';
+        
+        if (errors.length > 0) {
+            message += '❌ **Errors:**\n' + errors.map(e => `• ${e}`).join('\n') + '\n\n';
+        }
+        
+        if (warnings.length > 0) {
+            message += '⚠️ **Warnings:**\n' + warnings.map(w => `• ${w}`).join('\n');
+        }
+        
+        // Create a more user-friendly modal instead of alert
+        this.showValidationModal(errors, warnings);
+    }
+
+    showValidationModal(errors, warnings) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header ${errors.length > 0 ? 'bg-danger text-white' : 'bg-warning text-dark'}">
+                        <h5 class="modal-title">
+                            <i class="bi bi-${errors.length > 0 ? 'exclamation-triangle' : 'info-circle'}"></i>
+                            ${errors.length > 0 ? 'Validation Errors' : 'Validation Warnings'}
+                        </h5>
+                        <button type="button" class="btn-close ${errors.length > 0 ? 'btn-close-white' : ''}" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${errors.length > 0 ? `
+                        <div class="alert alert-danger">
+                            <h6><i class="bi bi-x-circle"></i> Please fix these errors:</h6>
+                            <ul class="mb-0">
+                                ${errors.map(e => `<li>${e}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                        ${warnings.length > 0 ? `
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Recommendations:</h6>
+                            <ul class="mb-0">
+                                ${warnings.map(w => `<li>${w}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        ${errors.length === 0 ? `
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Anyway</button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Remove modal when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    setupRealTimeValidation() {
+        // Starting prompt validation
+        const startingPrompt = document.getElementById('startingPrompt');
+        if (startingPrompt) {
+            startingPrompt.addEventListener('input', () => {
+                this.validateStartingPrompt();
+            });
+            startingPrompt.addEventListener('blur', () => {
+                this.validateStartingPrompt();
+            });
+        }
+
+        // Model and type combination validation
+        const modelSelect = document.getElementById('modelSelect');
+        const promptType = document.getElementById('promptType');
+        
+        if (modelSelect) {
+            modelSelect.addEventListener('change', () => {
+                this.validateModelTypeCombination();
+                this.updateFormBasedOnModel();
+            });
+        }
+        
+        if (promptType) {
+            promptType.addEventListener('change', () => {
+                this.validateModelTypeCombination();
+                this.updateFormBasedOnType();
+            });
+        }
+
+        // Style reference validation
+        const srefUrl = document.getElementById('srefUrl');
+        const srefWeight = document.getElementById('srefWeight');
+        
+        if (srefUrl) {
+            srefUrl.addEventListener('blur', () => {
+                this.validateStyleReference();
+            });
+        }
+        
+        if (srefWeight) {
+            srefWeight.addEventListener('input', () => {
+                this.validateStyleReference();
+            });
+        }
+
+        // Form completion progress
+        this.updateFormProgress();
+        document.querySelectorAll('#promptForm input, #promptForm select, #promptForm textarea').forEach(element => {
+            element.addEventListener('input', () => {
+                this.updateFormProgress();
+            });
+            element.addEventListener('change', () => {
+                this.updateFormProgress();
+            });
+        });
+    }
+
+    setupFormEnhancements() {
+        // Auto-suggestions based on model
+        this.setupAutoSuggestions();
+        
+        // Smart defaults
+        this.setupSmartDefaults();
+        
+        // Form shortcuts
+        this.setupFormShortcuts();
+    }
+
+    validateStartingPrompt() {
+        const startingPrompt = document.getElementById('startingPrompt');
+        if (!startingPrompt) return;
+
+        const value = startingPrompt.value.trim();
+        const feedback = this.getFieldFeedback('startingPrompt');
+        
+        if (value.length === 0) {
+            this.showFieldFeedback('startingPrompt', 'error', 'Starting prompt is required');
+        } else if (value.length < 3) {
+            this.showFieldFeedback('startingPrompt', 'error', 'Prompt must be at least 3 characters');
+        } else if (value.length > 2000) {
+            this.showFieldFeedback('startingPrompt', 'warning', 'Very long prompt (>2000 chars) - consider shortening');
+        } else if (value.includes('  ')) {
+            this.showFieldFeedback('startingPrompt', 'info', 'Consider removing extra spaces');
+        } else {
+            this.showFieldFeedback('startingPrompt', 'success', `${value.length} characters - good length!`);
+        }
+    }
+
+    validateModelTypeCombination() {
+        const model = document.getElementById('modelSelect')?.value;
+        const type = document.getElementById('promptType')?.value;
+        
+        if (!model || !type) return;
+
+        const validation = this.validateModelTypeCombination(model, type);
+        
+        if (validation.error) {
+            this.showFieldFeedback('promptType', 'error', validation.error);
+        } else if (validation.warning) {
+            this.showFieldFeedback('promptType', 'warning', validation.warning);
+        } else {
+            this.showFieldFeedback('promptType', 'success', 'Great combination!');
+        }
+    }
+
+    validateStyleReference() {
+        const url = document.getElementById('srefUrl')?.value;
+        const weight = document.getElementById('srefWeight')?.value;
+        
+        if (url && !this.isValidUrl(url)) {
+            this.showFieldFeedback('srefUrl', 'error', 'Invalid URL format');
+        } else if (url) {
+            this.showFieldFeedback('srefUrl', 'success', 'Valid URL');
+        }
+        
+        if (weight) {
+            const weightNum = parseInt(weight);
+            if (isNaN(weightNum) || weightNum < 0 || weightNum > 1000) {
+                this.showFieldFeedback('srefWeight', 'error', 'Weight must be 0-1000');
+            } else {
+                this.showFieldFeedback('srefWeight', 'success', 'Valid weight');
+            }
+        }
+    }
+
+    showFieldFeedback(fieldId, type, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Remove existing feedback
+        const existingFeedback = field.parentNode.querySelector('.field-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+
+        // Add new feedback
+        const feedback = document.createElement('div');
+        feedback.className = `field-feedback text-${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : type === 'info' ? 'info' : 'success'} small mt-1`;
+        feedback.innerHTML = `<i class="bi bi-${type === 'error' ? 'x-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i> ${message}`;
+        
+        field.parentNode.appendChild(feedback);
+        
+        // Add visual styling to field
+        field.classList.remove('is-valid', 'is-invalid');
+        if (type === 'success') {
+            field.classList.add('is-valid');
+        } else if (type === 'error') {
+            field.classList.add('is-invalid');
+        }
+    }
+
+    getFieldFeedback(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return null;
+        
+        const existingFeedback = field.parentNode.querySelector('.field-feedback');
+        return existingFeedback;
+    }
+
+    updateFormBasedOnModel() {
+        const model = document.getElementById('modelSelect')?.value;
+        const promptType = document.getElementById('promptType');
+        
+        if (!model || !promptType) return;
+
+        // Clear current options and add relevant ones
+        const currentValue = promptType.value;
+        
+        // Enable/disable options based on model capabilities
+        Array.from(promptType.options).forEach(option => {
+            if (option.value === '') return; // Keep the placeholder
+            
+            const isSupported = this.isModelTypeSupported(model, option.value);
+            option.disabled = !isSupported;
+            
+            if (!isSupported && option.selected) {
+                option.selected = false;
+                promptType.value = '';
+            }
+        });
+    }
+
+    updateFormBasedOnType() {
+        const type = document.getElementById('promptType')?.value;
+        const modelSelect = document.getElementById('modelSelect');
+        
+        if (!type || !modelSelect) return;
+
+        // Highlight recommended models for this type
+        Array.from(modelSelect.options).forEach(option => {
+            if (option.value === '') return; // Keep the placeholder
+            
+            const isRecommended = this.isModelTypeOptimal(option.value, type);
+            if (isRecommended) {
+                option.style.fontWeight = 'bold';
+                option.style.backgroundColor = '#d4edda';
+            } else {
+                option.style.fontWeight = 'normal';
+                option.style.backgroundColor = '';
+            }
+        });
+    }
+
+    isModelTypeSupported(model, type) {
+        const incompatibleCombinations = {
+            'gpt4': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'claude': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'gemini': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'llama': ['text-to-image', 'image-to-video', 'text-to-video', 'image-to-image'],
+            'midjourney': ['text-to-text'],
+            'dalle3': ['text-to-text'],
+            'stable-diffusion': ['text-to-text'],
+            'flux1': ['text-to-text']
+        };
+        
+        return !(incompatibleCombinations[model] && incompatibleCombinations[model].includes(type));
+    }
+
+    isModelTypeOptimal(model, type) {
+        const optimalCombinations = {
+            'text-to-image': ['midjourney', 'dalle3', 'stable-diffusion', 'flux1', 'ideogram2'],
+            'text-to-text': ['gpt4', 'claude', 'gemini', 'llama'],
+            'text-to-video': ['sora', 'veo2', 'runway', 'pika', 'luma-dream']
+        };
+        
+        return optimalCombinations[type] && optimalCombinations[type].includes(model);
+    }
+
+    updateFormProgress() {
+        const requiredFields = ['modelSelect', 'promptType', 'startingPrompt'];
+        let completedFields = 0;
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value.trim() !== '') {
+                completedFields++;
+            }
+        });
+        
+        const progress = (completedFields / requiredFields.length) * 100;
+        
+        // Update progress indicator
+        const progressIndicator = document.getElementById('formProgress');
+        const progressText = document.getElementById('progressText');
+        
+        if (progressIndicator) {
+            progressIndicator.style.width = `${progress}%`;
+            progressIndicator.setAttribute('aria-valuenow', progress);
+        }
+        
+        if (progressText) {
+            progressText.textContent = `${Math.round(progress)}%`;
+        }
+        
+        // Enable/disable generate button
+        const generateButton = document.querySelector('button[type="submit"]');
+        if (generateButton) {
+            generateButton.disabled = progress < 100;
+        }
+    }
+
+    setupAutoSuggestions() {
+        // Add auto-suggestions for starting prompt based on model
+        const startingPrompt = document.getElementById('startingPrompt');
+        if (startingPrompt) {
+            startingPrompt.addEventListener('focus', () => {
+                this.showPromptSuggestions();
+            });
+        }
+    }
+
+    setupSmartDefaults() {
+        // Set smart defaults based on model selection
+        const modelSelect = document.getElementById('modelSelect');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', () => {
+                this.applySmartDefaults();
+            });
+        }
+    }
+
+    setupFormShortcuts() {
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        this.generatePrompt();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        this.savePromptToLibrary();
+                        break;
+                    case 'c':
+                        if (this.currentOutput) {
+                            e.preventDefault();
+                            this.copyToClipboard();
+                        }
+                        break;
+                }
+            }
+        });
+    }
+
+    showPromptSuggestions() {
+        const model = document.getElementById('modelSelect')?.value;
+        const type = document.getElementById('promptType')?.value;
+        
+        if (!model || !type) return;
+
+        const suggestions = this.getPromptSuggestions(model, type);
+        if (suggestions.length === 0) return;
+
+        // Create suggestions dropdown
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'prompt-suggestions dropdown-menu show';
+        suggestionsContainer.innerHTML = suggestions.map(suggestion => 
+            `<button class="dropdown-item" type="button" onclick="app.applySuggestion('${suggestion.replace(/'/g, "\\'")}')">${suggestion}</button>`
+        ).join('');
+        
+        // Position and show suggestions
+        const startingPrompt = document.getElementById('startingPrompt');
+        startingPrompt.parentNode.appendChild(suggestionsContainer);
+        
+        // Hide after selection or click outside
+        setTimeout(() => {
+            document.addEventListener('click', () => {
+                suggestionsContainer.remove();
+            }, { once: true });
+        }, 100);
+    }
+
+    getPromptSuggestions(model, type) {
+        const suggestions = {
+            'text-to-image': [
+                'a beautiful landscape',
+                'portrait of a person',
+                'abstract art piece',
+                'futuristic cityscape',
+                'fantasy creature'
+            ],
+            'text-to-text': [
+                'Write a compelling blog post about',
+                'Create a professional email for',
+                'Summarize the following text:',
+                'Explain the concept of',
+                'Generate creative ideas for'
+            ],
+            'text-to-video': [
+                'cinematic shot of',
+                'animated sequence showing',
+                'timelapse of',
+                'dramatic scene with',
+                'peaceful moment featuring'
+            ]
+        };
+        
+        return suggestions[type] || [];
+    }
+
+    applySuggestion(suggestion) {
+        const startingPrompt = document.getElementById('startingPrompt');
+        if (startingPrompt) {
+            startingPrompt.value = suggestion;
+            startingPrompt.focus();
+            this.validateStartingPrompt();
+        }
+    }
+
+    applySmartDefaults() {
+        const model = document.getElementById('modelSelect')?.value;
+        if (!model) return;
+
+        const defaults = {
+            'midjourney': { type: 'text-to-image', quality: 'high-quality' },
+            'dalle3': { type: 'text-to-image', quality: 'high-quality' },
+            'gpt4': { type: 'text-to-text', quality: 'detailed' },
+            'claude': { type: 'text-to-text', quality: 'detailed' },
+            'sora': { type: 'text-to-video', quality: 'high-quality' }
+        };
+
+        const defaultSettings = defaults[model];
+        if (defaultSettings) {
+            if (defaultSettings.type) {
+                const promptType = document.getElementById('promptType');
+                if (promptType) promptType.value = defaultSettings.type;
+            }
+            
+            if (defaultSettings.quality) {
+                const quality = document.getElementById('quality');
+                if (quality) quality.value = defaultSettings.quality;
+            }
+        }
     }
 
     buildPrompt(formData) {
@@ -226,10 +865,7 @@ class PromptGenerator {
             }
         }
 
-        // Add manual information if available
-        if (this.manualInformation) {
-            prompt += `. Additional context: ${this.manualInformation}`;
-        }
+        // Manual information is for notes about documents, not prompt injection
 
         return prompt;
     }
@@ -306,7 +942,7 @@ class PromptGenerator {
                 }
             },
             context: {
-                manual_information: this.manualInformation || null,
+                document_notes: this.manualInformation || null,
                 uploaded_documents: this.uploadedDocuments.length,
                 library_size: this.promptLibrary.length
             }
@@ -315,22 +951,146 @@ class PromptGenerator {
         return JSON.stringify(jsonOutput, null, 2);
     }
 
+    formatAsMarkdown(prompt) {
+        const formData = this.getFormData();
+        const timestamp = new Date().toLocaleString();
+        
+        return `# AI Prompt Generated
+
+**Generated:** ${timestamp}  
+**Model:** ${formData.model}  
+**Type:** ${formData.type}
+
+## Prompt
+\`\`\`
+${prompt}
+\`\`\`
+
+## Settings
+- **Camera Angle:** ${formData.cameraAngle || 'Not specified'}
+- **Perspective:** ${formData.perspective || 'Not specified'}
+- **Mood:** ${formData.mood || 'Not specified'}
+- **Color Scheme:** ${formData.colorScheme || 'Not specified'}
+- **Lighting:** ${formData.lighting || 'Not specified'}
+- **Art Style:** ${formData.artStyle || 'Not specified'}
+- **Composition:** ${formData.composition || 'Not specified'}
+- **Quality:** ${formData.quality || 'Not specified'}
+
+## Style Reference
+${formData.srefUrl ? `- **URL:** ${formData.srefUrl}` : 'No style reference'}
+${formData.srefWeight ? `- **Weight:** ${formData.srefWeight}` : ''}
+${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : ''}
+
+---
+*Generated by AI Prompt Generator v2.0*`;
+    }
+
+    formatAsCSV(prompt) {
+        const formData = this.getFormData();
+        const timestamp = new Date().toLocaleString();
+        
+        const headers = [
+            'Timestamp', 'Model', 'Type', 'Prompt', 'Camera Angle', 'Perspective', 
+            'Mood', 'Color Scheme', 'Lighting', 'Art Style', 'Composition', 
+            'Quality', 'Sref URL', 'Sref Weight', 'Sref Description'
+        ];
+        
+        const values = [
+            timestamp, formData.model, formData.type, `"${prompt.replace(/"/g, '""')}"`,
+            formData.cameraAngle || '', formData.perspective || '', formData.mood || '',
+            formData.colorScheme || '', formData.lighting || '', formData.artStyle || '',
+            formData.composition || '', formData.quality || '', formData.srefUrl || '',
+            formData.srefWeight || '', `"${(formData.srefExplanation || '').replace(/"/g, '""')}"`
+        ];
+        
+        return headers.join(',') + '\n' + values.join(',');
+    }
+
+    formatAsHTML(prompt) {
+        const formData = this.getFormData();
+        const timestamp = new Date().toLocaleString();
+        
+        return `
+            <div class="prompt-output">
+                <h2>AI Prompt Generated</h2>
+                <div class="prompt-meta">
+                    <p><strong>Generated:</strong> ${timestamp}</p>
+                    <p><strong>Model:</strong> ${formData.model}</p>
+                    <p><strong>Type:</strong> ${formData.type}</p>
+                </div>
+                <div class="prompt-content">
+                    <h3>Prompt</h3>
+                    <pre class="prompt-text">${prompt}</pre>
+                </div>
+                <div class="prompt-settings">
+                    <h3>Settings</h3>
+                    <ul>
+                        <li><strong>Camera Angle:</strong> ${formData.cameraAngle || 'Not specified'}</li>
+                        <li><strong>Perspective:</strong> ${formData.perspective || 'Not specified'}</li>
+                        <li><strong>Mood:</strong> ${formData.mood || 'Not specified'}</li>
+                        <li><strong>Color Scheme:</strong> ${formData.colorScheme || 'Not specified'}</li>
+                        <li><strong>Lighting:</strong> ${formData.lighting || 'Not specified'}</li>
+                        <li><strong>Art Style:</strong> ${formData.artStyle || 'Not specified'}</li>
+                        <li><strong>Composition:</strong> ${formData.composition || 'Not specified'}</li>
+                        <li><strong>Quality:</strong> ${formData.quality || 'Not specified'}</li>
+                    </ul>
+                </div>
+                ${formData.srefUrl ? `
+                <div class="style-reference">
+                    <h3>Style Reference</h3>
+                    <ul>
+                        <li><strong>URL:</strong> <a href="${formData.srefUrl}" target="_blank">${formData.srefUrl}</a></li>
+                        <li><strong>Weight:</strong> ${formData.srefWeight || 'Not specified'}</li>
+                        <li><strong>Description:</strong> ${formData.srefExplanation || 'Not specified'}</li>
+                    </ul>
+                </div>
+                ` : ''}
+                <hr>
+                <p><em>Generated by AI Prompt Generator v2.0</em></p>
+            </div>
+        `;
+    }
+
     displayOutput(output, format) {
         const outputSection = document.getElementById('outputSection');
         
-        if (format === 'json') {
+        switch (format) {
+            case 'json':
             outputSection.innerHTML = `<pre><code>${output}</code></pre>`;
-        } else {
+                break;
+            case 'markdown':
+                // Convert to markdown format
+                const markdownOutput = this.formatAsMarkdown(output);
+                outputSection.innerHTML = `<pre><code>${markdownOutput}</code></pre>`;
+                break;
+            case 'csv':
+                // Convert to CSV format
+                const csvOutput = this.formatAsCSV(output);
+                outputSection.innerHTML = `<pre><code>${csvOutput}</code></pre>`;
+                break;
+            case 'html':
+                // Convert to HTML format
+                const htmlOutput = this.formatAsHTML(output);
+                outputSection.innerHTML = htmlOutput;
+                break;
+            default: // text
             outputSection.innerHTML = `<p>${output}</p>`;
+                break;
         }
         
-        // Store the output for copying
+        // Store the output for copying/downloading
         this.currentOutput = output;
+        this.currentFormat = format;
     }
 
     enableCopyButton() {
         const copyButton = document.getElementById('copyOutput');
-        copyButton.disabled = false;
+        const downloadButton = document.getElementById('downloadOutput');
+        const saveButton = document.getElementById('saveToLibrary');
+        
+        if (copyButton) copyButton.disabled = false;
+        if (downloadButton) downloadButton.disabled = false;
+        if (saveButton) saveButton.disabled = false;
     }
 
     copyToClipboard() {
@@ -355,6 +1115,69 @@ class PromptGenerator {
         }
     }
 
+    downloadOutput() {
+        if (!this.currentOutput) {
+            this.showToast('No output to download', 'warning');
+            return;
+        }
+
+        const formData = this.getFormData();
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `prompt_${formData.model}_${timestamp}.${this.getFileExtension(this.currentFormat)}`;
+        
+        let content = this.currentOutput;
+        
+        // Format content based on current format
+        switch (this.currentFormat) {
+            case 'markdown':
+                content = this.formatAsMarkdown(this.currentOutput);
+                break;
+            case 'csv':
+                content = this.formatAsCSV(this.currentOutput);
+                break;
+            case 'html':
+                content = this.formatAsHTML(this.currentOutput);
+                break;
+        }
+
+        this.downloadFile(content, filename, this.getMimeType(this.currentFormat));
+        this.showToast(`Downloaded as ${filename}`, 'success');
+    }
+
+    getFileExtension(format) {
+        const extensions = {
+            'text': 'txt',
+            'json': 'json',
+            'markdown': 'md',
+            'csv': 'csv',
+            'html': 'html'
+        };
+        return extensions[format] || 'txt';
+    }
+
+    getMimeType(format) {
+        const mimeTypes = {
+            'text': 'text/plain',
+            'json': 'application/json',
+            'markdown': 'text/markdown',
+            'csv': 'text/csv',
+            'html': 'text/html'
+        };
+        return mimeTypes[format] || 'text/plain';
+    }
+
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     clearForm() {
         document.getElementById('promptForm').reset();
         document.getElementById('srefUrl').value = '';
@@ -364,6 +1187,49 @@ class PromptGenerator {
             '<p class="text-muted text-center mb-0"><i class="bi bi-arrow-up"></i> Fill out the form above and click "Generate Prompt" to see your output here</p>';
         document.getElementById('copyOutput').disabled = true;
         this.currentOutput = null;
+    }
+
+    applyTemplate(templateType) {
+        const template = this.promptTemplates[templateType];
+        if (!template) {
+            console.error('Template not found:', templateType);
+            return;
+        }
+
+        // Apply template values to form fields
+        const fields = [
+            'model', 'type', 'startingPrompt', 'cameraAngle', 'perspective', 
+            'mood', 'colorScheme', 'lighting', 'artStyle', 'composition', 'quality'
+        ];
+
+        fields.forEach(field => {
+            const element = document.getElementById(field === 'model' ? 'modelSelect' : 
+                                                  field === 'type' ? 'promptType' : 
+                                                  field === 'startingPrompt' ? 'startingPrompt' :
+                                                  field === 'cameraAngle' ? 'cameraAngle' :
+                                                  field === 'perspective' ? 'perspective' :
+                                                  field === 'mood' ? 'mood' :
+                                                  field === 'colorScheme' ? 'colorScheme' :
+                                                  field === 'lighting' ? 'lighting' :
+                                                  field === 'artStyle' ? 'artStyle' :
+                                                  field === 'composition' ? 'composition' :
+                                                  'quality');
+            if (element && template[field]) {
+                element.value = template[field];
+            }
+        });
+
+        // Show success message
+        const templateNames = {
+            'image-generation': '🎨 Image Generation',
+            'content-writing': '✍️ Content Writing',
+            'ai-assistant': '🤖 AI Assistant',
+            'data-analysis': '📊 Data Analysis',
+            'marketing': '🎯 Marketing',
+            'creative-writing': '📚 Creative Writing'
+        };
+
+        this.showToast(`${templateNames[templateType]} template applied!`, 'success');
     }
 
     savePromptToLibrary() {
@@ -400,6 +1266,11 @@ class PromptGenerator {
 
     loadPromptLibrary() {
         const libraryContainer = document.getElementById('promptLibrary');
+        
+        // Element no longer exists in unified interface
+        if (!libraryContainer) {
+            return;
+        }
         
         if (this.promptLibrary.length === 0) {
             libraryContainer.innerHTML = '<p class="text-muted text-center">No saved prompts yet</p>';
@@ -467,11 +1338,20 @@ class PromptGenerator {
         }
     }
 
-    handleFileUpload(files) {
-        Array.from(files).forEach(file => {
+    async handleFileUpload(files) {
+        for (const file of Array.from(files)) {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            
+            await new Promise((resolve) => {
+                reader.onload = async (e) => {
                 const content = e.target.result;
+                    
+                    // Show loading state
+                    this.showToast(`Analyzing "${file.name}"...`, 'info');
+                    
+                    try {
+                        const enhancements = await this.extractEnhancements(content, file.name);
+                        
                 const documentData = {
                     id: Date.now() + Math.random(),
                     name: file.name,
@@ -480,16 +1360,41 @@ class PromptGenerator {
                     content: content,
                     uploadedAt: new Date().toISOString(),
                     source: 'file',
-                    enhancements: this.extractEnhancements(content, file.name)
+                            enhancements: enhancements,
+                            analysisDate: new Date().toISOString()
                 };
 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
-                this.showToast(`File "${file.name}" uploaded successfully!`, 'success');
+                        
+                        const analysisSource = enhancements?.source || 'basic';
+                        this.showToast(`File "${file.name}" uploaded and analyzed (${analysisSource})!`, 'success');
+                    } catch (error) {
+                        console.error('Error analyzing file:', error);
+                        // Still save the file even if analysis fails
+                        const documentData = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            content: content,
+                            uploadedAt: new Date().toISOString(),
+                            source: 'file',
+                            enhancements: null
+                        };
+
+                        this.uploadedDocuments.push(documentData);
+                        this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+                        this.loadUploadedFiles();
+                        this.showToast(`File "${file.name}" uploaded (analysis failed)`, 'warning');
+                    }
+                    
+                    resolve();
             };
             reader.readAsText(file);
         });
+        }
     }
 
     async fetchWebContent() {
@@ -518,6 +1423,12 @@ class PromptGenerator {
             const content = await this.fetchUrlContent(url);
             
             if (content) {
+                // Show analysis loading state
+                fetchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Analyzing...';
+                
+                try {
+                    const enhancements = await this.extractEnhancements(content, url);
+                    
                 const documentData = {
                     id: Date.now() + Math.random(),
                     name: this.extractTitleFromUrl(url),
@@ -527,14 +1438,38 @@ class PromptGenerator {
                     url: url,
                     uploadedAt: new Date().toISOString(),
                     source: 'web',
-                    enhancements: this.extractEnhancements(content, url)
+                        enhancements: enhancements,
+                        analysisDate: new Date().toISOString()
                 };
 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
-                this.showToast(`Content from "${this.extractTitleFromUrl(url)}" added successfully!`, 'success');
+                    
+                    const analysisSource = enhancements?.source || 'basic';
+                    this.showToast(`Content from "${this.extractTitleFromUrl(url)}" analyzed (${analysisSource})!`, 'success');
+                    urlInput.value = '';
+                } catch (error) {
+                    console.error('Error analyzing web content:', error);
+                    // Still save the content even if analysis fails
+                    const documentData = {
+                        id: Date.now() + Math.random(),
+                        name: this.extractTitleFromUrl(url),
+                        type: 'text/html',
+                        size: content.length,
+                        content: content,
+                        url: url,
+                        uploadedAt: new Date().toISOString(),
+                        source: 'web',
+                        enhancements: null
+                    };
+
+                    this.uploadedDocuments.push(documentData);
+                    this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+                    this.loadUploadedFiles();
+                    this.showToast(`Content from "${this.extractTitleFromUrl(url)}" added (analysis failed)`, 'warning');
                 urlInput.value = '';
+                }
             }
         } catch (error) {
             console.error('Error fetching URL:', error);
@@ -646,24 +1581,179 @@ class PromptGenerator {
         }
     }
 
-    extractEnhancements(content, filename) {
-        // Simple enhancement extraction logic
-        // Look for common prompt enhancement keywords
-        const enhancementKeywords = [
-            'high quality', 'detailed', 'professional', 'cinematic', 'photorealistic',
-            'masterpiece', '8k', '4k', 'ultra detailed', 'best quality', 'sharp focus',
-            'highly detailed', 'intricate', 'elegant', 'smooth', 'vibrant colors'
-        ];
+    async extractEnhancements(content, filename) {
+        // Try local LLM analysis first if enabled
+        if (this.llmSettings.enabled && await this.isLocalLLMAvailable()) {
+            try {
+                const llmAnalysis = await this.analyzeContentWithLLM(content, filename);
+                if (llmAnalysis) {
+                    return llmAnalysis;
+                }
+            } catch (error) {
+                console.warn('LLM analysis failed, falling back to keyword extraction:', error);
+            }
+        }
+        
+        // Enhanced keyword extraction with more comprehensive patterns
+        const enhancementPatterns = {
+            quality: ['high quality', 'ultra detailed', 'best quality', 'masterpiece', 'professional', 'premium'],
+            resolution: ['8k', '4k', '2k', 'hd', 'high resolution', 'ultra hd'],
+            style: ['cinematic', 'photorealistic', 'artistic', 'detailed', 'sharp focus', 'crisp'],
+            lighting: ['dramatic lighting', 'soft lighting', 'natural light', 'golden hour', 'rim lighting'],
+            composition: ['rule of thirds', 'symmetrical', 'dynamic composition', 'leading lines'],
+            technical: ['--style', '--quality', '--ar', '--chaos', '--stylize', '--iw', '--seed'],
+            negative: ['blurry', 'low quality', 'distorted', 'deformed', 'bad anatomy', 'worst quality']
+        };
 
-        const foundEnhancements = enhancementKeywords.filter(keyword => 
-            content.toLowerCase().includes(keyword.toLowerCase())
+        const foundEnhancements = [];
+        const foundNegatives = [];
+
+        // Extract positive enhancements
+        Object.entries(enhancementPatterns).forEach(([category, keywords]) => {
+            if (category === 'negative') return;
+            
+            keywords.forEach(keyword => {
+                if (content.toLowerCase().includes(keyword.toLowerCase())) {
+                    foundEnhancements.push(keyword);
+                }
+            });
+        });
+
+        // Extract negative prompts
+        enhancementPatterns.negative.forEach(keyword => {
+            if (content.toLowerCase().includes(keyword.toLowerCase())) {
+                foundNegatives.push(keyword);
+            }
+        });
+
+        // Extract model-specific parameters
+        const paramMatches = content.match(/--[\w-]+(?:\s+\d+)?/g);
+        if (paramMatches) {
+            foundEnhancements.push(...paramMatches);
+        }
+
+        // Extract technical terms and best practices
+        const technicalTerms = content.match(/\b(?:prompt|parameter|setting|technique|tip|best practice|recommendation)\b/gi);
+        if (technicalTerms) {
+            foundEnhancements.push('technical documentation');
+        }
+
+        const result = foundEnhancements.length > 0 ? foundEnhancements.join(', ') : null;
+        const negatives = foundNegatives.length > 0 ? foundNegatives.join(', ') : null;
+        
+        return {
+            enhancements: result,
+            negatives: negatives,
+            source: 'keyword-extraction'
+        };
+    }
+
+    async analyzeContentWithLLM(content, filename) {
+        if (!this.llmSettings.enabled) return null;
+
+        const prompt = `Analyze this AI model documentation and extract key information for prompt optimization:
+
+Content: ${content.substring(0, 3000)}...
+
+Please extract:
+1. Key prompt enhancement techniques (quality terms, style modifiers)
+2. Model-specific parameters (--flags and settings)
+3. Best practices and recommendations
+4. Common mistakes to avoid (negative prompts)
+5. Technical tips and tricks
+
+Format your response as JSON:
+{
+  "enhancements": "comma-separated enhancement terms",
+  "parameters": "model-specific parameters found",
+  "bestPractices": "key recommendations",
+  "negatives": "things to avoid",
+  "technicalTips": "advanced techniques"
+}`;
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.llmSettings.timeout);
+
+            const response = await fetch(`${this.llmSettings.apiUrl}/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: this.llmSettings.model,
+                    prompt: prompt,
+                    stream: false,
+                    options: {
+                        temperature: 0.3,
+                        top_p: 0.9,
+                        max_tokens: 1000
+                    }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`LLM API error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            try {
+                const analysis = JSON.parse(result.response);
+                return {
+                    enhancements: analysis.enhancements || '',
+                    parameters: analysis.parameters || '',
+                    bestPractices: analysis.bestPractices || '',
+                    negatives: analysis.negatives || '',
+                    technicalTips: analysis.technicalTips || '',
+                    source: 'llm-analysis'
+                };
+            } catch (parseError) {
+                // If JSON parsing fails, try to extract key terms from text response
+                const textResponse = result.response;
+                return {
+                    enhancements: this.extractTermsFromText(textResponse, ['quality', 'detailed', 'professional', 'cinematic']),
+                    source: 'llm-text-analysis'
+                };
+            }
+        } catch (error) {
+            console.error('LLM analysis failed:', error);
+            return null;
+        }
+    }
+
+    extractTermsFromText(text, keywords) {
+        const foundTerms = keywords.filter(keyword => 
+            text.toLowerCase().includes(keyword.toLowerCase())
         );
+        return foundTerms.length > 0 ? foundTerms.join(', ') : null;
+    }
 
-        return foundEnhancements.length > 0 ? foundEnhancements.join(', ') : null;
+    async isLocalLLMAvailable() {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+            const response = await fetch(`${this.llmSettings.apiUrl}/tags`, {
+                method: 'GET',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            return response.ok;
+        } catch {
+            return false;
+        }
     }
 
     loadUploadedFiles() {
         const container = document.getElementById('uploadedFiles');
+        
+        // Element no longer exists in unified interface
+        if (!container) {
+            return;
+        }
         
         if (this.uploadedDocuments.length === 0) {
             container.innerHTML = '';
@@ -712,11 +1802,15 @@ class PromptGenerator {
         const manualInfo = document.getElementById('manualInfo').value;
         this.manualInformation = manualInfo;
         localStorage.setItem('manualInformation', manualInfo);
-        this.showToast('Manual information saved!', 'success');
+        this.showToast('Document notes saved!', 'success');
     }
 
     loadManualInformation() {
-        document.getElementById('manualInfo').value = this.manualInformation;
+        // Manual information moved to unified interface - no longer needed here
+        // const manualInfo = document.getElementById('manualInfo');
+        // if (manualInfo) {
+        //     manualInfo.value = this.manualInformation;
+        // }
     }
 
     saveToLocalStorage(key, data) {
@@ -779,6 +1873,11 @@ class PromptGenerator {
 
     loadSrefLibrary() {
         const libraryContainer = document.getElementById('srefLibrary');
+        
+        // Element no longer exists in unified interface
+        if (!libraryContainer) {
+            return;
+        }
         
         if (this.srefLibrary.length === 0) {
             libraryContainer.innerHTML = '<p class="text-muted text-center">No saved style references yet</p>';
@@ -1056,6 +2155,89 @@ class PromptGenerator {
         };
     }
 
+    initPromptTemplates() {
+        return {
+            'image-generation': {
+                model: 'midjourney',
+                type: 'text-to-image',
+                startingPrompt: 'a beautiful landscape',
+                cameraAngle: 'eye-level',
+                perspective: 'medium',
+                mood: 'serene',
+                colorScheme: 'natural',
+                lighting: 'golden-hour',
+                artStyle: 'photorealistic',
+                composition: 'rule-of-thirds',
+                quality: 'high-quality'
+            },
+            'content-writing': {
+                model: 'gpt4',
+                type: 'text-to-text',
+                startingPrompt: 'Write a compelling blog post about',
+                cameraAngle: '',
+                perspective: '',
+                mood: 'professional',
+                colorScheme: '',
+                lighting: '',
+                artStyle: '',
+                composition: '',
+                quality: 'high-quality'
+            },
+            'ai-assistant': {
+                model: 'claude',
+                type: 'text-to-text',
+                startingPrompt: 'Act as a helpful AI assistant and',
+                cameraAngle: '',
+                perspective: '',
+                mood: 'helpful',
+                colorScheme: '',
+                lighting: '',
+                artStyle: '',
+                composition: '',
+                quality: 'detailed'
+            },
+            'data-analysis': {
+                model: 'gpt4',
+                type: 'text-to-text',
+                startingPrompt: 'Analyze the following data and provide insights:',
+                cameraAngle: '',
+                perspective: '',
+                mood: 'analytical',
+                colorScheme: '',
+                lighting: '',
+                artStyle: '',
+                composition: '',
+                quality: 'comprehensive'
+            },
+            'marketing': {
+                model: 'gpt4',
+                type: 'text-to-text',
+                startingPrompt: 'Create compelling marketing copy for',
+                cameraAngle: '',
+                perspective: '',
+                mood: 'persuasive',
+                colorScheme: '',
+                lighting: '',
+                artStyle: '',
+                composition: '',
+                quality: 'high-quality'
+            },
+            'creative-writing': {
+                model: 'claude',
+                type: 'text-to-text',
+                startingPrompt: 'Write a creative story about',
+                cameraAngle: '',
+                perspective: '',
+                mood: 'creative',
+                colorScheme: '',
+                lighting: '',
+                artStyle: '',
+                composition: '',
+                quality: 'detailed'
+            }
+        };
+    }
+
     initTooltips() {
         // Create tooltip element
         this.tooltip = document.createElement('div');
@@ -1134,6 +2316,978 @@ class PromptGenerator {
 
     hideTooltip() {
         this.tooltip.classList.remove('show');
+    }
+
+    // Search functionality
+    searchPrompts(query) {
+        const libraryContainer = document.getElementById('promptLibrary');
+        
+        if (!query.trim()) {
+            this.loadPromptLibrary();
+            return;
+        }
+
+        const filteredPrompts = this.promptLibrary.filter(prompt => 
+            prompt.name.toLowerCase().includes(query.toLowerCase()) ||
+            prompt.startingPrompt.toLowerCase().includes(query.toLowerCase()) ||
+            prompt.model.toLowerCase().includes(query.toLowerCase()) ||
+            prompt.type.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (filteredPrompts.length === 0) {
+            libraryContainer.innerHTML = `<p class="text-muted text-center">No prompts found matching "${query}"</p>`;
+            return;
+        }
+
+        const libraryHTML = filteredPrompts.map(prompt => `
+            <div class="library-item" data-id="${prompt.id}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-1">${this.highlightSearchTerm(prompt.name, query)}</h6>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadPrompt(${prompt.id})">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="app.deletePrompt(${prompt.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-tag"></i> ${prompt.model} | ${prompt.type}
+                    <br><i class="bi bi-clock"></i> ${new Date(prompt.createdAt).toLocaleDateString()}
+                </small>
+                <p class="mt-2 mb-0 small">${this.highlightSearchTerm(prompt.startingPrompt.substring(0, 100), query)}${prompt.startingPrompt.length > 100 ? '...' : ''}</p>
+            </div>
+        `).join('');
+
+        libraryContainer.innerHTML = libraryHTML;
+    }
+
+    searchSref(query) {
+        const libraryContainer = document.getElementById('srefLibrary');
+        
+        if (!query.trim()) {
+            this.loadSrefLibrary();
+            return;
+        }
+
+        const filteredSrefs = this.srefLibrary.filter(sref => 
+            sref.name.toLowerCase().includes(query.toLowerCase()) ||
+            sref.explanation.toLowerCase().includes(query.toLowerCase()) ||
+            sref.url.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (filteredSrefs.length === 0) {
+            libraryContainer.innerHTML = `<p class="text-muted text-center">No style references found matching "${query}"</p>`;
+            return;
+        }
+
+        const libraryHTML = filteredSrefs.map(sref => `
+            <div class="library-item" data-id="${sref.id}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${this.highlightSearchTerm(sref.name, query)}</h6>
+                        <small class="text-muted">
+                            <i class="bi bi-sliders"></i> Weight: ${sref.weight}
+                            <br><i class="bi bi-clock"></i> ${new Date(sref.createdAt).toLocaleDateString()}
+                        </small>
+                        <p class="mt-2 mb-2 small">${this.highlightSearchTerm(sref.explanation, query)}</p>
+                        <a href="${sref.url}" target="_blank" class="text-decoration-none small">
+                            <i class="bi bi-box-arrow-up-right"></i> View Reference
+                        </a>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadSref(${sref.id})">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteSref(${sref.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        libraryContainer.innerHTML = libraryHTML;
+    }
+
+    highlightSearchTerm(text, query) {
+        if (!query.trim()) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    // LLM Settings
+    showLLMSettings() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-cpu"></i> Local LLM Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="llmEnabled" ${this.llmSettings.enabled ? 'checked' : ''}>
+                                <label class="form-check-label" for="llmEnabled">
+                                    Enable Local LLM Analysis
+                                </label>
+                            </div>
+                            <small class="text-muted">Use local LLM for enhanced content analysis</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="llmApiUrl" class="form-label">API URL</label>
+                            <input type="text" class="form-control" id="llmApiUrl" value="${this.llmSettings.apiUrl}" placeholder="http://localhost:11434/api">
+                            <small class="text-muted">Ollama default: http://localhost:11434/api</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="llmModel" class="form-label">Model Name</label>
+                            <input type="text" class="form-control" id="llmModel" value="${this.llmSettings.model}" placeholder="llama3.1:8b">
+                            <small class="text-muted">Available models will be detected automatically</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="llmTimeout" class="form-label">Timeout (ms)</label>
+                            <input type="number" class="form-control" id="llmTimeout" value="${this.llmSettings.timeout}" min="1000" max="60000">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="testLLMConnection">
+                                <i class="bi bi-wifi"></i> Test Connection
+                            </button>
+                            <span id="connectionStatus" class="ms-2"></span>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Supported LLM Services:</strong><br>
+                                • Ollama (recommended)<br>
+                                • LM Studio<br>
+                                • LocalAI<br>
+                                • Any OpenAI-compatible API
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveLLMSettings">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Event listeners
+        document.getElementById('testLLMConnection').addEventListener('click', async () => {
+            await this.testLLMConnection(modal);
+        });
+        
+        document.getElementById('saveLLMSettings').addEventListener('click', () => {
+            this.saveLLMSettings(modal);
+            bsModal.hide();
+        });
+        
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    async testLLMConnection(modal) {
+        const statusSpan = modal.querySelector('#connectionStatus');
+        const testBtn = modal.querySelector('#testLLMConnection');
+        const apiUrl = modal.querySelector('#llmApiUrl').value;
+        const model = modal.querySelector('#llmModel').value;
+        
+        testBtn.disabled = true;
+        testBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Testing...';
+        statusSpan.innerHTML = '';
+        
+        try {
+            const response = await fetch(`${apiUrl}/tags`, {
+                method: 'GET',
+                timeout: 5000
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                statusSpan.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Connected</span>';
+                
+                // Show available models
+                if (data.models && data.models.length > 0) {
+                    const modelNames = data.models.map(m => m.name).join(', ');
+                    statusSpan.innerHTML += `<br><small class="text-muted">Available models: ${modelNames}</small>`;
+                }
+            } else {
+                statusSpan.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Connection failed</span>';
+            }
+        } catch (error) {
+            statusSpan.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Connection failed</span>';
+        }
+        
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="bi bi-wifi"></i> Test Connection';
+    }
+
+    saveLLMSettings(modal) {
+        this.llmSettings = {
+            enabled: modal.querySelector('#llmEnabled').checked,
+            apiUrl: modal.querySelector('#llmApiUrl').value,
+            model: modal.querySelector('#llmModel').value,
+            timeout: parseInt(modal.querySelector('#llmTimeout').value)
+        };
+        
+        localStorage.setItem('llmSettings', JSON.stringify(this.llmSettings));
+        this.showToast('LLM settings saved!', 'success');
+    }
+
+    // Unified Library Functions
+    showAddItemForm(type) {
+        const contentDiv = document.getElementById('addItemContent');
+        
+        if (!contentDiv) {
+            console.error('addItemContent div not found!');
+            return;
+        }
+        
+        switch(type) {
+            case 'document':
+                contentDiv.innerHTML = `
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="bi bi-cloud-arrow-up text-primary mb-2"></i>
+                        <h6>Drag & Drop Files</h6>
+                        <p class="text-muted small mb-2">or click to browse</p>
+                        <input type="file" id="fileInput" multiple accept=".txt,.json,.md,.pdf,.doc,.docx" style="display: none;">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('fileInput').click()">
+                            <i class="bi bi-folder2-open"></i> Browse
+                        </button>
+                    </div>
+                `;
+                this.setupFileUpload();
+                break;
+                
+            case 'website':
+                contentDiv.innerHTML = `
+                    <div class="input-group mb-2">
+                        <input type="url" class="form-control" id="urlInput" placeholder="https://example.com/ai-guide">
+                        <button class="btn btn-outline-info" type="button" id="fetchUrlBtn">
+                            <i class="bi bi-download"></i> Fetch
+                        </button>
+                    </div>
+                    <small class="text-muted">Add AI documentation, tutorials, or guides</small>
+                `;
+                this.setupWebFetch();
+                break;
+                
+            case 'text':
+                contentDiv.innerHTML = `
+                    <textarea class="form-control mb-2" id="textNoteInput" rows="4" 
+                              placeholder="Enter your notes here..."></textarea>
+                    <button type="button" class="btn btn-outline-success btn-sm w-100" id="saveTextNote">
+                        <i class="bi bi-save"></i> Save Note
+                    </button>
+                `;
+                this.setupTextNote();
+                break;
+                
+            case 'sref':
+                contentDiv.innerHTML = `
+                    <div class="mb-2">
+                        <input type="url" class="form-control mb-2" id="srefUrlInput" 
+                               placeholder="https://example.com/style-image.jpg">
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="number" class="form-control" id="srefWeightInput" 
+                                       min="0" max="1000" step="50" placeholder="Weight (100)">
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-info btn-sm w-100" id="saveSrefFromUnified">
+                                    <i class="bi bi-save"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                        <textarea class="form-control mt-2" id="srefExplanationInput" rows="2" 
+                                  placeholder="Style description..."></textarea>
+                    </div>
+                `;
+                this.setupSrefFromUnified();
+                break;
+                
+            case 'prompt':
+                contentDiv.innerHTML = `
+                    <div class="mb-2">
+                        <input type="text" class="form-control mb-2" id="quickPromptName" 
+                               placeholder="Prompt name...">
+                        <textarea class="form-control mb-2" id="quickPromptText" rows="3" 
+                                  placeholder="Enter prompt text..."></textarea>
+                        <div class="row">
+                            <div class="col-6">
+                                <select class="form-select" id="quickPromptModel">
+                                    <option value="">Model (optional)</option>
+                                    <option value="midjourney">Midjourney</option>
+                                    <option value="dalle3">DALL-E 3</option>
+                                    <option value="stable-diffusion">Stable Diffusion</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-success btn-sm w-100" id="saveQuickPrompt">
+                                    <i class="bi bi-save"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                this.setupQuickPrompt();
+                break;
+                
+            default:
+                contentDiv.innerHTML = '<p class="text-muted text-center">Select a type above to add content</p>';
+        }
+    }
+
+    setupFileUpload() {
+        // Use setTimeout to ensure DOM elements exist
+        setTimeout(() => {
+            const fileInput = document.getElementById('fileInput');
+            const uploadZone = document.getElementById('uploadZone');
+
+            if (fileInput && uploadZone) {
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFileUpload(e.target.files);
+                });
+
+                uploadZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('dragover');
+                });
+
+                uploadZone.addEventListener('dragleave', () => {
+                    uploadZone.classList.remove('dragover');
+                });
+
+                uploadZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('dragover');
+                    this.handleFileUpload(e.dataTransfer.files);
+                });
+
+                uploadZone.addEventListener('click', () => {
+                    fileInput.click();
+                });
+            }
+        }, 100);
+    }
+
+    setupWebFetch() {
+        setTimeout(() => {
+            const fetchBtn = document.getElementById('fetchUrlBtn');
+            const urlInput = document.getElementById('urlInput');
+            
+            if (fetchBtn) {
+                fetchBtn.addEventListener('click', () => {
+                    this.fetchWebContent();
+                });
+            }
+            
+            if (urlInput) {
+                urlInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.fetchWebContent();
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    setupTextNote() {
+        setTimeout(() => {
+            const saveBtn = document.getElementById('saveTextNote');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const text = document.getElementById('textNoteInput').value.trim();
+                    if (text) {
+                        const noteData = {
+                            id: Date.now(),
+                            name: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+                            content: text,
+                            type: 'text-note',
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        if (!this.textNotes) this.textNotes = [];
+                        this.textNotes.unshift(noteData);
+                        this.saveToLocalStorage('textNotes', this.textNotes);
+                        
+                        document.getElementById('textNoteInput').value = '';
+                        this.showToast('Text note saved!', 'success');
+                        this.performUnifiedSearch(document.getElementById('unifiedSearchInput').value);
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    setupSrefFromUnified() {
+        setTimeout(() => {
+            const saveBtn = document.getElementById('saveSrefFromUnified');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const url = document.getElementById('srefUrlInput').value.trim();
+                    const weight = document.getElementById('srefWeightInput').value || 100;
+                    const explanation = document.getElementById('srefExplanationInput').value.trim();
+
+                    if (url && this.isValidUrl(url)) {
+                        const srefData = {
+                            id: Date.now(),
+                            url: url,
+                            weight: weight,
+                            explanation: explanation || 'No description provided',
+                            name: this.extractNameFromUrl(url),
+                            createdAt: new Date().toISOString()
+                        };
+
+                        this.srefLibrary.unshift(srefData);
+                        this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                        
+                        // Clear form
+                        document.getElementById('srefUrlInput').value = '';
+                        document.getElementById('srefWeightInput').value = '';
+                        document.getElementById('srefExplanationInput').value = '';
+                        
+                        this.showToast('Style reference saved!', 'success');
+                        this.performUnifiedSearch(document.getElementById('unifiedSearchInput').value);
+                    } else {
+                        this.showToast('Please enter a valid URL', 'warning');
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    setupQuickPrompt() {
+        setTimeout(() => {
+            const saveBtn = document.getElementById('saveQuickPrompt');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const name = document.getElementById('quickPromptName').value.trim();
+                    const text = document.getElementById('quickPromptText').value.trim();
+                    const model = document.getElementById('quickPromptModel').value;
+
+                    if (name && text) {
+                        const promptData = {
+                            id: Date.now(),
+                            name: name,
+                            model: model || 'custom',
+                            type: 'text-to-image',
+                            startingPrompt: text,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        this.promptLibrary.unshift(promptData);
+                        this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+                        
+                        // Clear form
+                        document.getElementById('quickPromptName').value = '';
+                        document.getElementById('quickPromptText').value = '';
+                        document.getElementById('quickPromptModel').value = '';
+                        
+                        this.showToast('Quick prompt saved!', 'success');
+                        this.performUnifiedSearch(document.getElementById('unifiedSearchInput').value);
+                    } else {
+                        this.showToast('Please enter both name and prompt text', 'warning');
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    performUnifiedSearch(query) {
+        const resultsContainer = document.getElementById('unifiedSearchResults');
+        const searchPrompts = document.getElementById('searchPrompts').checked;
+        const searchDocuments = document.getElementById('searchDocuments').checked;
+        const searchSref = document.getElementById('searchSref').checked;
+        const searchNotes = document.getElementById('searchNotes').checked;
+
+        if (!query.trim()) {
+            resultsContainer.innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
+            return;
+        }
+
+        const results = [];
+        const lowerQuery = query.toLowerCase();
+
+        // Search prompts
+        if (searchPrompts) {
+            this.promptLibrary.forEach(prompt => {
+                if (prompt.name.toLowerCase().includes(lowerQuery) ||
+                    prompt.startingPrompt.toLowerCase().includes(lowerQuery) ||
+                    prompt.model.toLowerCase().includes(lowerQuery)) {
+                    results.push({
+                        type: 'prompt',
+                        icon: '⚡',
+                        title: prompt.name,
+                        content: prompt.startingPrompt.substring(0, 100) + '...',
+                        metadata: `${prompt.model} | ${prompt.type}`,
+                        data: prompt,
+                        date: prompt.createdAt
+                    });
+                }
+            });
+        }
+
+        // Search documents
+        if (searchDocuments) {
+            this.uploadedDocuments.forEach(doc => {
+                if (doc.name.toLowerCase().includes(lowerQuery) ||
+                    (doc.content && doc.content.toLowerCase().includes(lowerQuery))) {
+                    results.push({
+                        type: 'document',
+                        icon: doc.source === 'web' ? '🌐' : '📄',
+                        title: doc.name,
+                        content: doc.content ? doc.content.substring(0, 100) + '...' : 'Document content',
+                        metadata: `${doc.source} | ${this.formatFileSize(doc.size)}`,
+                        data: doc,
+                        date: doc.uploadedAt
+                    });
+                }
+            });
+        }
+
+        // Search style references
+        if (searchSref) {
+            this.srefLibrary.forEach(sref => {
+                if (sref.name.toLowerCase().includes(lowerQuery) ||
+                    sref.explanation.toLowerCase().includes(lowerQuery) ||
+                    sref.url.toLowerCase().includes(lowerQuery)) {
+                    results.push({
+                        type: 'sref',
+                        icon: '🎨',
+                        title: sref.name,
+                        content: sref.explanation,
+                        metadata: `Weight: ${sref.weight}`,
+                        data: sref,
+                        date: sref.createdAt
+                    });
+                }
+            });
+        }
+
+        // Search text notes
+        if (searchNotes && this.textNotes) {
+            this.textNotes.forEach(note => {
+                if (note.name.toLowerCase().includes(lowerQuery) ||
+                    note.content.toLowerCase().includes(lowerQuery)) {
+                    results.push({
+                        type: 'note',
+                        icon: '📝',
+                        title: note.name,
+                        content: note.content.substring(0, 100) + '...',
+                        metadata: 'Text Note',
+                        data: note,
+                        date: note.createdAt
+                    });
+                }
+            });
+        }
+
+        // Sort by date (newest first)
+        results.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `<p class="text-muted text-center">No results found for "${query}"</p>`;
+            return;
+        }
+
+        const resultsHTML = results.map(result => `
+            <div class="library-item mb-2" data-type="${result.type}" data-id="${result.data.id}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="me-2">${result.icon}</span>
+                            <h6 class="mb-0">${this.highlightSearchTerm(result.title, query)}</h6>
+                            <span class="badge bg-secondary ms-2">${result.type}</span>
+                        </div>
+                        <p class="small mb-1 text-muted">${this.highlightSearchTerm(result.content, query)}</p>
+                        <small class="text-muted">${result.metadata} | ${new Date(result.date).toLocaleDateString()}</small>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadFromSearch('${result.type}', ${result.data.id})">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteFromSearch('${result.type}', ${result.data.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        resultsContainer.innerHTML = resultsHTML;
+    }
+
+    loadFromSearch(type, id) {
+        switch(type) {
+            case 'prompt':
+                this.loadPrompt(id);
+                break;
+            case 'sref':
+                this.loadSref(id);
+                break;
+            case 'document':
+                this.showToast('Document loaded for reference', 'info');
+                break;
+            case 'note':
+                this.showToast('Note loaded for reference', 'info');
+                break;
+        }
+    }
+
+    deleteFromSearch(type, id) {
+        if (confirm('Are you sure you want to delete this item?')) {
+            switch(type) {
+                case 'prompt':
+                    this.promptLibrary = this.promptLibrary.filter(p => p.id !== id);
+                    this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+                    break;
+                case 'sref':
+                    this.srefLibrary = this.srefLibrary.filter(s => s.id !== id);
+                    this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                    break;
+                case 'document':
+                    this.uploadedDocuments = this.uploadedDocuments.filter(d => d.id !== id);
+                    this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+                    break;
+                case 'note':
+                    this.textNotes = this.textNotes.filter(n => n.id !== id);
+                    this.saveToLocalStorage('textNotes', this.textNotes);
+                    break;
+            }
+            this.performUnifiedSearch(document.getElementById('unifiedSearchInput').value);
+            this.showToast('Item deleted', 'warning');
+        }
+    }
+
+    clearAllLibrary() {
+        if (confirm('Are you sure you want to clear ALL library content? This action cannot be undone.')) {
+            this.promptLibrary = [];
+            this.srefLibrary = [];
+            this.uploadedDocuments = [];
+            this.textNotes = [];
+            this.manualInformation = '';
+            
+            this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+            this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+            this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+            this.saveToLocalStorage('textNotes', this.textNotes);
+            localStorage.removeItem('manualInformation');
+            
+            document.getElementById('unifiedSearchResults').innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
+            this.showToast('All library content cleared!', 'warning');
+        }
+    }
+
+    showExportAllModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-download"></i> Export All Prompts</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Export Format</label>
+                                <select class="form-select" id="exportFormat">
+                                    <option value="json">JSON</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="markdown">Markdown</option>
+                                    <option value="txt">Plain Text</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Include Metadata</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                                    <label class="form-check-label" for="includeMetadata">
+                                        Include timestamps and settings
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Filename Prefix</label>
+                            <input type="text" class="form-control" id="filenamePrefix" value="prompt_library_export">
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Library Statistics:</strong><br>
+                            • ${this.promptLibrary.length} saved prompts<br>
+                            • ${this.srefLibrary.length} style references<br>
+                            • ${this.uploadedDocuments.length} uploaded documents<br>
+                            • ${this.textNotes.length} text notes
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmExportAll">
+                            <i class="bi bi-download"></i> Export All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Event listener for export button
+        modal.querySelector('#confirmExportAll').addEventListener('click', () => {
+            const format = modal.querySelector('#exportFormat').value;
+            const includeMetadata = modal.querySelector('#includeMetadata').checked;
+            const filenamePrefix = modal.querySelector('#filenamePrefix').value;
+            
+            this.exportAllData(format, includeMetadata, filenamePrefix);
+            bsModal.hide();
+            modal.remove();
+        });
+        
+        // Remove modal when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    showBatchOperationsModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-gear"></i> Batch Operations</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="bi bi-download"></i> Export Operations</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('prompts')">
+                                            <i class="bi bi-collection"></i> Export Prompt Library
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('srefs')">
+                                            <i class="bi bi-palette2"></i> Export Style References
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('documents')">
+                                            <i class="bi bi-file-earmark-text"></i> Export Documents
+                                        </button>
+                                        <button class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('notes')">
+                                            <i class="bi bi-sticky"></i> Export Text Notes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="bi bi-trash"></i> Cleanup Operations</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('prompts')">
+                                            <i class="bi bi-collection"></i> Clear Prompt Library
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('srefs')">
+                                            <i class="bi bi-palette2"></i> Clear Style References
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('documents')">
+                                            <i class="bi bi-file-earmark-text"></i> Clear Documents
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('notes')">
+                                            <i class="bi bi-sticky"></i> Clear Text Notes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Warning:</strong> Delete operations cannot be undone. Make sure to export your data first if you want to keep a backup.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Remove modal when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    exportAllData(format, includeMetadata, filenamePrefix) {
+        const timestamp = new Date().toISOString().split('T')[0];
+        let content = '';
+        let filename = '';
+        let mimeType = '';
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify({
+                    exported_at: new Date().toISOString(),
+                    version: '2.0',
+                    prompts: this.promptLibrary,
+                    styleReferences: this.srefLibrary,
+                    documents: this.uploadedDocuments,
+                    textNotes: this.textNotes,
+                    manualInformation: this.manualInformation
+                }, null, 2);
+                filename = `${filenamePrefix}_${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+                
+            case 'csv':
+                const csvHeaders = ['Type', 'ID', 'Name', 'Content', 'Created At', 'Metadata'];
+                const csvRows = [csvHeaders.join(',')];
+                
+                // Add prompts
+                this.promptLibrary.forEach(prompt => {
+                    csvRows.push([
+                        'Prompt', prompt.id, `"${prompt.name}"`, `"${prompt.startingPrompt}"`, 
+                        prompt.createdAt, `"${JSON.stringify(prompt).replace(/"/g, '""')}"`
+                    ].join(','));
+                });
+                
+                // Add style references
+                this.srefLibrary.forEach(sref => {
+                    csvRows.push([
+                        'Style Reference', sref.id, `"${sref.name}"`, `"${sref.url}"`, 
+                        sref.createdAt, `"${JSON.stringify(sref).replace(/"/g, '""')}"`
+                    ].join(','));
+                });
+                
+                content = csvRows.join('\n');
+                filename = `${filenamePrefix}_${timestamp}.csv`;
+                mimeType = 'text/csv';
+                break;
+                
+            case 'markdown':
+                content = `# AI Prompt Generator Library Export
+
+**Exported:** ${new Date().toLocaleString()}  
+**Version:** 2.0
+
+## Summary
+- **Prompts:** ${this.promptLibrary.length}
+- **Style References:** ${this.srefLibrary.length}
+- **Documents:** ${this.uploadedDocuments.length}
+- **Text Notes:** ${this.textNotes.length}
+
+## Prompts
+${this.promptLibrary.map(p => `### ${p.name}\n\`\`\`\n${p.startingPrompt}\n\`\`\`\n`).join('\n')}
+
+## Style References
+${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description:** ${s.explanation}\n`).join('\n')}
+
+---
+*Generated by AI Prompt Generator v2.0*`;
+                filename = `${filenamePrefix}_${timestamp}.md`;
+                mimeType = 'text/markdown';
+                break;
+                
+            default: // txt
+                content = `AI Prompt Generator Library Export\n`;
+                content += `Exported: ${new Date().toLocaleString()}\n\n`;
+                content += `PROMPTS (${this.promptLibrary.length}):\n`;
+                this.promptLibrary.forEach(p => {
+                    content += `- ${p.name}: ${p.startingPrompt}\n`;
+                });
+                filename = `${filenamePrefix}_${timestamp}.txt`;
+                mimeType = 'text/plain';
+        }
+
+        this.downloadFile(content, filename, mimeType);
+        this.showToast(`Library exported as ${filename}`, 'success');
+    }
+
+    exportSelectedLibrary(type) {
+        const timestamp = new Date().toISOString().split('T')[0];
+        let content = '';
+        let filename = '';
+        let mimeType = '';
+
+        switch (type) {
+            case 'prompts':
+                content = JSON.stringify(this.promptLibrary, null, 2);
+                filename = `prompts_${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+            case 'srefs':
+                content = JSON.stringify(this.srefLibrary, null, 2);
+                filename = `style_references_${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+            case 'documents':
+                content = JSON.stringify(this.uploadedDocuments, null, 2);
+                filename = `documents_${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+            case 'notes':
+                content = JSON.stringify(this.textNotes, null, 2);
+                filename = `text_notes_${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+        }
+
+        this.downloadFile(content, filename, mimeType);
+        this.showToast(`${type} exported successfully`, 'success');
+    }
+
+    bulkDelete(type) {
+        if (!confirm(`Are you sure you want to delete all ${type}? This action cannot be undone.`)) {
+            return;
+        }
+
+        switch (type) {
+            case 'prompts':
+                this.promptLibrary = [];
+                this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+                break;
+            case 'srefs':
+                this.srefLibrary = [];
+                this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                break;
+            case 'documents':
+                this.uploadedDocuments = [];
+                this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+                break;
+            case 'notes':
+                this.textNotes = [];
+                this.saveToLocalStorage('textNotes', this.textNotes);
+                break;
+        }
+
+        this.showToast(`All ${type} deleted successfully`, 'warning');
     }
 }
 

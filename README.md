@@ -1,6 +1,6 @@
-# AI Prompt Generator v1.1.0
+# AI Prompt Generator v2.0.0
 
-A comprehensive web application for generating, managing, and optimizing prompts for various AI models. Features style references (sref), 20+ AI models, advanced parameters, and professional prompt generation capabilities.
+A comprehensive web application for generating, managing, and optimizing prompts for various AI models. Features style references (sref), 20+ AI models, local LLM integration, advanced search, mobile responsiveness, and professional prompt generation capabilities.
 
 ## Features
 
@@ -23,9 +23,10 @@ A comprehensive web application for generating, managing, and optimizing prompts
 
 ### 📚 Prompt Library
 - Save frequently used prompts for quick access
-- Search and manage your prompt collection
+- **Advanced Search**: Real-time search with highlighting across prompts, models, and content
 - Load saved prompts with one click
-- Export/import functionality
+- **Import/Export functionality**: Full backup and restore capabilities
+- **Enhanced filtering**: Search by model, type, or content
 
 ### 🎨 Style Reference (sref) System
 - **Style Reference Library**: Save and manage image URLs with descriptions
@@ -38,7 +39,8 @@ A comprehensive web application for generating, managing, and optimizing prompts
 ### 📁 Document & Web Content Management
 - Upload documentation from AI model providers
 - **Fetch content directly from web URLs** - Add AI documentation, tutorials, and guides from websites
-- Automatic enhancement extraction from uploaded documents and web content
+- **AI-Powered Content Analysis**: Local LLM integration for intelligent enhancement extraction
+- **Enhanced keyword extraction**: Advanced pattern recognition for technical parameters
 - Support for various file formats (.txt, .json, .md, .pdf, .doc, .docx)
 - Drag-and-drop file upload interface
 - Multiple fallback methods for web content fetching (direct fetch, CORS proxies, manual input)
@@ -49,10 +51,20 @@ A comprehensive web application for generating, managing, and optimizing prompts
 - Automatic saving of prompts, documents, and manual information
 
 ### 🎨 Modern UI
-- Responsive Bootstrap 5 design
+- **Responsive Bootstrap 5 design** with enhanced mobile support
+- **Dark mode support** with automatic system preference detection
 - Intuitive drag-and-drop interfaces
 - Real-time feedback and notifications
-- Mobile-friendly responsive layout
+- **Advanced search with highlighting**
+- **Local LLM integration settings** with connection testing
+
+### 🤖 Local LLM Integration (NEW in v2.0)
+- **AI-Powered Analysis**: Use local language models to analyze documentation and extract intelligent insights
+- **Supported Services**: Ollama, LM Studio, LocalAI, and any OpenAI-compatible API
+- **Enhanced Content Understanding**: Goes beyond keyword matching to understand context and meaning
+- **Privacy-First**: All analysis happens locally on your computer
+- **Intelligent Enhancement Extraction**: Automatically identifies best practices, parameters, and techniques
+- **Connection Testing**: Built-in tools to verify LLM connectivity and available models
 
 ## How to Use
 
@@ -68,7 +80,12 @@ A comprehensive web application for generating, managing, and optimizing prompts
    - Upload documentation files from AI providers
    - **Add web URLs** from AI model documentation, tutorials, or prompt guides
    - **Save style references** with URLs, weights, and descriptions
-6. **Copy Output**: Use the generated prompt in your AI tool of choice
+6. **Enable Local LLM Analysis** (Optional):
+   - Click the "LLM" button in the Prompt Library
+   - Configure your local LLM service (Ollama, LM Studio, etc.)
+   - Test the connection and enable AI-powered analysis
+7. **Search and Filter**: Use the search boxes to quickly find saved prompts and style references
+8. **Copy Output**: Use the generated prompt in your AI tool of choice
 
 ## File Structure
 
@@ -130,15 +147,38 @@ The application uses browser localStorage to persist:
   3. Prompt you to manually copy content if automatic methods fail
 - **UI issues**: Try refreshing the page or clearing browser cache
 
+## Local LLM Setup Guide
+
+### Ollama (Recommended)
+1. Install Ollama from [ollama.ai](https://ollama.ai)
+2. Pull a model: `ollama pull llama3.1:8b`
+3. Start Ollama service
+4. In the app, click "LLM" button and configure:
+   - API URL: `http://localhost:11434/api`
+   - Model: `llama3.1:8b`
+5. Test connection and enable analysis
+
+### LM Studio
+1. Install LM Studio from [lmstudio.ai](https://lmstudio.ai)
+2. Download a model (e.g., Llama 3.1 8B)
+3. Start the local server
+4. Configure in the app:
+   - API URL: `http://localhost:1234/v1`
+   - Model: Your downloaded model name
+
+### Other Services
+- **LocalAI**: Follow LocalAI documentation for setup
+- **Custom APIs**: Any OpenAI-compatible endpoint works
+
 ## Future Enhancements
 
-- Export/import prompt libraries
-- Advanced prompt templates
-- Integration with AI model APIs
+- Prompt templates and presets
+- Integration with AI model APIs for direct testing
 - Collaborative prompt sharing
-- Advanced document parsing for better enhancement extraction
+- Advanced analytics and usage tracking
+- Plugin system for custom enhancements
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: September 2025
+**Version**: 2.0.0  
+**Last Updated**: January 2025

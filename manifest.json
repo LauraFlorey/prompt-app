@@ -1,7 +1,7 @@
 {
   "name": "AI Prompt Generator",
   "short_name": "PromptGen",
-  "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, mood/color controls, and advanced parameters",
+  "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, mood/color controls, local LLM integration, and advanced parameters",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#667eea",

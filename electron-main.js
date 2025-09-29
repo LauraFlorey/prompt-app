@@ -76,6 +76,46 @@ function createMenu() {
                 },
                 { type: 'separator' },
                 {
+                    label: 'Import Prompt Library',
+                    click: async () => {
+                        const result = await dialog.showOpenDialog(mainWindow, {
+                            title: 'Import Prompt Library',
+                            filters: [
+                                { name: 'JSON Files', extensions: ['json'] },
+                                { name: 'All Files', extensions: ['*'] }
+                            ]
+                        });
+
+                        if (!result.canceled && result.filePaths.length > 0) {
+                            const fs = require('fs');
+                            try {
+                                const data = fs.readFileSync(result.filePaths[0], 'utf8');
+                                const importedData = JSON.parse(data);
+                                
+                                mainWindow.webContents.executeJavaScript(`
+                                    if(window.app && importedData) {
+                                        if (Array.isArray(importedData)) {
+                                            // Direct array import
+                                            window.app.promptLibrary = importedData;
+                                        } else if (importedData.promptLibrary) {
+                                            // Full backup import
+                                            window.app.promptLibrary = importedData.promptLibrary;
+                                            if (importedData.srefLibrary) window.app.srefLibrary = importedData.srefLibrary;
+                                            if (importedData.uploadedDocuments) window.app.uploadedDocuments = importedData.uploadedDocuments;
+                                            if (importedData.manualInformation) window.app.manualInformation = importedData.manualInformation;
+                                        }
+                                        window.app.saveToLocalStorage('promptLibrary', window.app.promptLibrary);
+                                        window.app.loadPromptLibrary();
+                                        alert('Import successful!');
+                                    }
+                                `);
+                            } catch (error) {
+                                dialog.showErrorBox('Import Error', 'Failed to import file: ' + error.message);
+                            }
+                        }
+                    }
+                },
+                {
                     label: 'Export Prompt Library',
                     click: async () => {
                         const result = await dialog.showSaveDialog(mainWindow, {
@@ -220,7 +260,7 @@ function createMenu() {
                             type: 'info',
                             title: 'About AI Prompt Generator',
                             message: 'AI Prompt Generator',
-                            detail: 'Version 1.0.0\n\nA comprehensive tool for generating, managing, and optimizing prompts for various AI models.\n\nBuilt with Electron and Bootstrap 5.',
+                            detail: 'Version 2.0.0\n\nA comprehensive tool for generating, managing, and optimizing prompts for various AI models.\n\nNew Features:\n• Local LLM integration for enhanced analysis\n• Advanced search and filtering\n• Improved mobile responsiveness\n• Dark mode support\n• Enhanced content analysis\n\nBuilt with Electron and Bootstrap 5.',
                             buttons: ['OK']
                         });
                     }

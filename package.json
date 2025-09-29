@@ -1,6 +1,6 @@
 {
   "name": "ai-prompt-generator",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, and advanced parameters",
   "main": "electron-main.js",
   "homepage": "./",
