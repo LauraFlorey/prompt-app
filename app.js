@@ -15,6 +15,19 @@ class PromptGenerator {
             timeout: 10000
         };
         
+        // Enhanced saving settings
+        this.saveSettings = JSON.parse(localStorage.getItem('saveSettings')) || {
+            autoSave: true,
+            autoSaveInterval: 30000, // 30 seconds
+            backupOnClose: true,
+            showSaveStatus: true,
+            lastSaveTime: null
+        };
+        
+        // Track unsaved changes
+        this.hasUnsavedChanges = false;
+        this.autoSaveTimer = null;
+        
         // Initialize tooltip explanations
         this.tooltipExplanations = this.initTooltipExplanations();
         
@@ -26,11 +39,14 @@ class PromptGenerator {
 
     init() {
         this.setupEventListeners();
+        this.setupLifecycleEvents();
+        this.setupAutoSave();
         this.loadPromptLibrary();
         this.loadManualInformation();
         this.loadUploadedFiles();
         this.loadSrefLibrary();
         this.initTooltips();
+        this.updateSaveStatus();
     }
 
     setupEventListeners() {
@@ -38,9 +54,9 @@ class PromptGenerator {
         const promptForm = document.getElementById('promptForm');
         if (promptForm) {
             promptForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.generatePrompt();
-        });
+                e.preventDefault();
+                this.generatePrompt();
+            });
         }
 
         // Clear form
@@ -143,6 +159,22 @@ class PromptGenerator {
             });
         }, 100);
 
+        // Real-time validation for required fields
+        const requiredFields = ['modelSelect', 'promptType', 'startingPrompt'];
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', () => {
+                    this.validateField(fieldId);
+                });
+                field.addEventListener('input', () => {
+                    if (fieldId === 'startingPrompt') {
+                        this.validateField(fieldId);
+                    }
+                });
+            }
+        });
+
         // Real-time validation and form enhancement
         setTimeout(() => {
             this.setupRealTimeValidation();
@@ -180,6 +212,14 @@ class PromptGenerator {
                     });
                 }
             });
+
+            // Save Settings
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', () => {
+                    this.showSaveSettings();
+                });
+            }
 
             // LLM Settings
             const llmSettingsBtn = document.getElementById('llmSettingsBtn');
@@ -244,12 +284,19 @@ class PromptGenerator {
         const errors = [];
         const warnings = [];
         
+        // Clear previous validation states
+        this.clearValidationStates();
+        
         // Required field validation
         const requiredFields = ['model', 'type', 'startingPrompt'];
         const missingFields = requiredFields.filter(field => !formData[field]);
         
         if (missingFields.length > 0) {
             errors.push(`Missing required fields: ${missingFields.join(', ')}`);
+            // Highlight missing fields
+            missingFields.forEach(field => {
+                this.highlightField(field, false);
+            });
         }
         
         // Starting prompt validation
@@ -336,6 +383,57 @@ class PromptGenerator {
         return { error: null, warning: null };
     }
 
+    clearValidationStates() {
+        // Clear validation classes from all form fields
+        const fields = ['modelSelect', 'promptType', 'startingPrompt'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+    }
+
+    highlightField(fieldName, isValid) {
+        const fieldIdMap = {
+            'model': 'modelSelect',
+            'type': 'promptType',
+            'startingPrompt': 'startingPrompt'
+        };
+        
+        const fieldId = fieldIdMap[fieldName];
+        if (fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.remove('is-invalid', 'is-valid');
+                field.classList.add(isValid ? 'is-valid' : 'is-invalid');
+            }
+        }
+    }
+
+    validateField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        const value = field.value.trim();
+        let isValid = false;
+
+        switch (fieldId) {
+            case 'modelSelect':
+            case 'promptType':
+                isValid = value !== '';
+                break;
+            case 'startingPrompt':
+                isValid = value.length >= 3;
+                break;
+        }
+
+        field.classList.remove('is-invalid', 'is-valid');
+        if (value !== '') { // Only show validation if user has interacted with the field
+            field.classList.add(isValid ? 'is-valid' : 'is-invalid');
+        }
+    }
+
     showValidationResults(errors, warnings) {
         let message = '';
         
@@ -420,14 +518,14 @@ class PromptGenerator {
         
         if (modelSelect) {
             modelSelect.addEventListener('change', () => {
-                this.validateModelTypeCombination();
+                this.validateModelTypeCombinationRealTime();
                 this.updateFormBasedOnModel();
             });
         }
         
         if (promptType) {
             promptType.addEventListener('change', () => {
-                this.validateModelTypeCombination();
+                this.validateModelTypeCombinationRealTime();
                 this.updateFormBasedOnType();
             });
         }
@@ -491,7 +589,7 @@ class PromptGenerator {
         }
     }
 
-    validateModelTypeCombination() {
+    validateModelTypeCombinationRealTime() {
         const model = document.getElementById('modelSelect')?.value;
         const type = document.getElementById('promptType')?.value;
         
@@ -1222,11 +1320,11 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
         // Show success message
         const templateNames = {
             'image-generation': '🎨 Image Generation',
-            'content-writing': '✍️ Content Writing',
-            'ai-assistant': '🤖 AI Assistant',
-            'data-analysis': '📊 Data Analysis',
-            'marketing': '🎯 Marketing',
-            'creative-writing': '📚 Creative Writing'
+            'portrait-photography': '📸 Portrait Photography',
+            'character-design': '🎭 Character Design',
+            'product-photography': '📦 Product Photography',
+            'video-generation': '🎬 Video Generation',
+            'animation-style': '🎞️ Animation Style'
         };
 
         this.showToast(`${templateNames[templateType]} template applied!`, 'success');
@@ -1259,6 +1357,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
         this.promptLibrary.unshift(promptData);
         this.saveToLocalStorage('promptLibrary', this.promptLibrary);
         this.loadPromptLibrary();
+        this.markAsSaved();
         
         // Show success message
         this.showToast('Prompt saved to library successfully!', 'success');
@@ -1325,6 +1424,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             this.promptLibrary = this.promptLibrary.filter(p => p.id !== id);
             this.saveToLocalStorage('promptLibrary', this.promptLibrary);
             this.loadPromptLibrary();
+            this.markAsSaved();
             this.showToast('Prompt deleted successfully!', 'warning');
         }
     }
@@ -1334,6 +1434,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             this.promptLibrary = [];
             this.saveToLocalStorage('promptLibrary', this.promptLibrary);
             this.loadPromptLibrary();
+            this.markAsSaved();
             this.showToast('Prompt library cleared!', 'warning');
         }
     }
@@ -1815,6 +1916,154 @@ Format your response as JSON:
 
     saveToLocalStorage(key, data) {
         localStorage.setItem(key, JSON.stringify(data));
+        this.markAsChanged();
+    }
+
+    // Enhanced saving functionality
+    setupLifecycleEvents() {
+        // Handle app close/refresh
+        window.addEventListener('beforeunload', (e) => {
+            if (this.hasUnsavedChanges && this.saveSettings.backupOnClose) {
+                this.performBackupSave();
+            }
+        });
+
+        // Handle visibility change (tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && this.hasUnsavedChanges) {
+                this.autoSave();
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('unload', () => {
+            if (this.hasUnsavedChanges) {
+                this.performBackupSave();
+            }
+        });
+
+        // Handle pagehide (mobile browsers)
+        window.addEventListener('pagehide', () => {
+            if (this.hasUnsavedChanges) {
+                this.performBackupSave();
+            }
+        });
+    }
+
+    setupAutoSave() {
+        if (this.saveSettings.autoSave && this.saveSettings.autoSaveInterval > 0) {
+            this.startAutoSave();
+        }
+    }
+
+    startAutoSave() {
+        this.stopAutoSave(); // Clear any existing timer
+        this.autoSaveTimer = setInterval(() => {
+            if (this.hasUnsavedChanges) {
+                this.autoSave();
+            }
+        }, this.saveSettings.autoSaveInterval);
+    }
+
+    stopAutoSave() {
+        if (this.autoSaveTimer) {
+            clearInterval(this.autoSaveTimer);
+            this.autoSaveTimer = null;
+        }
+    }
+
+    markAsChanged() {
+        this.hasUnsavedChanges = true;
+        this.updateSaveStatus();
+    }
+
+    markAsSaved() {
+        this.hasUnsavedChanges = false;
+        this.saveSettings.lastSaveTime = new Date().toISOString();
+        localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings));
+        this.updateSaveStatus();
+    }
+
+    autoSave() {
+        try {
+            this.saveAllData();
+            this.showToast('Auto-saved successfully!', 'success');
+        } catch (error) {
+            console.error('Auto-save failed:', error);
+            this.showToast('Auto-save failed. Please save manually.', 'warning');
+        }
+    }
+
+    saveAllData() {
+        // Save all libraries and data
+        this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+        this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
+        this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+        this.saveToLocalStorage('textNotes', this.textNotes);
+        localStorage.setItem('manualInformation', this.manualInformation);
+        localStorage.setItem('llmSettings', JSON.stringify(this.llmSettings));
+        
+        this.markAsSaved();
+    }
+
+    performBackupSave() {
+        try {
+            // Create a backup with timestamp
+            const backupData = {
+                promptLibrary: this.promptLibrary,
+                uploadedDocuments: this.uploadedDocuments,
+                srefLibrary: this.srefLibrary,
+                textNotes: this.textNotes,
+                manualInformation: this.manualInformation,
+                llmSettings: this.llmSettings,
+                saveSettings: this.saveSettings,
+                backupTime: new Date().toISOString(),
+                version: '2.0.0'
+            };
+
+            // Store backup in localStorage with timestamp
+            const backupKey = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+            localStorage.setItem(backupKey, JSON.stringify(backupData));
+
+            // Keep only last 5 backups
+            this.cleanupOldBackups();
+            
+            this.markAsSaved();
+            console.log('Backup save completed');
+        } catch (error) {
+            console.error('Backup save failed:', error);
+        }
+    }
+
+    cleanupOldBackups() {
+        const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('backup_'));
+        if (backupKeys.length > 5) {
+            // Sort by timestamp and remove oldest
+            backupKeys.sort();
+            const toRemove = backupKeys.slice(0, backupKeys.length - 5);
+            toRemove.forEach(key => localStorage.removeItem(key));
+        }
+    }
+
+    updateSaveStatus() {
+        const saveStatusElement = document.getElementById('saveStatus');
+        if (!saveStatusElement) return;
+
+        if (this.hasUnsavedChanges) {
+            saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-warning"></i> Unsaved changes';
+            saveStatusElement.className = 'badge bg-warning text-dark';
+        } else {
+            const lastSave = this.saveSettings.lastSaveTime;
+            if (lastSave) {
+                const saveTime = new Date(lastSave);
+                const timeStr = saveTime.toLocaleTimeString();
+                saveStatusElement.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> Saved ${timeStr}`;
+                saveStatusElement.className = 'badge bg-success';
+            } else {
+                saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-muted"></i> No changes';
+                saveStatusElement.className = 'badge bg-secondary';
+            }
+        }
     }
 
     showToast(message, type = 'info') {
@@ -2170,70 +2419,70 @@ Format your response as JSON:
                 composition: 'rule-of-thirds',
                 quality: 'high-quality'
             },
-            'content-writing': {
-                model: 'gpt4',
-                type: 'text-to-text',
-                startingPrompt: 'Write a compelling blog post about',
-                cameraAngle: '',
-                perspective: '',
-                mood: 'professional',
-                colorScheme: '',
-                lighting: '',
-                artStyle: '',
-                composition: '',
+            'portrait-photography': {
+                model: 'midjourney',
+                type: 'text-to-image',
+                startingPrompt: 'a professional portrait of a person',
+                cameraAngle: 'eye-level',
+                perspective: 'close-up',
+                mood: 'confident',
+                colorScheme: 'warm',
+                lighting: 'studio',
+                artStyle: 'photorealistic',
+                composition: 'centered',
                 quality: 'high-quality'
             },
-            'ai-assistant': {
-                model: 'claude',
-                type: 'text-to-text',
-                startingPrompt: 'Act as a helpful AI assistant and',
-                cameraAngle: '',
-                perspective: '',
-                mood: 'helpful',
-                colorScheme: '',
-                lighting: '',
-                artStyle: '',
-                composition: '',
-                quality: 'detailed'
-            },
-            'data-analysis': {
-                model: 'gpt4',
-                type: 'text-to-text',
-                startingPrompt: 'Analyze the following data and provide insights:',
-                cameraAngle: '',
-                perspective: '',
-                mood: 'analytical',
-                colorScheme: '',
-                lighting: '',
-                artStyle: '',
-                composition: '',
-                quality: 'comprehensive'
-            },
-            'marketing': {
-                model: 'gpt4',
-                type: 'text-to-text',
-                startingPrompt: 'Create compelling marketing copy for',
-                cameraAngle: '',
-                perspective: '',
-                mood: 'persuasive',
-                colorScheme: '',
-                lighting: '',
-                artStyle: '',
-                composition: '',
+            'character-design': {
+                model: 'midjourney',
+                type: 'text-to-image',
+                startingPrompt: 'a detailed character design',
+                cameraAngle: 'full-body',
+                perspective: 'medium',
+                mood: 'heroic',
+                colorScheme: 'vibrant',
+                lighting: 'dramatic',
+                artStyle: 'concept-art',
+                composition: 'rule-of-thirds',
                 quality: 'high-quality'
             },
-            'creative-writing': {
-                model: 'claude',
-                type: 'text-to-text',
-                startingPrompt: 'Write a creative story about',
-                cameraAngle: '',
-                perspective: '',
-                mood: 'creative',
-                colorScheme: '',
-                lighting: '',
-                artStyle: '',
-                composition: '',
-                quality: 'detailed'
+            'product-photography': {
+                model: 'midjourney',
+                type: 'text-to-image',
+                startingPrompt: 'a professional product photo',
+                cameraAngle: 'eye-level',
+                perspective: 'close-up',
+                mood: 'clean',
+                colorScheme: 'minimal',
+                lighting: 'soft',
+                artStyle: 'photorealistic',
+                composition: 'centered',
+                quality: 'high-quality'
+            },
+            'video-generation': {
+                model: 'runway',
+                type: 'text-to-video',
+                startingPrompt: 'a cinematic scene',
+                cameraAngle: 'wide',
+                perspective: 'medium',
+                mood: 'cinematic',
+                colorScheme: 'film-like',
+                lighting: 'golden-hour',
+                artStyle: 'cinematic',
+                composition: 'rule-of-thirds',
+                quality: 'high-quality'
+            },
+            'animation-style': {
+                model: 'midjourney',
+                type: 'text-to-image',
+                startingPrompt: 'an animated character in a scene',
+                cameraAngle: 'eye-level',
+                perspective: 'medium',
+                mood: 'playful',
+                colorScheme: 'bright',
+                lighting: 'soft',
+                artStyle: 'animated',
+                composition: 'dynamic',
+                quality: 'high-quality'
             }
         };
     }
@@ -2415,6 +2664,249 @@ Format your response as JSON:
         if (!query.trim()) return text;
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    // Save Settings
+    showSaveSettings() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-gear"></i> Save Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="autoSaveEnabled" ${this.saveSettings.autoSave ? 'checked' : ''}>
+                                <label class="form-check-label" for="autoSaveEnabled">
+                                    Enable Auto-Save
+                                </label>
+                            </div>
+                            <small class="text-muted">Automatically save changes periodically</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="autoSaveInterval" class="form-label">Auto-Save Interval (seconds)</label>
+                            <input type="number" class="form-control" id="autoSaveInterval" value="${this.saveSettings.autoSaveInterval / 1000}" min="5" max="300">
+                            <small class="text-muted">How often to auto-save (5-300 seconds)</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="backupOnCloseEnabled" ${this.saveSettings.backupOnClose ? 'checked' : ''}>
+                                <label class="form-check-label" for="backupOnCloseEnabled">
+                                    Backup on App Close
+                                </label>
+                            </div>
+                            <small class="text-muted">Create backup when closing the app</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showSaveStatusEnabled" ${this.saveSettings.showSaveStatus ? 'checked' : ''}>
+                                <label class="form-check-label" for="showSaveStatusEnabled">
+                                    Show Save Status
+                                </label>
+                            </div>
+                            <small class="text-muted">Display save status indicator in header</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm me-2" id="manualSaveBtn">
+                                <i class="bi bi-save"></i> Save Now
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" id="viewBackupsBtn">
+                                <i class="bi bi-archive"></i> View Backups
+                            </button>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Save Features:</strong><br>
+                                • Auto-save every 30 seconds (configurable)<br>
+                                • Backup on app close/refresh<br>
+                                • Automatic backup cleanup (keeps last 5)<br>
+                                • Visual save status indicator<br>
+                                • Works in both web and desktop versions
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveSaveSettings">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Event listeners
+        document.getElementById('manualSaveBtn').addEventListener('click', () => {
+            this.autoSave();
+        });
+        
+        document.getElementById('viewBackupsBtn').addEventListener('click', () => {
+            this.showBackupManager();
+            bsModal.hide();
+        });
+        
+        document.getElementById('saveSaveSettings').addEventListener('click', () => {
+            this.saveSaveSettings(modal);
+            bsModal.hide();
+        });
+        
+        // Clean up modal when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    saveSaveSettings(modal) {
+        this.saveSettings = {
+            autoSave: modal.querySelector('#autoSaveEnabled').checked,
+            autoSaveInterval: parseInt(modal.querySelector('#autoSaveInterval').value) * 1000,
+            backupOnClose: modal.querySelector('#backupOnCloseEnabled').checked,
+            showSaveStatus: modal.querySelector('#showSaveStatusEnabled').checked,
+            lastSaveTime: this.saveSettings.lastSaveTime
+        };
+        
+        localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings));
+        
+        // Restart auto-save with new settings
+        if (this.saveSettings.autoSave) {
+            this.startAutoSave();
+        } else {
+            this.stopAutoSave();
+        }
+        
+        this.showToast('Save settings updated!', 'success');
+    }
+
+    showBackupManager() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        
+        const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('backup_'));
+        const backupList = backupKeys.map(key => {
+            const backup = JSON.parse(localStorage.getItem(key));
+            return {
+                key,
+                time: backup.backupTime,
+                size: JSON.stringify(backup).length
+            };
+        }).sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-archive"></i> Backup Manager</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${backupList.length === 0 ? 
+                            '<p class="text-muted text-center">No backups found</p>' :
+                            `<div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date/Time</th>
+                                            <th>Size</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${backupList.map(backup => `
+                                            <tr>
+                                                <td>${new Date(backup.time).toLocaleString()}</td>
+                                                <td>${Math.round(backup.size / 1024)} KB</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="window.app.restoreBackup('${backup.key}')">
+                                                        <i class="bi bi-arrow-clockwise"></i> Restore
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="window.app.deleteBackup('${backup.key}')">
+                                                        <i class="bi bi-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>`
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger" onclick="window.app.clearAllBackups()">
+                            <i class="bi bi-trash"></i> Clear All Backups
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Clean up modal when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    restoreBackup(backupKey) {
+        if (!confirm('Are you sure you want to restore this backup? This will replace all current data.')) {
+            return;
+        }
+        
+        try {
+            const backup = JSON.parse(localStorage.getItem(backupKey));
+            
+            this.promptLibrary = backup.promptLibrary || [];
+            this.uploadedDocuments = backup.uploadedDocuments || [];
+            this.srefLibrary = backup.srefLibrary || [];
+            this.textNotes = backup.textNotes || [];
+            this.manualInformation = backup.manualInformation || '';
+            this.llmSettings = backup.llmSettings || this.llmSettings;
+            
+            this.saveAllData();
+            this.loadPromptLibrary();
+            this.loadUploadedFiles();
+            this.loadSrefLibrary();
+            
+            this.showToast('Backup restored successfully!', 'success');
+        } catch (error) {
+            console.error('Restore failed:', error);
+            this.showToast('Failed to restore backup', 'danger');
+        }
+    }
+
+    deleteBackup(backupKey) {
+        if (confirm('Are you sure you want to delete this backup?')) {
+            localStorage.removeItem(backupKey);
+            this.showToast('Backup deleted', 'warning');
+            // Refresh the backup manager
+            setTimeout(() => {
+                const modal = document.querySelector('.modal.show');
+                if (modal) modal.remove();
+                this.showBackupManager();
+            }, 500);
+        }
+    }
+
+    clearAllBackups() {
+        if (confirm('Are you sure you want to delete all backups?')) {
+            const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('backup_'));
+            backupKeys.forEach(key => localStorage.removeItem(key));
+            this.showToast('All backups cleared', 'warning');
+        }
     }
 
     // LLM Settings
