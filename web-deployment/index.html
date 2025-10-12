@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Generator</title>
+    <meta name="description" content="A comprehensive AI prompt generation tool for image, video, and text models">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PromptGen">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        .header-section {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .form-section {
+            padding: 2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        .output-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #212529;
+            font-weight: 500;
+        }
+        
+        .output-section p {
+            color: #212529 !important;
+            margin-bottom: 0;
+        }
+        
+        .output-section pre {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            color: #212529;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .output-section code {
+            color: #212529;
+            background: transparent;
+        }
+        .library-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .library-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        .upload-zone {
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-zone:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #4facfe;
+        }
+        .upload-zone.dragover {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #00f2fe;
+        }
+        
+        /* Custom tooltip styles */
+        .custom-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 1060;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .custom-tooltip.show {
+            opacity: 1;
+        }
+        
+        .custom-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid rgba(0, 0, 0, 0.9);
+        }
+        
+        /* Hover effect for dropdown options */
+        .form-select option:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Search highlighting */
+        mark {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Field feedback styling */
+        .field-feedback {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .field-feedback i {
+            font-size: 0.75rem;
+        }
+
+        /* Form validation states */
+        .form-control.is-valid,
+        .form-select.is-valid {
+            border-color: #198754;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 1.87 1.87 2.8-2.8.94.94L5.17 9.54z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #dc3545;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4m0-2.4-2.4 2.4'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        /* Progress bar styling */
+        .progress {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Prompt suggestions dropdown */
+        .prompt-suggestions {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .prompt-suggestions .dropdown-item {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: #212529;
+            transition: background-color 0.15s ease;
+        }
+
+        .prompt-suggestions .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Mobile responsiveness improvements */
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header-section {
+                padding: 1.5rem;
+            }
+            
+            .form-section {
+                padding: 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .btn-group-sm .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .library-item {
+                padding: 10px;
+            }
+            
+            .upload-zone {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .col-lg-8, .col-lg-4 {
+                margin-bottom: 1rem;
+            }
+            
+            .d-grid.gap-2.d-md-flex {
+                flex-direction: column;
+            }
+            
+            .btn-group-sm {
+                flex-direction: column;
+            }
+            
+            .btn-group-sm .btn {
+                margin-bottom: 2px;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .main-container {
+                background: rgba(30, 30, 30, 0.95);
+                color: #e9ecef;
+            }
+            
+            .card {
+                background-color: rgba(40, 40, 40, 0.8);
+                border-color: #495057;
+                color: #e9ecef;
+            }
+            
+            .card-header {
+                background-color: rgba(50, 50, 50, 0.8) !important;
+                border-bottom-color: #495057 !important;
+                color: #ffffff !important;
+            }
+            
+            .form-control, .form-select {
+                background-color: rgba(50, 50, 50, 0.8);
+                border-color: #6c757d;
+                color: #e9ecef;
+            }
+            
+            .form-control:focus, .form-select:focus {
+                background-color: rgba(50, 50, 50, 0.9);
+                border-color: #667eea;
+                color: #e9ecef;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+            
+            .form-control::placeholder {
+                color: #adb5bd;
+            }
+            
+            .form-label {
+                color: #e9ecef;
+            }
+            
+            .library-item {
+                background: rgba(40, 40, 40, 0.6);
+                border-color: #495057;
+                color: #e9ecef;
+            }
+            
+            .library-item h6 {
+                color: #ffffff;
+            }
+            
+            .library-item .text-muted {
+                color: #adb5bd !important;
+            }
+            
+            .upload-zone {
+                background: rgba(102, 126, 234, 0.1);
+                border-color: #6c757d;
+                color: #e9ecef;
+            }
+            
+            .upload-zone .text-muted {
+                color: #adb5bd !important;
+            }
+            
+            .text-muted {
+                color: #adb5bd !important;
+            }
+            
+            .text-success {
+                color: #75b798 !important;
+            }
+            
+            .text-warning {
+                color: #ffc107 !important;
+            }
+            
+            .text-danger {
+                color: #dc3545 !important;
+            }
+            
+            .text-info {
+                color: #17a2b8 !important;
+            }
+            
+            .btn-outline-primary {
+                color: #667eea;
+                border-color: #667eea;
+            }
+            
+            .btn-outline-primary:hover {
+                background-color: #667eea;
+                color: #ffffff;
+            }
+            
+            .btn-outline-secondary {
+                color: #6c757d;
+                border-color: #6c757d;
+            }
+            
+            .btn-outline-secondary:hover {
+                background-color: #6c757d;
+                color: #ffffff;
+            }
+            
+            .btn-outline-danger {
+                color: #dc3545;
+                border-color: #dc3545;
+            }
+            
+            .btn-outline-danger:hover {
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            
+            .btn-outline-info {
+                color: #17a2b8;
+                border-color: #17a2b8;
+            }
+            
+            .btn-outline-info:hover {
+                background-color: #17a2b8;
+                color: #ffffff;
+            }
+            
+            .btn-outline-warning {
+                color: #ffc107;
+                border-color: #ffc107;
+            }
+            
+            .btn-outline-warning:hover {
+                background-color: #ffc107;
+                color: #212529;
+            }
+            
+            .btn-outline-light {
+                color: #f8f9fa;
+                border-color: #f8f9fa;
+            }
+            
+            .btn-outline-light:hover {
+                background-color: #f8f9fa;
+                color: #212529;
+            }
+            
+            .alert {
+                background-color: rgba(50, 50, 50, 0.8);
+                border-color: #495057;
+                color: #e9ecef;
+            }
+            
+            .alert-info {
+                background-color: rgba(23, 162, 184, 0.2);
+                border-color: #17a2b8;
+                color: #b8ecf0;
+            }
+            
+            .alert-success {
+                background-color: rgba(40, 167, 69, 0.2);
+                border-color: #28a745;
+                color: #b8e6c1;
+            }
+            
+            .alert-warning {
+                background-color: rgba(255, 193, 7, 0.2);
+                border-color: #ffc107;
+                color: #fff3cd;
+            }
+            
+            .alert-danger {
+                background-color: rgba(220, 53, 69, 0.2);
+                border-color: #dc3545;
+                color: #f5c6cb;
+            }
+            
+            /* Search highlighting in dark mode */
+            mark {
+                background-color: #856404;
+                color: #fff3cd;
+                padding: 2px 4px;
+                border-radius: 3px;
+            }
+            
+            /* Links */
+            a {
+                color: #667eea;
+            }
+            
+            a:hover {
+                color: #5a6fd8;
+            }
+            
+            /* Modal in dark mode */
+            .modal-content {
+                background-color: rgba(40, 40, 40, 0.95);
+                border-color: #495057;
+                color: #e9ecef;
+            }
+            
+            .modal-header {
+                border-bottom-color: #495057;
+            }
+            
+            .modal-footer {
+                border-top-color: #495057;
+            }
+            
+            .btn-close {
+                filter: invert(1);
+            }
+            
+            /* Output section in dark mode */
+            .output-section {
+                background: rgba(40, 40, 40, 0.8);
+                color: #e9ecef;
+                border: 1px solid #495057;
+            }
+            
+            .output-section p {
+                color: #e9ecef !important;
+            }
+            
+            .output-section pre {
+                background: rgba(30, 30, 30, 0.9);
+                border: 1px solid #495057;
+                color: #e9ecef;
+            }
+            
+            .output-section code {
+                color: #e9ecef;
+                background: transparent;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <section class="header-section">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h1 class="display-4 fw-bold mb-0">
+                            <i class="bi bi-magic"></i> AI Prompt Generator
+                        </h1>
+                        <p class="lead mb-0">Generate, manage, and optimize prompts for AI models</p>
+                    </div>
+                    <div id="saveStatus" class="badge bg-secondary">
+                        <i class="bi bi-circle-fill text-muted"></i> No changes
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content -->
+            <section class="form-section">
+                <div class="row">
+                    <!-- Left Column - Prompt Generation Form -->
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0"><i class="bi bi-gear-fill"></i> Prompt Configuration</h4>
+                            </div>
+                            <div class="card-body">
+                                <form id="promptForm">
+                                    <!-- Form Progress Indicator -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="text-muted">Form Completion</small>
+                                            <small class="text-muted" id="progressText">0%</small>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" id="formProgress" 
+                                                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="modelSelect" class="form-label fw-semibold">
+                                                <i class="bi bi-cpu"></i> Model Used
+                                            </label>
+                                            <select class="form-select" id="modelSelect" required>
+                                                <option value="">Select Model</option>
+                                                <optgroup label="Image Generation">
+                                                    <option value="midjourney">Midjourney</option>
+                                                    <option value="dalle3">DALL-E 3</option>
+                                                    <option value="stable-diffusion">Stable Diffusion</option>
+                                                    <option value="flux1">Flux.1</option>
+                                                    <option value="ideogram2">Ideogram 2.0</option>
+                                                    <option value="leonardo-ai">Leonardo AI</option>
+                                                    <option value="nano-banana">Nano Banana</option>
+                                                    <option value="firefly">Adobe Firefly</option>
+                                                    <option value="imagen3">Google Imagen 3</option>
+                                                </optgroup>
+                                                <optgroup label="Video Generation">
+                                                    <option value="sora">OpenAI Sora</option>
+                                                    <option value="veo2">Google Veo 2</option>
+                                                    <option value="runway">Runway ML</option>
+                                                    <option value="pika">Pika Labs</option>
+                                                    <option value="luma-dream">Luma Dream Machine</option>
+                                                    <option value="kling-ai">Kling AI</option>
+                                                    <option value="hailuo">Hailuo (MiniMax)</option>
+                                                    <option value="haiper">Haiper</option>
+                                                </optgroup>
+                                                <optgroup label="Text & Multimodal">
+                                                    <option value="gpt4">GPT-4</option>
+                                                    <option value="claude">Claude</option>
+                                                    <option value="gemini">Google Gemini</option>
+                                                    <option value="llama">Meta Llama</option>
+                                                </optgroup>
+                                                <optgroup label="Other">
+                                                    <option value="custom">Custom Model</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="promptType" class="form-label fw-semibold">
+                                                <i class="bi bi-type"></i> Type of Prompt
+                                            </label>
+                                            <select class="form-select" id="promptType" required>
+                                                <option value="">Select Type</option>
+                                                <option value="text-to-image">Text to Image</option>
+                                                <option value="image-to-video">Image to Video</option>
+                                                <option value="text-to-video">Text to Video</option>
+                                                <option value="text-to-text">Text to Text</option>
+                                                <option value="image-to-image">Image to Image</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Prompt Templates -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-layout-text-window"></i> Quick Templates
+                                        </label>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-primary btn-sm w-100" data-template="image-generation">
+                                                    🎨 Image Generation
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-success btn-sm w-100" data-template="portrait-photography">
+                                                    📸 Portrait Photography
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-info btn-sm w-100" data-template="character-design">
+                                                    🎭 Character Design
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-warning btn-sm w-100" data-template="product-photography">
+                                                    📦 Product Photography
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-template="video-generation">
+                                                    🎬 Video Generation
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm w-100" data-template="animation-style">
+                                                    🎞️ Animation Style
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Click a template to auto-fill common settings</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="startingPrompt" class="form-label fw-semibold">
+                                            <i class="bi bi-chat-text"></i> Starting Prompt
+                                        </label>
+                                        <textarea class="form-control" id="startingPrompt" rows="4" 
+                                                placeholder="Enter your base prompt here..." required></textarea>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="cameraAngle" class="form-label fw-semibold">
+                                                <i class="bi bi-camera"></i> Camera Angle
+                                            </label>
+                                            <select class="form-select" id="cameraAngle">
+                                                <option value="">Select Camera Angle</option>
+                                                <option value="eye-level">Eye Level</option>
+                                                <option value="high-angle">High Angle</option>
+                                                <option value="low-angle">Low Angle</option>
+                                                <option value="bird-eye">Bird's Eye View</option>
+                                                <option value="worm-eye">Worm's Eye View</option>
+                                                <option value="dutch-angle">Dutch Angle</option>
+                                                <option value="over-shoulder">Over the Shoulder</option>
+                                                <option value="close-up">Close-up</option>
+                                                <option value="medium-shot">Medium Shot</option>
+                                                <option value="wide-shot">Wide Shot</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="perspective" class="form-label fw-semibold">
+                                                <i class="bi bi-aspect-ratio"></i> Perspective/Scale
+                                            </label>
+                                            <select class="form-select" id="perspective">
+                                                <option value="">Select Perspective</option>
+                                                <option value="macro">Macro</option>
+                                                <option value="close-up">Close-up</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="wide">Wide</option>
+                                                <option value="panoramic">Panoramic</option>
+                                                <option value="first-person">First Person</option>
+                                                <option value="third-person">Third Person</option>
+                                                <option value="isometric">Isometric</option>
+                                                <option value="orthographic">Orthographic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="mood" class="form-label fw-semibold">
+                                                <i class="bi bi-emoji-smile"></i> Mood/Emotion
+                                            </label>
+                                            <select class="form-select" id="mood">
+                                                <option value="">Select Mood</option>
+                                                <optgroup label="Positive">
+                                                    <option value="happy">Happy</option>
+                                                    <option value="joyful">Joyful</option>
+                                                    <option value="peaceful">Peaceful</option>
+                                                    <option value="serene">Serene</option>
+                                                    <option value="uplifting">Uplifting</option>
+                                                    <option value="energetic">Energetic</option>
+                                                    <option value="vibrant">Vibrant</option>
+                                                    <option value="optimistic">Optimistic</option>
+                                                </optgroup>
+                                                <optgroup label="Dramatic">
+                                                    <option value="dramatic">Dramatic</option>
+                                                    <option value="intense">Intense</option>
+                                                    <option value="powerful">Powerful</option>
+                                                    <option value="epic">Epic</option>
+                                                    <option value="heroic">Heroic</option>
+                                                    <option value="majestic">Majestic</option>
+                                                </optgroup>
+                                                <optgroup label="Mysterious">
+                                                    <option value="mysterious">Mysterious</option>
+                                                    <option value="dark">Dark</option>
+                                                    <option value="moody">Moody</option>
+                                                    <option value="eerie">Eerie</option>
+                                                    <option value="haunting">Haunting</option>
+                                                    <option value="suspenseful">Suspenseful</option>
+                                                </optgroup>
+                                                <optgroup label="Calm">
+                                                    <option value="calm">Calm</option>
+                                                    <option value="tranquil">Tranquil</option>
+                                                    <option value="meditative">Meditative</option>
+                                                    <option value="zen">Zen</option>
+                                                    <option value="minimalist">Minimalist</option>
+                                                </optgroup>
+                                                <optgroup label="Romantic">
+                                                    <option value="romantic">Romantic</option>
+                                                    <option value="dreamy">Dreamy</option>
+                                                    <option value="whimsical">Whimsical</option>
+                                                    <option value="ethereal">Ethereal</option>
+                                                    <option value="magical">Magical</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="colorScheme" class="form-label fw-semibold">
+                                                <i class="bi bi-palette"></i> Color Scheme
+                                            </label>
+                                            <select class="form-select" id="colorScheme">
+                                                <option value="">Select Color Scheme</option>
+                                                <optgroup label="Warm Colors">
+                                                    <option value="warm-tones">Warm Tones</option>
+                                                    <option value="red-orange">Red & Orange</option>
+                                                    <option value="golden-hour">Golden Hour</option>
+                                                    <option value="sunset-colors">Sunset Colors</option>
+                                                    <option value="earth-tones">Earth Tones</option>
+                                                </optgroup>
+                                                <optgroup label="Cool Colors">
+                                                    <option value="cool-tones">Cool Tones</option>
+                                                    <option value="blue-cyan">Blue & Cyan</option>
+                                                    <option value="ocean-blues">Ocean Blues</option>
+                                                    <option value="winter-colors">Winter Colors</option>
+                                                    <option value="mint-green">Mint Green</option>
+                                                </optgroup>
+                                                <optgroup label="Monochromatic">
+                                                    <option value="black-white">Black & White</option>
+                                                    <option value="sepia">Sepia</option>
+                                                    <option value="monochromatic">Monochromatic</option>
+                                                    <option value="grayscale">Grayscale</option>
+                                                </optgroup>
+                                                <optgroup label="Vibrant">
+                                                    <option value="neon-colors">Neon Colors</option>
+                                                    <option value="rainbow">Rainbow</option>
+                                                    <option value="saturated">Saturated Colors</option>
+                                                    <option value="pastel">Pastel Colors</option>
+                                                    <option value="cyberpunk">Cyberpunk Colors</option>
+                                                </optgroup>
+                                                <optgroup label="Natural">
+                                                    <option value="forest-green">Forest Green</option>
+                                                    <option value="desert-colors">Desert Colors</option>
+                                                    <option value="autumn-colors">Autumn Colors</option>
+                                                    <option value="spring-colors">Spring Colors</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="lighting" class="form-label fw-semibold">
+                                                <i class="bi bi-sun"></i> Lighting
+                                            </label>
+                                            <select class="form-select" id="lighting">
+                                                <option value="">Select Lighting</option>
+                                                <optgroup label="Natural Light">
+                                                    <option value="golden-hour">Golden Hour</option>
+                                                    <option value="blue-hour">Blue Hour</option>
+                                                    <option value="natural-light">Natural Light</option>
+                                                    <option value="sunlight">Bright Sunlight</option>
+                                                    <option value="overcast">Overcast</option>
+                                                    <option value="sunset">Sunset</option>
+                                                    <option value="sunrise">Sunrise</option>
+                                                    <option value="moonlight">Moonlight</option>
+                                                </optgroup>
+                                                <optgroup label="Studio Lighting">
+                                                    <option value="soft-lighting">Soft Lighting</option>
+                                                    <option value="hard-lighting">Hard Lighting</option>
+                                                    <option value="dramatic-lighting">Dramatic Lighting</option>
+                                                    <option value="rim-lighting">Rim Lighting</option>
+                                                    <option value="backlighting">Backlighting</option>
+                                                    <option value="key-lighting">Key Lighting</option>
+                                                </optgroup>
+                                                <optgroup label="Atmospheric">
+                                                    <option value="volumetric-lighting">Volumetric Lighting</option>
+                                                    <option value="god-rays">God Rays</option>
+                                                    <option value="atmospheric">Atmospheric Lighting</option>
+                                                    <option value="cinematic-lighting">Cinematic Lighting</option>
+                                                    <option value="moody-lighting">Moody Lighting</option>
+                                                </optgroup>
+                                                <optgroup label="Artificial">
+                                                    <option value="neon-lighting">Neon Lighting</option>
+                                                    <option value="led-lighting">LED Lighting</option>
+                                                    <option value="fluorescent">Fluorescent</option>
+                                                    <option value="candlelight">Candlelight</option>
+                                                    <option value="fire-light">Fire Light</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="artStyle" class="form-label fw-semibold">
+                                                <i class="bi bi-brush"></i> Art Style
+                                            </label>
+                                            <select class="form-select" id="artStyle">
+                                                <option value="">Select Art Style</option>
+                                                <optgroup label="Photography">
+                                                    <option value="photorealistic">Photorealistic</option>
+                                                    <option value="portrait-photography">Portrait Photography</option>
+                                                    <option value="landscape-photography">Landscape Photography</option>
+                                                    <option value="street-photography">Street Photography</option>
+                                                    <option value="macro-photography">Macro Photography</option>
+                                                </optgroup>
+                                                <optgroup label="Digital Art">
+                                                    <option value="digital-art">Digital Art</option>
+                                                    <option value="concept-art">Concept Art</option>
+                                                    <option value="matte-painting">Matte Painting</option>
+                                                    <option value="3d-render">3D Render</option>
+                                                    <option value="pixel-art">Pixel Art</option>
+                                                </optgroup>
+                                                <optgroup label="Traditional Art">
+                                                    <option value="oil-painting">Oil Painting</option>
+                                                    <option value="watercolor">Watercolor</option>
+                                                    <option value="acrylic-painting">Acrylic Painting</option>
+                                                    <option value="pencil-drawing">Pencil Drawing</option>
+                                                    <option value="charcoal">Charcoal</option>
+                                                    <option value="ink-drawing">Ink Drawing</option>
+                                                </optgroup>
+                                                <optgroup label="Artistic Movements">
+                                                    <option value="impressionist">Impressionist</option>
+                                                    <option value="surrealist">Surrealist</option>
+                                                    <option value="abstract">Abstract</option>
+                                                    <option value="minimalist">Minimalist</option>
+                                                    <option value="baroque">Baroque</option>
+                                                    <option value="art-nouveau">Art Nouveau</option>
+                                                </optgroup>
+                                                <optgroup label="Modern Styles">
+                                                    <option value="anime-style">Anime Style</option>
+                                                    <option value="cartoon">Cartoon</option>
+                                                    <option value="comic-book">Comic Book</option>
+                                                    <option value="cyberpunk">Cyberpunk</option>
+                                                    <option value="steampunk">Steampunk</option>
+                                                    <option value="vaporwave">Vaporwave</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="composition" class="form-label fw-semibold">
+                                                <i class="bi bi-grid-3x3"></i> Composition
+                                            </label>
+                                            <select class="form-select" id="composition">
+                                                <option value="">Select Composition</option>
+                                                <option value="rule-of-thirds">Rule of Thirds</option>
+                                                <option value="centered">Centered</option>
+                                                <option value="symmetrical">Symmetrical</option>
+                                                <option value="asymmetrical">Asymmetrical</option>
+                                                <option value="leading-lines">Leading Lines</option>
+                                                <option value="framing">Natural Framing</option>
+                                                <option value="diagonal">Diagonal Composition</option>
+                                                <option value="golden-ratio">Golden Ratio</option>
+                                                <option value="triangular">Triangular</option>
+                                                <option value="spiral">Spiral Composition</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="quality" class="form-label fw-semibold">
+                                                <i class="bi bi-gem"></i> Quality/Detail
+                                            </label>
+                                            <select class="form-select" id="quality">
+                                                <option value="">Select Quality Level</option>
+                                                <option value="ultra-high-quality">Ultra High Quality</option>
+                                                <option value="high-quality">High Quality</option>
+                                                <option value="professional">Professional</option>
+                                                <option value="detailed">Highly Detailed</option>
+                                                <option value="ultra-detailed">Ultra Detailed</option>
+                                                <option value="sharp-focus">Sharp Focus</option>
+                                                <option value="8k-resolution">8K Resolution</option>
+                                                <option value="4k-resolution">4K Resolution</option>
+                                                <option value="masterpiece">Masterpiece</option>
+                                                <option value="award-winning">Award Winning</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="outputFormat" class="form-label fw-semibold">
+                                            <i class="bi bi-file-earmark-code"></i> Output Format
+                                        </label>
+                                        <select class="form-select" id="outputFormat">
+                                            <option value="text">Plain Text</option>
+                                            <option value="json">JSON</option>
+                                            <option value="markdown">Markdown</option>
+                                            <option value="csv">CSV</option>
+                                            <option value="html">HTML</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Style Reference Section -->
+                                    <div class="card mt-4 border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0"><i class="bi bi-palette2"></i> Style Reference (sref)</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="srefUrl" class="form-label fw-semibold">
+                                                        <i class="bi bi-link-45deg"></i> Reference URL
+                                                    </label>
+                                                    <input type="url" class="form-control" id="srefUrl" 
+                                                           placeholder="https://example.com/style-image.jpg">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="srefWeight" class="form-label fw-semibold">
+                                                        <i class="bi bi-sliders"></i> Weight (0-1000)
+                                                    </label>
+                                                    <input type="number" class="form-control" id="srefWeight" 
+                                                           min="0" max="1000" step="50" placeholder="100">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="srefExplanation" class="form-label fw-semibold">
+                                                    <i class="bi bi-chat-text"></i> Style Description
+                                                </label>
+                                                <textarea class="form-control" id="srefExplanation" rows="2" 
+                                                          placeholder="Describe the style, mood, or artistic approach this reference provides..."></textarea>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-outline-info btn-sm" id="saveSref">
+                                                    <i class="bi bi-bookmark-plus"></i> Save to Sref Library
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSref">
+                                                    <i class="bi bi-x-circle"></i> Clear Sref
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-outline-secondary me-md-2" id="clearForm">
+                                            <i class="bi bi-arrow-clockwise"></i> Clear
+                                        </button>
+                                        <button type="button" class="btn btn-success me-md-2" id="savePrompt">
+                                            <i class="bi bi-bookmark-plus"></i> Save to Library
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-magic"></i> Generate Prompt
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Output Section -->
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h4 class="mb-0"><i class="bi bi-file-text"></i> Generated Output</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="outputSection" class="output-section">
+                                    <p class="text-muted text-center mb-0">
+                                        <i class="bi bi-arrow-up"></i> Fill out the form above and click "Generate Prompt" to see your output here
+                                    </p>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary" id="copyOutput" disabled>
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success" id="downloadOutput" disabled>
+                                            <i class="bi bi-download"></i> Download
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info" id="saveToLibrary" disabled>
+                                            <i class="bi bi-bookmark-plus"></i> Save
+                                        </button>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-warning btn-sm" id="exportAllPrompts">
+                                            <i class="bi bi-download"></i> Export All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="batchOperations">
+                                            <i class="bi bi-gear"></i> Batch Ops
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Unified Library -->
+                    <div class="col-lg-4">
+                        <!-- Library Management -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="bi bi-collection"></i> Library</h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="saveSettingsBtn">
+                                        <i class="bi bi-gear"></i> Save
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="llmSettingsBtn">
+                                        <i class="bi bi-cpu"></i> LLM
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="clearAllLibrary">
+                                        <i class="bi bi-trash"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Add New Item -->
+                                <div class="mb-4">
+                                    <label for="addItemType" class="form-label fw-semibold">
+                                        <i class="bi bi-plus-circle"></i> Add to Library
+                                    </label>
+                                    <select class="form-select mb-3" id="addItemType">
+                                        <option value="">Select type...</option>
+                                        <option value="document">📄 Document</option>
+                                        <option value="website">🌐 Website</option>
+                                        <option value="text">📝 Text Note</option>
+                                        <option value="sref">🎨 Style Reference</option>
+                                        <option value="prompt">⚡ Quick Prompt</option>
+                                    </select>
+                                    
+                                    <!-- Dynamic content area based on selection -->
+                                    <div id="addItemContent">
+                                        <p class="text-muted text-center">Select a type above to add content</p>
+                                    </div>
+                                </div>
+
+                                <!-- Unified Search -->
+                                <div class="mb-3">
+                                    <label for="unifiedSearchInput" class="form-label fw-semibold">
+                                        <i class="bi bi-search"></i> Search Library
+                                    </label>
+                                    <input type="text" class="form-control" id="unifiedSearchInput" 
+                                           placeholder="Search all content...">
+                                    <div class="mt-2">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="searchPrompts" checked>
+                                            <label class="form-check-label" for="searchPrompts">Prompts</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="searchDocuments" checked>
+                                            <label class="form-check-label" for="searchDocuments">Documents</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="searchSref" checked>
+                                            <label class="form-check-label" for="searchSref">Style Refs</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="searchNotes" checked>
+                                            <label class="form-check-label" for="searchNotes">Notes</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Search Results -->
+                                <div style="max-height: 500px; overflow-y: auto;">
+                                    <div id="unifiedSearchResults">
+                                        <p class="text-muted text-center">Use search above to find content</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- PWA Registration -->
+    <script>
+        // Register service worker for PWA functionality (only on HTTPS/localhost)
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // PWA install prompt
+        let deferredPrompt;
+        const installButton = document.createElement('button');
+        installButton.className = 'btn btn-outline-light btn-sm position-fixed';
+        installButton.style.cssText = 'top: 20px; right: 20px; z-index: 1000; display: none;';
+        installButton.innerHTML = '<i class="bi bi-download"></i> Install App';
+        document.body.appendChild(installButton);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show install button
+            installButton.style.display = 'block';
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // Clear the deferredPrompt variable
+                deferredPrompt = null;
+                // Hide install button
+                installButton.style.display = 'none';
+            }
+        });
+
+        // Handle app installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App was installed');
+            installButton.style.display = 'none';
+        });
+
+        // Handle URL parameters for PWA shortcuts
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            
+            if (action === 'new' && window.app) {
+                setTimeout(() => window.app.clearForm(), 1000);
+            } else if (action === 'library') {
+                // Scroll to prompt library section
+                setTimeout(() => {
+                    const librarySection = document.querySelector('.card:last-child');
+                    if (librarySection) {
+                        librarySection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 1000);
+            } else if (action === 'sref') {
+                // Scroll to sref library section
+                setTimeout(() => {
+                    const srefSection = document.getElementById('srefLibrary').closest('.card');
+                    if (srefSection) {
+                        srefSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

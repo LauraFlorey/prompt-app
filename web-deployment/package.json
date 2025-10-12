@@ -1,0 +1,36 @@
+{
+  "name": "ai-prompt-generator-web",
+  "version": "2.0.0",
+  "description": "A comprehensive AI prompt generation tool - Web Version",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "serve": "python3 -m http.server 8080",
+    "build": "echo 'No build step needed - static files ready to deploy'",
+    "deploy": "echo 'Upload all files to your web server'"
+  },
+  "keywords": [
+    "ai",
+    "prompt",
+    "generator",
+    "midjourney",
+    "dalle",
+    "stable-diffusion",
+    "sref",
+    "style-reference",
+    "flux",
+    "ideogram",
+    "sora",
+    "pwa",
+    "web-app"
+  ],
+  "author": {
+    "name": "AI Prompt Generator",
+    "email": "contact@example.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
