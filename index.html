@@ -677,36 +677,46 @@
                                             <label for="cameraAngle" class="form-label fw-semibold">
                                                 <i class="bi bi-camera"></i> Camera Angle
                                             </label>
-                                            <select class="form-select" id="cameraAngle">
-                                                <option value="">Select Camera Angle</option>
-                                                <option value="eye-level">Eye Level</option>
-                                                <option value="high-angle">High Angle</option>
-                                                <option value="low-angle">Low Angle</option>
-                                                <option value="bird-eye">Bird's Eye View</option>
-                                                <option value="worm-eye">Worm's Eye View</option>
-                                                <option value="dutch-angle">Dutch Angle</option>
-                                                <option value="over-shoulder">Over the Shoulder</option>
-                                                <option value="close-up">Close-up</option>
-                                                <option value="medium-shot">Medium Shot</option>
-                                                <option value="wide-shot">Wide Shot</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="cameraAngle">
+                                                    <option value="">Select Camera Angle</option>
+                                                    <option value="eye-level">Eye Level</option>
+                                                    <option value="high-angle">High Angle</option>
+                                                    <option value="low-angle">Low Angle</option>
+                                                    <option value="bird-eye">Bird's Eye View</option>
+                                                    <option value="worm-eye">Worm's Eye View</option>
+                                                    <option value="dutch-angle">Dutch Angle</option>
+                                                    <option value="over-shoulder">Over the Shoulder</option>
+                                                    <option value="close-up">Close-up</option>
+                                                    <option value="medium-shot">Medium Shot</option>
+                                                    <option value="wide-shot">Wide Shot</option>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('cameraAngle')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="perspective" class="form-label fw-semibold">
                                                 <i class="bi bi-aspect-ratio"></i> Perspective/Scale
                                             </label>
-                                            <select class="form-select" id="perspective">
-                                                <option value="">Select Perspective</option>
-                                                <option value="macro">Macro</option>
-                                                <option value="close-up">Close-up</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="wide">Wide</option>
-                                                <option value="panoramic">Panoramic</option>
-                                                <option value="first-person">First Person</option>
-                                                <option value="third-person">Third Person</option>
-                                                <option value="isometric">Isometric</option>
-                                                <option value="orthographic">Orthographic</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="perspective">
+                                                    <option value="">Select Perspective</option>
+                                                    <option value="macro">Macro</option>
+                                                    <option value="close-up">Close-up</option>
+                                                    <option value="medium">Medium</option>
+                                                    <option value="wide">Wide</option>
+                                                    <option value="panoramic">Panoramic</option>
+                                                    <option value="first-person">First Person</option>
+                                                    <option value="third-person">Third Person</option>
+                                                    <option value="isometric">Isometric</option>
+                                                    <option value="orthographic">Orthographic</option>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('perspective')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -715,90 +725,100 @@
                                             <label for="mood" class="form-label fw-semibold">
                                                 <i class="bi bi-emoji-smile"></i> Mood/Emotion
                                             </label>
-                                            <select class="form-select" id="mood">
-                                                <option value="">Select Mood</option>
-                                                <optgroup label="Positive">
-                                                    <option value="happy">Happy</option>
-                                                    <option value="joyful">Joyful</option>
-                                                    <option value="peaceful">Peaceful</option>
-                                                    <option value="serene">Serene</option>
-                                                    <option value="uplifting">Uplifting</option>
-                                                    <option value="energetic">Energetic</option>
-                                                    <option value="vibrant">Vibrant</option>
-                                                    <option value="optimistic">Optimistic</option>
-                                                </optgroup>
-                                                <optgroup label="Dramatic">
-                                                    <option value="dramatic">Dramatic</option>
-                                                    <option value="intense">Intense</option>
-                                                    <option value="powerful">Powerful</option>
-                                                    <option value="epic">Epic</option>
-                                                    <option value="heroic">Heroic</option>
-                                                    <option value="majestic">Majestic</option>
-                                                </optgroup>
-                                                <optgroup label="Mysterious">
-                                                    <option value="mysterious">Mysterious</option>
-                                                    <option value="dark">Dark</option>
-                                                    <option value="moody">Moody</option>
-                                                    <option value="eerie">Eerie</option>
-                                                    <option value="haunting">Haunting</option>
-                                                    <option value="suspenseful">Suspenseful</option>
-                                                </optgroup>
-                                                <optgroup label="Calm">
-                                                    <option value="calm">Calm</option>
-                                                    <option value="tranquil">Tranquil</option>
-                                                    <option value="meditative">Meditative</option>
-                                                    <option value="zen">Zen</option>
-                                                    <option value="minimalist">Minimalist</option>
-                                                </optgroup>
-                                                <optgroup label="Romantic">
-                                                    <option value="romantic">Romantic</option>
-                                                    <option value="dreamy">Dreamy</option>
-                                                    <option value="whimsical">Whimsical</option>
-                                                    <option value="ethereal">Ethereal</option>
-                                                    <option value="magical">Magical</option>
-                                                </optgroup>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="mood">
+                                                    <option value="">Select Mood</option>
+                                                    <optgroup label="Positive">
+                                                        <option value="happy">Happy</option>
+                                                        <option value="joyful">Joyful</option>
+                                                        <option value="peaceful">Peaceful</option>
+                                                        <option value="serene">Serene</option>
+                                                        <option value="uplifting">Uplifting</option>
+                                                        <option value="energetic">Energetic</option>
+                                                        <option value="vibrant">Vibrant</option>
+                                                        <option value="optimistic">Optimistic</option>
+                                                    </optgroup>
+                                                    <optgroup label="Dramatic">
+                                                        <option value="dramatic">Dramatic</option>
+                                                        <option value="intense">Intense</option>
+                                                        <option value="powerful">Powerful</option>
+                                                        <option value="epic">Epic</option>
+                                                        <option value="heroic">Heroic</option>
+                                                        <option value="majestic">Majestic</option>
+                                                    </optgroup>
+                                                    <optgroup label="Mysterious">
+                                                        <option value="mysterious">Mysterious</option>
+                                                        <option value="dark">Dark</option>
+                                                        <option value="moody">Moody</option>
+                                                        <option value="eerie">Eerie</option>
+                                                        <option value="haunting">Haunting</option>
+                                                        <option value="suspenseful">Suspenseful</option>
+                                                    </optgroup>
+                                                    <optgroup label="Calm">
+                                                        <option value="calm">Calm</option>
+                                                        <option value="tranquil">Tranquil</option>
+                                                        <option value="meditative">Meditative</option>
+                                                        <option value="zen">Zen</option>
+                                                        <option value="minimalist">Minimalist</option>
+                                                    </optgroup>
+                                                    <optgroup label="Romantic">
+                                                        <option value="romantic">Romantic</option>
+                                                        <option value="dreamy">Dreamy</option>
+                                                        <option value="whimsical">Whimsical</option>
+                                                        <option value="ethereal">Ethereal</option>
+                                                        <option value="magical">Magical</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('mood')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="colorScheme" class="form-label fw-semibold">
                                                 <i class="bi bi-palette"></i> Color Scheme
                                             </label>
-                                            <select class="form-select" id="colorScheme">
-                                                <option value="">Select Color Scheme</option>
-                                                <optgroup label="Warm Colors">
-                                                    <option value="warm-tones">Warm Tones</option>
-                                                    <option value="red-orange">Red & Orange</option>
-                                                    <option value="golden-hour">Golden Hour</option>
-                                                    <option value="sunset-colors">Sunset Colors</option>
-                                                    <option value="earth-tones">Earth Tones</option>
-                                                </optgroup>
-                                                <optgroup label="Cool Colors">
-                                                    <option value="cool-tones">Cool Tones</option>
-                                                    <option value="blue-cyan">Blue & Cyan</option>
-                                                    <option value="ocean-blues">Ocean Blues</option>
-                                                    <option value="winter-colors">Winter Colors</option>
-                                                    <option value="mint-green">Mint Green</option>
-                                                </optgroup>
-                                                <optgroup label="Monochromatic">
-                                                    <option value="black-white">Black & White</option>
-                                                    <option value="sepia">Sepia</option>
-                                                    <option value="monochromatic">Monochromatic</option>
-                                                    <option value="grayscale">Grayscale</option>
-                                                </optgroup>
-                                                <optgroup label="Vibrant">
-                                                    <option value="neon-colors">Neon Colors</option>
-                                                    <option value="rainbow">Rainbow</option>
-                                                    <option value="saturated">Saturated Colors</option>
-                                                    <option value="pastel">Pastel Colors</option>
-                                                    <option value="cyberpunk">Cyberpunk Colors</option>
-                                                </optgroup>
-                                                <optgroup label="Natural">
-                                                    <option value="forest-green">Forest Green</option>
-                                                    <option value="desert-colors">Desert Colors</option>
-                                                    <option value="autumn-colors">Autumn Colors</option>
-                                                    <option value="spring-colors">Spring Colors</option>
-                                                </optgroup>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="colorScheme">
+                                                    <option value="">Select Color Scheme</option>
+                                                    <optgroup label="Warm Colors">
+                                                        <option value="warm-tones">Warm Tones</option>
+                                                        <option value="red-orange">Red & Orange</option>
+                                                        <option value="golden-hour">Golden Hour</option>
+                                                        <option value="sunset-colors">Sunset Colors</option>
+                                                        <option value="earth-tones">Earth Tones</option>
+                                                    </optgroup>
+                                                    <optgroup label="Cool Colors">
+                                                        <option value="cool-tones">Cool Tones</option>
+                                                        <option value="blue-cyan">Blue & Cyan</option>
+                                                        <option value="ocean-blues">Ocean Blues</option>
+                                                        <option value="winter-colors">Winter Colors</option>
+                                                        <option value="mint-green">Mint Green</option>
+                                                    </optgroup>
+                                                    <optgroup label="Monochromatic">
+                                                        <option value="black-white">Black & White</option>
+                                                        <option value="sepia">Sepia</option>
+                                                        <option value="monochromatic">Monochromatic</option>
+                                                        <option value="grayscale">Grayscale</option>
+                                                    </optgroup>
+                                                    <optgroup label="Vibrant">
+                                                        <option value="neon-colors">Neon Colors</option>
+                                                        <option value="rainbow">Rainbow</option>
+                                                        <option value="saturated">Saturated Colors</option>
+                                                        <option value="pastel">Pastel Colors</option>
+                                                        <option value="cyberpunk">Cyberpunk Colors</option>
+                                                    </optgroup>
+                                                    <optgroup label="Natural">
+                                                        <option value="forest-green">Forest Green</option>
+                                                        <option value="desert-colors">Desert Colors</option>
+                                                        <option value="autumn-colors">Autumn Colors</option>
+                                                        <option value="spring-colors">Spring Colors</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('colorScheme')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -807,87 +827,97 @@
                                             <label for="lighting" class="form-label fw-semibold">
                                                 <i class="bi bi-sun"></i> Lighting
                                             </label>
-                                            <select class="form-select" id="lighting">
-                                                <option value="">Select Lighting</option>
-                                                <optgroup label="Natural Light">
-                                                    <option value="golden-hour">Golden Hour</option>
-                                                    <option value="blue-hour">Blue Hour</option>
-                                                    <option value="natural-light">Natural Light</option>
-                                                    <option value="sunlight">Bright Sunlight</option>
-                                                    <option value="overcast">Overcast</option>
-                                                    <option value="sunset">Sunset</option>
-                                                    <option value="sunrise">Sunrise</option>
-                                                    <option value="moonlight">Moonlight</option>
-                                                </optgroup>
-                                                <optgroup label="Studio Lighting">
-                                                    <option value="soft-lighting">Soft Lighting</option>
-                                                    <option value="hard-lighting">Hard Lighting</option>
-                                                    <option value="dramatic-lighting">Dramatic Lighting</option>
-                                                    <option value="rim-lighting">Rim Lighting</option>
-                                                    <option value="backlighting">Backlighting</option>
-                                                    <option value="key-lighting">Key Lighting</option>
-                                                </optgroup>
-                                                <optgroup label="Atmospheric">
-                                                    <option value="volumetric-lighting">Volumetric Lighting</option>
-                                                    <option value="god-rays">God Rays</option>
-                                                    <option value="atmospheric">Atmospheric Lighting</option>
-                                                    <option value="cinematic-lighting">Cinematic Lighting</option>
-                                                    <option value="moody-lighting">Moody Lighting</option>
-                                                </optgroup>
-                                                <optgroup label="Artificial">
-                                                    <option value="neon-lighting">Neon Lighting</option>
-                                                    <option value="led-lighting">LED Lighting</option>
-                                                    <option value="fluorescent">Fluorescent</option>
-                                                    <option value="candlelight">Candlelight</option>
-                                                    <option value="fire-light">Fire Light</option>
-                                                </optgroup>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="lighting">
+                                                    <option value="">Select Lighting</option>
+                                                    <optgroup label="Natural Light">
+                                                        <option value="golden-hour">Golden Hour</option>
+                                                        <option value="blue-hour">Blue Hour</option>
+                                                        <option value="natural-light">Natural Light</option>
+                                                        <option value="sunlight">Bright Sunlight</option>
+                                                        <option value="overcast">Overcast</option>
+                                                        <option value="sunset">Sunset</option>
+                                                        <option value="sunrise">Sunrise</option>
+                                                        <option value="moonlight">Moonlight</option>
+                                                    </optgroup>
+                                                    <optgroup label="Studio Lighting">
+                                                        <option value="soft-lighting">Soft Lighting</option>
+                                                        <option value="hard-lighting">Hard Lighting</option>
+                                                        <option value="dramatic-lighting">Dramatic Lighting</option>
+                                                        <option value="rim-lighting">Rim Lighting</option>
+                                                        <option value="backlighting">Backlighting</option>
+                                                        <option value="key-lighting">Key Lighting</option>
+                                                    </optgroup>
+                                                    <optgroup label="Atmospheric">
+                                                        <option value="volumetric-lighting">Volumetric Lighting</option>
+                                                        <option value="god-rays">God Rays</option>
+                                                        <option value="atmospheric">Atmospheric Lighting</option>
+                                                        <option value="cinematic-lighting">Cinematic Lighting</option>
+                                                        <option value="moody-lighting">Moody Lighting</option>
+                                                    </optgroup>
+                                                    <optgroup label="Artificial">
+                                                        <option value="neon-lighting">Neon Lighting</option>
+                                                        <option value="led-lighting">LED Lighting</option>
+                                                        <option value="fluorescent">Fluorescent</option>
+                                                        <option value="candlelight">Candlelight</option>
+                                                        <option value="fire-light">Fire Light</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('lighting')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="artStyle" class="form-label fw-semibold">
                                                 <i class="bi bi-brush"></i> Art Style
                                             </label>
-                                            <select class="form-select" id="artStyle">
-                                                <option value="">Select Art Style</option>
-                                                <optgroup label="Photography">
-                                                    <option value="photorealistic">Photorealistic</option>
-                                                    <option value="portrait-photography">Portrait Photography</option>
-                                                    <option value="landscape-photography">Landscape Photography</option>
-                                                    <option value="street-photography">Street Photography</option>
-                                                    <option value="macro-photography">Macro Photography</option>
-                                                </optgroup>
-                                                <optgroup label="Digital Art">
-                                                    <option value="digital-art">Digital Art</option>
-                                                    <option value="concept-art">Concept Art</option>
-                                                    <option value="matte-painting">Matte Painting</option>
-                                                    <option value="3d-render">3D Render</option>
-                                                    <option value="pixel-art">Pixel Art</option>
-                                                </optgroup>
-                                                <optgroup label="Traditional Art">
-                                                    <option value="oil-painting">Oil Painting</option>
-                                                    <option value="watercolor">Watercolor</option>
-                                                    <option value="acrylic-painting">Acrylic Painting</option>
-                                                    <option value="pencil-drawing">Pencil Drawing</option>
-                                                    <option value="charcoal">Charcoal</option>
-                                                    <option value="ink-drawing">Ink Drawing</option>
-                                                </optgroup>
-                                                <optgroup label="Artistic Movements">
-                                                    <option value="impressionist">Impressionist</option>
-                                                    <option value="surrealist">Surrealist</option>
-                                                    <option value="abstract">Abstract</option>
-                                                    <option value="minimalist">Minimalist</option>
-                                                    <option value="baroque">Baroque</option>
-                                                    <option value="art-nouveau">Art Nouveau</option>
-                                                </optgroup>
-                                                <optgroup label="Modern Styles">
-                                                    <option value="anime-style">Anime Style</option>
-                                                    <option value="cartoon">Cartoon</option>
-                                                    <option value="comic-book">Comic Book</option>
-                                                    <option value="cyberpunk">Cyberpunk</option>
-                                                    <option value="steampunk">Steampunk</option>
-                                                    <option value="vaporwave">Vaporwave</option>
-                                                </optgroup>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="artStyle">
+                                                    <option value="">Select Art Style</option>
+                                                    <optgroup label="Photography">
+                                                        <option value="photorealistic">Photorealistic</option>
+                                                        <option value="portrait-photography">Portrait Photography</option>
+                                                        <option value="landscape-photography">Landscape Photography</option>
+                                                        <option value="street-photography">Street Photography</option>
+                                                        <option value="macro-photography">Macro Photography</option>
+                                                    </optgroup>
+                                                    <optgroup label="Digital Art">
+                                                        <option value="digital-art">Digital Art</option>
+                                                        <option value="concept-art">Concept Art</option>
+                                                        <option value="matte-painting">Matte Painting</option>
+                                                        <option value="3d-render">3D Render</option>
+                                                        <option value="pixel-art">Pixel Art</option>
+                                                    </optgroup>
+                                                    <optgroup label="Traditional Art">
+                                                        <option value="oil-painting">Oil Painting</option>
+                                                        <option value="watercolor">Watercolor</option>
+                                                        <option value="acrylic-painting">Acrylic Painting</option>
+                                                        <option value="pencil-drawing">Pencil Drawing</option>
+                                                        <option value="charcoal">Charcoal</option>
+                                                        <option value="ink-drawing">Ink Drawing</option>
+                                                    </optgroup>
+                                                    <optgroup label="Artistic Movements">
+                                                        <option value="impressionist">Impressionist</option>
+                                                        <option value="surrealist">Surrealist</option>
+                                                        <option value="abstract">Abstract</option>
+                                                        <option value="minimalist">Minimalist</option>
+                                                        <option value="baroque">Baroque</option>
+                                                        <option value="art-nouveau">Art Nouveau</option>
+                                                    </optgroup>
+                                                    <optgroup label="Modern Styles">
+                                                        <option value="anime-style">Anime Style</option>
+                                                        <option value="cartoon">Cartoon</option>
+                                                        <option value="comic-book">Comic Book</option>
+                                                        <option value="cyberpunk">Cyberpunk</option>
+                                                        <option value="steampunk">Steampunk</option>
+                                                        <option value="vaporwave">Vaporwave</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('artStyle')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -896,37 +926,47 @@
                                             <label for="composition" class="form-label fw-semibold">
                                                 <i class="bi bi-grid-3x3"></i> Composition
                                             </label>
-                                            <select class="form-select" id="composition">
-                                                <option value="">Select Composition</option>
-                                                <option value="rule-of-thirds">Rule of Thirds</option>
-                                                <option value="centered">Centered</option>
-                                                <option value="symmetrical">Symmetrical</option>
-                                                <option value="asymmetrical">Asymmetrical</option>
-                                                <option value="leading-lines">Leading Lines</option>
-                                                <option value="framing">Natural Framing</option>
-                                                <option value="diagonal">Diagonal Composition</option>
-                                                <option value="golden-ratio">Golden Ratio</option>
-                                                <option value="triangular">Triangular</option>
-                                                <option value="spiral">Spiral Composition</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="composition">
+                                                    <option value="">Select Composition</option>
+                                                    <option value="rule-of-thirds">Rule of Thirds</option>
+                                                    <option value="centered">Centered</option>
+                                                    <option value="symmetrical">Symmetrical</option>
+                                                    <option value="asymmetrical">Asymmetrical</option>
+                                                    <option value="leading-lines">Leading Lines</option>
+                                                    <option value="framing">Natural Framing</option>
+                                                    <option value="diagonal">Diagonal Composition</option>
+                                                    <option value="golden-ratio">Golden Ratio</option>
+                                                    <option value="triangular">Triangular</option>
+                                                    <option value="spiral">Spiral Composition</option>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('composition')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="quality" class="form-label fw-semibold">
                                                 <i class="bi bi-gem"></i> Quality/Detail
                                             </label>
-                                            <select class="form-select" id="quality">
-                                                <option value="">Select Quality Level</option>
-                                                <option value="ultra-high-quality">Ultra High Quality</option>
-                                                <option value="high-quality">High Quality</option>
-                                                <option value="professional">Professional</option>
-                                                <option value="detailed">Highly Detailed</option>
-                                                <option value="ultra-detailed">Ultra Detailed</option>
-                                                <option value="sharp-focus">Sharp Focus</option>
-                                                <option value="8k-resolution">8K Resolution</option>
-                                                <option value="4k-resolution">4K Resolution</option>
-                                                <option value="masterpiece">Masterpiece</option>
-                                                <option value="award-winning">Award Winning</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <select class="form-select" id="quality">
+                                                    <option value="">Select Quality Level</option>
+                                                    <option value="ultra-high-quality">Ultra High Quality</option>
+                                                    <option value="high-quality">High Quality</option>
+                                                    <option value="professional">Professional</option>
+                                                    <option value="detailed">Highly Detailed</option>
+                                                    <option value="ultra-detailed">Ultra Detailed</option>
+                                                    <option value="sharp-focus">Sharp Focus</option>
+                                                    <option value="8k-resolution">8K Resolution</option>
+                                                    <option value="4k-resolution">4K Resolution</option>
+                                                    <option value="masterpiece">Masterpiece</option>
+                                                    <option value="award-winning">Award Winning</option>
+                                                </select>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="app.addCustomOption('quality')" title="Add custom option">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1047,6 +1087,9 @@
                                     <button type="button" class="btn btn-outline-light btn-sm" id="llmSettingsBtn">
                                         <i class="bi bi-cpu"></i> LLM
                                     </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="app.manageCustomOptions()" title="Manage Custom Dropdown Options">
+                                        <i class="bi bi-sliders"></i> Options
+                                    </button>
                                     <button type="button" class="btn btn-outline-light btn-sm" id="clearAllLibrary">
                                         <i class="bi bi-trash"></i> Clear All
                                     </button>
@@ -1083,19 +1126,27 @@
                                     <div class="mt-2">
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="searchPrompts" checked>
-                                            <label class="form-check-label" for="searchPrompts">Prompts</label>
+                                            <label class="form-check-label" for="searchPrompts">
+                                                Prompts <span class="badge bg-secondary" id="promptCount">0</span>
+                                            </label>
                                         </div>
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="searchDocuments" checked>
-                                            <label class="form-check-label" for="searchDocuments">Documents</label>
+                                            <label class="form-check-label" for="searchDocuments">
+                                                Documents <span class="badge bg-secondary" id="documentCount">0</span>
+                                            </label>
                                         </div>
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="searchSref" checked>
-                                            <label class="form-check-label" for="searchSref">Style Refs</label>
+                                            <label class="form-check-label" for="searchSref">
+                                                Style Refs <span class="badge bg-secondary" id="srefCount">0</span>
+                                            </label>
                                         </div>
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="searchNotes" checked>
-                                            <label class="form-check-label" for="searchNotes">Notes</label>
+                                            <label class="form-check-label" for="searchNotes">
+                                                Notes <span class="badge bg-secondary" id="noteCount">0</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>

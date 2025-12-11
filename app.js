@@ -7,6 +7,18 @@ class PromptGenerator {
         this.srefLibrary = JSON.parse(localStorage.getItem('srefLibrary')) || [];
         this.textNotes = JSON.parse(localStorage.getItem('textNotes')) || [];
         
+        // Custom dropdown options
+        this.customOptions = JSON.parse(localStorage.getItem('customOptions')) || {
+            cameraAngle: [],
+            perspective: [],
+            mood: [],
+            colorScheme: [],
+            lighting: [],
+            artStyle: [],
+            composition: [],
+            quality: []
+        };
+        
         // LLM Integration settings
         this.llmSettings = JSON.parse(localStorage.getItem('llmSettings')) || {
             enabled: false,
@@ -45,8 +57,31 @@ class PromptGenerator {
         this.loadManualInformation();
         this.loadUploadedFiles();
         this.loadSrefLibrary();
+        this.loadCustomOptions();
         this.initTooltips();
         this.updateSaveStatus();
+        this.updateLibraryCounts();
+    }
+
+    updateLibraryCounts() {
+        // Update count badges in the library filter section
+        const promptCount = document.getElementById('promptCount');
+        const documentCount = document.getElementById('documentCount');
+        const srefCount = document.getElementById('srefCount');
+        const noteCount = document.getElementById('noteCount');
+
+        if (promptCount) {
+            promptCount.textContent = this.promptLibrary.length;
+        }
+        if (documentCount) {
+            documentCount.textContent = this.uploadedDocuments.length;
+        }
+        if (srefCount) {
+            srefCount.textContent = this.srefLibrary.length;
+        }
+        if (noteCount) {
+            noteCount.textContent = this.textNotes.length;
+        }
     }
 
     setupEventListeners() {
@@ -976,7 +1011,14 @@ class PromptGenerator {
         );
         
         if (modelDoc && modelDoc.enhancements) {
-            return modelDoc.enhancements;
+            // If enhancements is an object, extract the enhancements string property
+            if (typeof modelDoc.enhancements === 'object' && modelDoc.enhancements.enhancements) {
+                return modelDoc.enhancements.enhancements;
+            }
+            // If it's already a string, return it
+            if (typeof modelDoc.enhancements === 'string') {
+                return modelDoc.enhancements;
+            }
         }
 
         // Default enhancements based on model type
@@ -1358,6 +1400,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
         this.saveToLocalStorage('promptLibrary', this.promptLibrary);
         this.loadPromptLibrary();
         this.markAsSaved();
+        this.updateLibraryCounts();
         
         // Show success message
         this.showToast('Prompt saved to library successfully!', 'success');
@@ -1425,6 +1468,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             this.saveToLocalStorage('promptLibrary', this.promptLibrary);
             this.loadPromptLibrary();
             this.markAsSaved();
+            this.updateLibraryCounts();
             this.showToast('Prompt deleted successfully!', 'warning');
         }
     }
@@ -1435,6 +1479,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             this.saveToLocalStorage('promptLibrary', this.promptLibrary);
             this.loadPromptLibrary();
             this.markAsSaved();
+            this.updateLibraryCounts();
             this.showToast('Prompt library cleared!', 'warning');
         }
     }
@@ -1468,6 +1513,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
+                this.updateLibraryCounts();
                         
                         const analysisSource = enhancements?.source || 'basic';
                         this.showToast(`File "${file.name}" uploaded and analyzed (${analysisSource})!`, 'success');
@@ -1488,6 +1534,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                         this.uploadedDocuments.push(documentData);
                         this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                         this.loadUploadedFiles();
+                        this.updateLibraryCounts();
                         this.showToast(`File "${file.name}" uploaded (analysis failed)`, 'warning');
                     }
                     
@@ -1546,6 +1593,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
+                this.updateLibraryCounts();
                     
                     const analysisSource = enhancements?.source || 'basic';
                     this.showToast(`Content from "${this.extractTitleFromUrl(url)}" analyzed (${analysisSource})!`, 'success');
@@ -1568,6 +1616,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                     this.uploadedDocuments.push(documentData);
                     this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                     this.loadUploadedFiles();
+                    this.updateLibraryCounts();
                     this.showToast(`Content from "${this.extractTitleFromUrl(url)}" added (analysis failed)`, 'warning');
                 urlInput.value = '';
                 }
@@ -1887,6 +1936,7 @@ Format your response as JSON:
             this.uploadedDocuments = this.uploadedDocuments.filter(doc => doc.id !== id);
             this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
             this.loadUploadedFiles();
+            this.updateLibraryCounts();
             this.showToast('Document deleted successfully!', 'warning');
         }
     }
@@ -2117,6 +2167,7 @@ Format your response as JSON:
         this.srefLibrary.unshift(srefData);
         this.saveToLocalStorage('srefLibrary', this.srefLibrary);
         this.loadSrefLibrary();
+        this.updateLibraryCounts();
         this.showToast('Style reference saved to library!', 'success');
     }
 
@@ -2177,6 +2228,7 @@ Format your response as JSON:
             this.srefLibrary = this.srefLibrary.filter(s => s.id !== id);
             this.saveToLocalStorage('srefLibrary', this.srefLibrary);
             this.loadSrefLibrary();
+            this.updateLibraryCounts();
             this.showToast('Style reference deleted!', 'warning');
         }
     }
@@ -2186,6 +2238,7 @@ Format your response as JSON:
             this.srefLibrary = [];
             this.saveToLocalStorage('srefLibrary', this.srefLibrary);
             this.loadSrefLibrary();
+            this.updateLibraryCounts();
             this.showToast('Style reference library cleared!', 'warning');
         }
     }
@@ -3217,6 +3270,7 @@ Format your response as JSON:
                         if (!this.textNotes) this.textNotes = [];
                         this.textNotes.unshift(noteData);
                         this.saveToLocalStorage('textNotes', this.textNotes);
+                        this.updateLibraryCounts();
                         
                         document.getElementById('textNoteInput').value = '';
                         this.showToast('Text note saved!', 'success');
@@ -3248,6 +3302,7 @@ Format your response as JSON:
 
                         this.srefLibrary.unshift(srefData);
                         this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                        this.updateLibraryCounts();
                         
                         // Clear form
                         document.getElementById('srefUrlInput').value = '';
@@ -3285,6 +3340,7 @@ Format your response as JSON:
 
                         this.promptLibrary.unshift(promptData);
                         this.saveToLocalStorage('promptLibrary', this.promptLibrary);
+                        this.updateLibraryCounts();
                         
                         // Clear form
                         document.getElementById('quickPromptName').value = '';
@@ -3462,6 +3518,7 @@ Format your response as JSON:
                     this.saveToLocalStorage('textNotes', this.textNotes);
                     break;
             }
+            this.updateLibraryCounts();
             this.performUnifiedSearch(document.getElementById('unifiedSearchInput').value);
             this.showToast('Item deleted', 'warning');
         }
@@ -3481,6 +3538,7 @@ Format your response as JSON:
             this.saveToLocalStorage('textNotes', this.textNotes);
             localStorage.removeItem('manualInformation');
             
+            this.updateLibraryCounts();
             document.getElementById('unifiedSearchResults').innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
             this.showToast('All library content cleared!', 'warning');
         }
@@ -3780,6 +3838,200 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
         }
 
         this.showToast(`All ${type} deleted successfully`, 'warning');
+    }
+
+    // Custom Options Management
+    loadCustomOptions() {
+        // Load custom options into each dropdown
+        const dropdowns = ['cameraAngle', 'perspective', 'mood', 'colorScheme', 'lighting', 'artStyle', 'composition', 'quality'];
+        
+        dropdowns.forEach(dropdownId => {
+            const select = document.getElementById(dropdownId);
+            if (select && this.customOptions[dropdownId]) {
+                // Add custom options to the dropdown
+                this.customOptions[dropdownId].forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.label;
+                    optionElement.setAttribute('data-custom', 'true');
+                    
+                    // Insert at the end of the select (before any optgroups if present)
+                    select.appendChild(optionElement);
+                });
+            }
+        });
+    }
+
+    addCustomOption(dropdownId) {
+        // Get the dropdown element
+        const select = document.getElementById(dropdownId);
+        if (!select) return;
+        
+        // Get a nice label for the field
+        const labels = {
+            cameraAngle: 'Camera Angle',
+            perspective: 'Perspective/Scale',
+            mood: 'Mood/Emotion',
+            colorScheme: 'Color Scheme',
+            lighting: 'Lighting',
+            artStyle: 'Art Style',
+            composition: 'Composition',
+            quality: 'Quality/Detail'
+        };
+        
+        const fieldLabel = labels[dropdownId] || dropdownId;
+        
+        // Prompt for custom value
+        const customValue = prompt(`Enter custom ${fieldLabel}:\n\nExample: "cinematic close-up" or "neon purple"`);
+        
+        if (!customValue || !customValue.trim()) {
+            return;
+        }
+        
+        const trimmedValue = customValue.trim();
+        
+        // Create a slug for the value (lowercase, hyphenated)
+        const valueSlug = trimmedValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        
+        // Check if this option already exists
+        const existingOptions = Array.from(select.options).map(opt => opt.value);
+        if (existingOptions.includes(valueSlug)) {
+            this.showToast('This option already exists!', 'warning');
+            return;
+        }
+        
+        // Add to custom options
+        if (!this.customOptions[dropdownId]) {
+            this.customOptions[dropdownId] = [];
+        }
+        
+        const newOption = {
+            value: valueSlug,
+            label: trimmedValue
+        };
+        
+        this.customOptions[dropdownId].push(newOption);
+        
+        // Save to localStorage
+        this.saveToLocalStorage('customOptions', this.customOptions);
+        
+        // Add to dropdown
+        const optionElement = document.createElement('option');
+        optionElement.value = newOption.value;
+        optionElement.textContent = newOption.label;
+        optionElement.setAttribute('data-custom', 'true');
+        select.appendChild(optionElement);
+        
+        // Select the newly added option
+        select.value = newOption.value;
+        
+        this.showToast(`Custom ${fieldLabel} added: "${trimmedValue}"`, 'success');
+    }
+
+    manageCustomOptions() {
+        // Create a modal to view and delete custom options
+        const modal = document.createElement('div');
+        modal.className = 'modal fade show';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const labels = {
+            cameraAngle: 'Camera Angle',
+            perspective: 'Perspective/Scale',
+            mood: 'Mood/Emotion',
+            colorScheme: 'Color Scheme',
+            lighting: 'Lighting',
+            artStyle: 'Art Style',
+            composition: 'Composition',
+            quality: 'Quality/Detail'
+        };
+        
+        let optionsHTML = '';
+        
+        Object.keys(this.customOptions).forEach(key => {
+            const options = this.customOptions[key];
+            if (options && options.length > 0) {
+                optionsHTML += `
+                    <div class="mb-3">
+                        <h6 class="fw-semibold">${labels[key]}</h6>
+                        ${options.map((opt, idx) => `
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                <span>${opt.label}</span>
+                                <button class="btn btn-sm btn-outline-danger" onclick="app.deleteCustomOption('${key}', ${idx})">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        });
+        
+        if (!optionsHTML) {
+            optionsHTML = '<p class="text-muted text-center">No custom options yet. Click the + button next to any dropdown to add custom values.</p>';
+        }
+        
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-gear"></i> Manage Custom Options
+                        </h5>
+                        <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${optionsHTML}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    deleteCustomOption(dropdownId, index) {
+        if (!confirm('Delete this custom option?')) {
+            return;
+        }
+        
+        // Remove from array
+        this.customOptions[dropdownId].splice(index, 1);
+        
+        // Save to localStorage
+        this.saveToLocalStorage('customOptions', this.customOptions);
+        
+        // Reload the dropdown
+        const select = document.getElementById(dropdownId);
+        if (select) {
+            // Remove all custom options from the select
+            Array.from(select.options).forEach(opt => {
+                if (opt.getAttribute('data-custom') === 'true') {
+                    opt.remove();
+                }
+            });
+            
+            // Reload custom options
+            this.customOptions[dropdownId].forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                optionElement.setAttribute('data-custom', 'true');
+                select.appendChild(optionElement);
+            });
+        }
+        
+        this.showToast('Custom option deleted', 'warning');
+        
+        // Refresh the management modal if it's open
+        const modal = document.querySelector('.modal');
+        if (modal) {
+            modal.remove();
+            this.manageCustomOptions();
+        }
     }
 }
 
