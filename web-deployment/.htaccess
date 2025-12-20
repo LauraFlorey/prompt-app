@@ -44,13 +44,21 @@
     AddType application/manifest+json .json
 </IfModule>
 
-# Handle SPA routing (if needed)
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
+# Handle SPA routing (if needed in standalone deployment)
+# Note: For WordPress subdirectory deployment, comment out or remove these rules
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule . /index.html [L]
 
-# Force HTTPS (uncomment if you have SSL)
+# Force HTTPS (recommended for PWA features)
+# Uncomment if your site uses HTTPS
+# RewriteEngine On
 # RewriteCond %{HTTPS} off
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Service Worker must have correct MIME type
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+</IfModule>
 

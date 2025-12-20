@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Generator - Tutorial & How To Guide</title>
+    <meta name="description" content="Learn how to use the AI Prompt Generator to create optimized prompts for Midjourney, DALL-E, Stable Diffusion, and more">
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --header-gradient: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            --accent-color: #667eea;
+        }
+        
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 1000px;
+        }
+        
+        .header-section {
+            background: var(--header-gradient);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .content-section {
+            padding: 2rem;
+        }
+        
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .feature-card .card-header {
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h5 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+        }
+        
+        .tip-box.warning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+        
+        .tip-box.success {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .model-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 2px;
+        }
+        
+        .model-badge.image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .model-badge.video {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .model-badge.text {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .toc-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            display: block;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .toc-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #5a6fd8;
+        }
+        
+        .back-to-app {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .example-prompt {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .example-prompt .highlight {
+            color: #9cdcfe;
+        }
+        
+        .example-prompt .param {
+            color: #ce9178;
+        }
+        
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            color: #666;
+            border: 2px dashed #ccc;
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .main-container {
+                background: rgba(30, 30, 30, 0.95);
+                color: #e9ecef;
+            }
+            
+            .feature-card {
+                background-color: rgba(40, 40, 40, 0.8);
+                border-color: #495057;
+                color: #e9ecef;
+            }
+            
+            .step-content h5 {
+                color: #ffffff;
+            }
+            
+            .tip-box {
+                background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+                color: #e9ecef;
+            }
+            
+            .tip-box.warning {
+                background: linear-gradient(135deg, #44403c 0%, #292524 100%);
+            }
+            
+            .tip-box.success {
+                background: linear-gradient(135deg, #1a4d2e 0%, #0d3321 100%);
+            }
+            
+            .toc-link {
+                color: #9cb3f0;
+            }
+            
+            .toc-link:hover {
+                background: rgba(102, 126, 234, 0.2);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header-section {
+                padding: 1.5rem;
+            }
+            
+            .content-section {
+                padding: 1rem;
+            }
+            
+            .back-to-app {
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <header class="header-section">
+                <h1 class="display-5 fw-bold mb-2">
+                    <i class="bi bi-book"></i> AI Prompt Generator
+                </h1>
+                <p class="lead mb-0">Complete Tutorial & How-To Guide</p>
+                <a href="index.html" class="btn btn-light btn-sm mt-3">
+                    <i class="bi bi-arrow-left"></i> Back to App
+                </a>
+            </header>
+
+            <!-- Content Section -->
+            <main class="content-section">
+                <!-- Table of Contents -->
+                <nav class="card feature-card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Table of Contents</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="#getting-started" class="toc-link"><i class="bi bi-play-circle"></i> Getting Started</a>
+                                <a href="#creating-prompts" class="toc-link"><i class="bi bi-pencil-square"></i> Creating Prompts</a>
+                                <a href="#models" class="toc-link"><i class="bi bi-cpu"></i> Supported Models</a>
+                                <a href="#parameters" class="toc-link"><i class="bi bi-sliders"></i> Parameters Explained</a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="#style-references" class="toc-link"><i class="bi bi-palette2"></i> Style References (Sref)</a>
+                                <a href="#library" class="toc-link"><i class="bi bi-collection"></i> Using the Library</a>
+                                <a href="#templates" class="toc-link"><i class="bi bi-layout-text-window"></i> Quick Templates</a>
+                                <a href="#tips" class="toc-link"><i class="bi bi-lightbulb"></i> Pro Tips</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Getting Started -->
+                <section id="getting-started" class="card feature-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-play-circle"></i> Getting Started</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">The AI Prompt Generator helps you create optimized prompts for AI image, video, and text generation models.</p>
+                        
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Select Your Model</h5>
+                                <p>Choose the AI model you'll be using from the dropdown. Each model has specific optimizations applied automatically.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Choose Prompt Type</h5>
+                                <p>Select what kind of generation you're doing: Text-to-Image, Image-to-Video, Text-to-Video, etc.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>Enter Your Base Prompt</h5>
+                                <p>Write your core idea in the "Starting Prompt" field. This is the foundation of your generated prompt.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Customize Parameters</h5>
+                                <p>Fine-tune your prompt with camera angles, mood, lighting, art style, and more.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h5>Generate & Copy</h5>
+                                <p>Click "Generate Prompt" to see your optimized prompt, then copy it to use in your AI tool.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="tip-box success">
+                            <strong><i class="bi bi-lightning-charge"></i> Quick Tip:</strong> Use the Quick Templates to instantly fill in common settings for different use cases!
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Creating Prompts -->
+                <section id="creating-prompts" class="card feature-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Creating Effective Prompts</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold">Writing Your Base Prompt</h6>
+                        <p>Your starting prompt should describe the core subject or scene. Be specific but concise:</p>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="tip-box warning">
+                                    <strong>❌ Too Vague:</strong><br>
+                                    "A woman in a field"
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="tip-box success">
+                                    <strong>✅ Better:</strong><br>
+                                    "A young woman with flowing red hair standing in a sunlit meadow of wildflowers"
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="fw-bold">Example Generated Prompt</h6>
+                        <div class="example-prompt">
+                            <span class="highlight">A young woman with flowing red hair standing in a sunlit meadow of wildflowers</span>, 
+                            <span class="param">eye-level view</span>, 
+                            <span class="param">medium perspective</span>, 
+                            <span class="param">peaceful mood</span>, 
+                            <span class="param">golden hour color palette</span>, 
+                            <span class="param">natural light lighting</span>, 
+                            <span class="param">portrait-photography style</span>, 
+                            <span class="param">rule-of-thirds composition</span>, 
+                            <span class="param">ultra high quality</span>
+                        </div>
+                        
+                        <div class="tip-box mt-3">
+                            <strong><i class="bi bi-info-circle"></i> How It Works:</strong> 
+                            The generator automatically combines your base prompt with the parameters you select, creating a comprehensive prompt optimized for your chosen AI model.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Supported Models -->
+                <section id="models" class="card feature-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-cpu"></i> Supported Models</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Image Generation</h6>
+                        <p>
+                            <span class="model-badge image">Midjourney</span>
+                            <span class="model-badge image">DALL-E 3</span>
+                            <span class="model-badge image">Stable Diffusion</span>
+                            <span class="model-badge image">Flux.1</span>
+                            <span class="model-badge image">Ideogram 2.0</span>
+                            <span class="model-badge image">Leonardo AI</span>
+                            <span class="model-badge image">Adobe Firefly</span>
+                            <span class="model-badge image">Google Imagen 3</span>
+                        </p>
+                        
+                        <h6 class="fw-bold mb-3 mt-4">Video Generation</h6>
+                        <p>
+                            <span class="model-badge video">OpenAI Sora</span>
+                            <span class="model-badge video">Google Veo 2</span>
+                            <span class="model-badge video">Runway ML</span>
+                            <span class="model-badge video">Pika Labs</span>
+                            <span class="model-badge video">Luma Dream Machine</span>
+                            <span class="model-badge video">Kling AI</span>
+                            <span class="model-badge video">Hailuo</span>
+                        </p>
+                        
+                        <h6 class="fw-bold mb-3 mt-4">Text & Multimodal</h6>
+                        <p>
+                            <span class="model-badge text">GPT-4</span>
+                            <span class="model-badge text">Claude</span>
+                            <span class="model-badge text">Google Gemini</span>
+                            <span class="model-badge text">Meta Llama</span>
+                        </p>
+                        
+                        <div class="tip-box">
+                            <strong><i class="bi bi-gear"></i> Model-Specific Optimizations:</strong> 
+                            Each model receives tailored enhancements. For example, Midjourney prompts include style and quality parameters, while Stable Diffusion prompts focus on quality keywords.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Parameters Explained -->
+                <section id="parameters" class="card feature-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-sliders"></i> Parameters Explained</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Example Values</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong><i class="bi bi-camera"></i> Camera Angle</strong></td>
+                                        <td>The viewpoint or angle of the shot</td>
+                                        <td>Eye Level, High Angle, Bird's Eye View, Dutch Angle</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-aspect-ratio"></i> Perspective</strong></td>
+                                        <td>The scale and distance of the view</td>
+                                        <td>Macro, Close-up, Wide, Panoramic, First Person</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-emoji-smile"></i> Mood</strong></td>
+                                        <td>The emotional atmosphere of the image</td>
+                                        <td>Happy, Dramatic, Mysterious, Peaceful, Epic</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-palette"></i> Color Scheme</strong></td>
+                                        <td>The dominant colors and tones</td>
+                                        <td>Warm Tones, Cool Tones, Neon, Sepia, Pastel</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-sun"></i> Lighting</strong></td>
+                                        <td>The type and quality of light</td>
+                                        <td>Golden Hour, Dramatic, Soft, Neon, Volumetric</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-brush"></i> Art Style</strong></td>
+                                        <td>The visual style or medium</td>
+                                        <td>Photorealistic, Oil Painting, Anime, Cyberpunk</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-grid-3x3"></i> Composition</strong></td>
+                                        <td>How elements are arranged in the frame</td>
+                                        <td>Rule of Thirds, Centered, Symmetrical, Golden Ratio</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="bi bi-gem"></i> Quality</strong></td>
+                                        <td>The level of detail and resolution</td>
+                                        <td>Ultra High Quality, 8K, Masterpiece, Award Winning</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="tip-box success">
+                            <strong><i class="bi bi-plus-circle"></i> Custom Options:</strong> 
+                            Click the <strong>+</strong> button next to any dropdown to add your own custom values! These are saved for future use.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Style References -->
+                <section id="style-references" class="card feature-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-palette2"></i> Style References (Sref)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Style References allow you to provide a reference image URL that AI models can use to match a specific visual style.</p>
+                        
+                        <h6 class="fw-bold">How to Use Style References</h6>
+                        <ol>
+                            <li><strong>Find a Reference:</strong> Locate an image online that has the style you want to emulate</li>
+                            <li><strong>Copy the URL:</strong> Right-click the image and copy its direct URL (ending in .jpg, .png, etc.)</li>
+                            <li><strong>Paste in Reference URL:</strong> Add the URL to the Style Reference section</li>
+                            <li><strong>Set Weight (0-1000):</strong> Higher values = stronger style influence. Default is 100.</li>
+                            <li><strong>Add Description:</strong> Note what style elements you want to capture</li>
+                        </ol>
+                        
+                        <div class="tip-box warning">
+                            <strong><i class="bi bi-exclamation-triangle"></i> Note:</strong> 
+                            Style references are primarily used with Midjourney (--sref parameter). Other models may handle style references differently or not support them.
+                        </div>
+                        
+                        <h6 class="fw-bold mt-4">Saving Style References</h6>
+                        <p>Click "Save to Sref Library" to save useful style references for reuse. You can search and apply them from the Library section.</p>
+                    </div>
+                </section>
+
+                <!-- Library -->
+                <section id="library" class="card feature-card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="bi bi-collection"></i> Using the Library</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>The Library stores all your saved content in your browser for easy access.</p>
+                        
+                        <h6 class="fw-bold">What You Can Store</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-lightning text-warning"></i> <strong>Prompts</strong> - Your saved generated prompts</li>
+                                    <li><i class="bi bi-file-earmark-text text-primary"></i> <strong>Documents</strong> - Uploaded reference files</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-palette text-info"></i> <strong>Style References</strong> - Saved sref URLs</li>
+                                    <li><i class="bi bi-sticky text-success"></i> <strong>Notes</strong> - Text notes and snippets</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h6 class="fw-bold mt-4">Adding Content</h6>
+                        <p>Use the "Add to Library" dropdown to add:</p>
+                        <ul>
+                            <li><strong>📄 Document</strong> - Upload PDF, TXT, or other text files</li>
+                            <li><strong>🌐 Website</strong> - Save content from a URL</li>
+                            <li><strong>📝 Text Note</strong> - Add custom notes</li>
+                            <li><strong>🎨 Style Reference</strong> - Save an image URL as a style reference</li>
+                            <li><strong>⚡ Quick Prompt</strong> - Manually add a prompt to your library</li>
+                        </ul>
+                        
+                        <h6 class="fw-bold mt-4">Searching</h6>
+                        <p>Use the search box to find content across all your saved items. Toggle the checkboxes to filter by type.</p>
+                        
+                        <div class="tip-box">
+                            <strong><i class="bi bi-cloud-download"></i> Export & Backup:</strong> 
+                            Use the "Export All" button to download all your library content as a JSON file. This is great for backups or transferring to another device.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Templates -->
+                <section id="templates" class="card feature-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-layout-text-window"></i> Quick Templates</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Quick Templates pre-fill the form with optimized settings for common use cases:</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-primary">🎨</span> Image Generation</h6>
+                                        <small class="text-muted">General image creation with balanced settings</small>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-success">📸</span> Portrait Photography</h6>
+                                        <small class="text-muted">Optimized for portraits with soft lighting and shallow depth</small>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-info">🎭</span> Character Design</h6>
+                                        <small class="text-muted">Perfect for character concepts and illustrations</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-warning text-dark">📦</span> Product Photography</h6>
+                                        <small class="text-muted">Clean, professional product shots</small>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-danger">🎬</span> Video Generation</h6>
+                                        <small class="text-muted">Cinematic settings for AI video models</small>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6><span class="badge bg-secondary">🎞️</span> Animation Style</h6>
+                                        <small class="text-muted">Settings for animated or cartoon styles</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pro Tips -->
+                <section id="tips" class="card feature-card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Pro Tips & Keyboard Shortcuts</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold">Keyboard Shortcuts</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">Enter</span></td>
+                                        <td>Generate prompt</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">S</span></td>
+                                        <td>Save prompt to library</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">C</span></td>
+                                        <td>Copy generated output (when output is visible)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h6 class="fw-bold">Best Practices</h6>
+                        <ul>
+                            <li><strong>Be Specific:</strong> The more detail in your base prompt, the better the results</li>
+                            <li><strong>Match Model to Task:</strong> Use image models for images, video models for videos</li>
+                            <li><strong>Experiment with Lighting:</strong> Lighting dramatically affects the mood and quality</li>
+                            <li><strong>Save What Works:</strong> When you get great results, save the prompt to your library</li>
+                            <li><strong>Use Custom Options:</strong> Add your own values to dropdowns for personalized workflows</li>
+                            <li><strong>Try Different Formats:</strong> Use JSON output for structured data or Markdown for documentation</li>
+                        </ul>
+                        
+                        <h6 class="fw-bold mt-4">Output Formats</h6>
+                        <ul>
+                            <li><strong>Plain Text:</strong> Simple prompt ready to paste (default)</li>
+                            <li><strong>JSON:</strong> Structured data with all parameters</li>
+                            <li><strong>Markdown:</strong> Formatted for documentation</li>
+                            <li><strong>CSV:</strong> Spreadsheet-friendly format</li>
+                            <li><strong>HTML:</strong> Web-ready formatted output</li>
+                        </ul>
+                        
+                        <div class="tip-box success">
+                            <strong><i class="bi bi-download"></i> Install as App:</strong> 
+                            Click the "Install App" button (when available) to add this tool to your desktop or phone home screen for quick access!
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <div class="text-center py-4">
+                    <a href="index.html" class="btn btn-primary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Start Using the App
+                    </a>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Back to App Button -->
+    <a href="index.html" class="btn btn-primary back-to-app shadow-lg">
+        <i class="bi bi-arrow-left"></i> Back to App
+    </a>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

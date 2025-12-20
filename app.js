@@ -1751,14 +1751,13 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             style: ['cinematic', 'photorealistic', 'artistic', 'detailed', 'sharp focus', 'crisp'],
             lighting: ['dramatic lighting', 'soft lighting', 'natural light', 'golden hour', 'rim lighting'],
             composition: ['rule of thirds', 'symmetrical', 'dynamic composition', 'leading lines'],
-            technical: ['--style', '--quality', '--ar', '--chaos', '--stylize', '--iw', '--seed'],
             negative: ['blurry', 'low quality', 'distorted', 'deformed', 'bad anatomy', 'worst quality']
         };
 
         const foundEnhancements = [];
         const foundNegatives = [];
 
-        // Extract positive enhancements
+        // Extract positive enhancements (skip technical params - handled separately)
         Object.entries(enhancementPatterns).forEach(([category, keywords]) => {
             if (category === 'negative') return;
             
@@ -1776,10 +1775,13 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             }
         });
 
-        // Extract model-specific parameters
-        const paramMatches = content.match(/--[\w-]+(?:\s+\d+)?/g);
+        // Extract model-specific parameters WITH values only (e.g., --style raw, --quality 2, --ar 16:9)
+        // This regex requires a value after the parameter name
+        const paramMatches = content.match(/--[\w-]+\s+[\w.:/-]+/g);
         if (paramMatches) {
-            foundEnhancements.push(...paramMatches);
+            // Filter out duplicates and clean up
+            const uniqueParams = [...new Set(paramMatches.map(p => p.trim()))];
+            foundEnhancements.push(...uniqueParams);
         }
 
         // Extract technical terms and best practices
@@ -1788,7 +1790,9 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             foundEnhancements.push('technical documentation');
         }
 
-        const result = foundEnhancements.length > 0 ? foundEnhancements.join(', ') : null;
+        // Remove duplicates from enhancements
+        const uniqueEnhancements = [...new Set(foundEnhancements)];
+        const result = uniqueEnhancements.length > 0 ? uniqueEnhancements.join(', ') : null;
         const negatives = foundNegatives.length > 0 ? foundNegatives.join(', ') : null;
         
         return {
