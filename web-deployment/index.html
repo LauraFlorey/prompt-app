@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Prompt Generator</title>
+    <title>Prompt Helper</title>
     <meta name="description" content="A comprehensive AI prompt generation tool for image, video, and text models">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
@@ -295,237 +295,260 @@
             }
         }
         
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            .main-container {
-                background: rgba(30, 30, 30, 0.95);
-                color: #e9ecef;
-            }
-            
-            .card {
-                background-color: rgba(40, 40, 40, 0.8);
-                border-color: #495057;
-                color: #e9ecef;
-            }
-            
-            .card-header {
-                background-color: rgba(50, 50, 50, 0.8) !important;
-                border-bottom-color: #495057 !important;
-                color: #ffffff !important;
-            }
-            
-            .form-control, .form-select {
-                background-color: rgba(50, 50, 50, 0.8);
-                border-color: #6c757d;
-                color: #e9ecef;
-            }
-            
-            .form-control:focus, .form-select:focus {
-                background-color: rgba(50, 50, 50, 0.9);
-                border-color: #667eea;
-                color: #e9ecef;
-                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-            }
-            
-            .form-control::placeholder {
-                color: #adb5bd;
-            }
-            
-            .form-label {
-                color: #e9ecef;
-            }
-            
-            .library-item {
-                background: rgba(40, 40, 40, 0.6);
-                border-color: #495057;
-                color: #e9ecef;
-            }
-            
-            .library-item h6 {
-                color: #ffffff;
-            }
-            
-            .library-item .text-muted {
-                color: #adb5bd !important;
-            }
-            
-            .upload-zone {
-                background: rgba(102, 126, 234, 0.1);
-                border-color: #6c757d;
-                color: #e9ecef;
-            }
-            
-            .upload-zone .text-muted {
-                color: #adb5bd !important;
-            }
-            
-            .text-muted {
-                color: #adb5bd !important;
-            }
-            
-            .text-success {
-                color: #75b798 !important;
-            }
-            
-            .text-warning {
-                color: #ffc107 !important;
-            }
-            
-            .text-danger {
-                color: #dc3545 !important;
-            }
-            
-            .text-info {
-                color: #17a2b8 !important;
-            }
-            
-            .btn-outline-primary {
-                color: #667eea;
-                border-color: #667eea;
-            }
-            
-            .btn-outline-primary:hover {
-                background-color: #667eea;
-                color: #ffffff;
-            }
-            
-            .btn-outline-secondary {
-                color: #6c757d;
-                border-color: #6c757d;
-            }
-            
-            .btn-outline-secondary:hover {
-                background-color: #6c757d;
-                color: #ffffff;
-            }
-            
-            .btn-outline-danger {
-                color: #dc3545;
-                border-color: #dc3545;
-            }
-            
-            .btn-outline-danger:hover {
-                background-color: #dc3545;
-                color: #ffffff;
-            }
-            
-            .btn-outline-info {
-                color: #17a2b8;
-                border-color: #17a2b8;
-            }
-            
-            .btn-outline-info:hover {
-                background-color: #17a2b8;
-                color: #ffffff;
-            }
-            
-            .btn-outline-warning {
-                color: #ffc107;
-                border-color: #ffc107;
-            }
-            
-            .btn-outline-warning:hover {
-                background-color: #ffc107;
-                color: #212529;
-            }
-            
-            .btn-outline-light {
-                color: #f8f9fa;
-                border-color: #f8f9fa;
-            }
-            
-            .btn-outline-light:hover {
-                background-color: #f8f9fa;
-                color: #212529;
-            }
-            
-            .alert {
-                background-color: rgba(50, 50, 50, 0.8);
-                border-color: #495057;
-                color: #e9ecef;
-            }
-            
-            .alert-info {
-                background-color: rgba(23, 162, 184, 0.2);
-                border-color: #17a2b8;
-                color: #b8ecf0;
-            }
-            
-            .alert-success {
-                background-color: rgba(40, 167, 69, 0.2);
-                border-color: #28a745;
-                color: #b8e6c1;
-            }
-            
-            .alert-warning {
-                background-color: rgba(255, 193, 7, 0.2);
-                border-color: #ffc107;
-                color: #fff3cd;
-            }
-            
-            .alert-danger {
-                background-color: rgba(220, 53, 69, 0.2);
-                border-color: #dc3545;
-                color: #f5c6cb;
-            }
-            
-            /* Search highlighting in dark mode */
-            mark {
-                background-color: #856404;
-                color: #fff3cd;
-                padding: 2px 4px;
-                border-radius: 3px;
-            }
-            
-            /* Links */
-            a {
-                color: #667eea;
-            }
-            
-            a:hover {
-                color: #5a6fd8;
-            }
-            
-            /* Modal in dark mode */
-            .modal-content {
-                background-color: rgba(40, 40, 40, 0.95);
-                border-color: #495057;
-                color: #e9ecef;
-            }
-            
-            .modal-header {
-                border-bottom-color: #495057;
-            }
-            
-            .modal-footer {
-                border-top-color: #495057;
-            }
-            
-            .btn-close {
-                filter: invert(1);
-            }
-            
-            /* Output section in dark mode */
-            .output-section {
-                background: rgba(40, 40, 40, 0.8);
-                color: #e9ecef;
-                border: 1px solid #495057;
-            }
-            
-            .output-section p {
-                color: #e9ecef !important;
-            }
-            
-            .output-section pre {
-                background: rgba(30, 30, 30, 0.9);
-                border: 1px solid #495057;
-                color: #e9ecef;
-            }
-            
-            .output-section code {
-                color: #e9ecef;
-                background: transparent;
-            }
+        /* Dark mode support - class-based for manual toggle */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        body.dark-mode .main-container {
+            background: rgba(30, 30, 30, 0.95);
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .card {
+            background-color: rgba(40, 40, 40, 0.8);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .card-header {
+            background-color: rgba(50, 50, 50, 0.8) !important;
+            border-bottom-color: #495057 !important;
+            color: #ffffff !important;
+        }
+        
+        body.dark-mode .form-control, 
+        body.dark-mode .form-select {
+            background-color: rgba(50, 50, 50, 0.8);
+            border-color: #6c757d;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .form-control:focus, 
+        body.dark-mode .form-select:focus {
+            background-color: rgba(50, 50, 50, 0.9);
+            border-color: #667eea;
+            color: #e9ecef;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        body.dark-mode .form-control::placeholder {
+            color: #adb5bd;
+        }
+        
+        body.dark-mode .form-label {
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .library-item {
+            background: rgba(40, 40, 40, 0.6);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .library-item h6 {
+            color: #ffffff;
+        }
+        
+        body.dark-mode .library-item .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        body.dark-mode .upload-zone {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #6c757d;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .upload-zone .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        body.dark-mode .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        body.dark-mode .text-success {
+            color: #75b798 !important;
+        }
+        
+        body.dark-mode .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        body.dark-mode .text-danger {
+            color: #dc3545 !important;
+        }
+        
+        body.dark-mode .text-info {
+            color: #17a2b8 !important;
+        }
+        
+        body.dark-mode .btn-outline-primary {
+            color: #667eea;
+            border-color: #667eea;
+        }
+        
+        body.dark-mode .btn-outline-primary:hover {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+        
+        body.dark-mode .btn-outline-secondary {
+            color: #adb5bd;
+            border-color: #6c757d;
+        }
+        
+        body.dark-mode .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: #ffffff;
+        }
+        
+        body.dark-mode .btn-outline-danger {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        body.dark-mode .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+        
+        body.dark-mode .btn-outline-info {
+            color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        body.dark-mode .btn-outline-info:hover {
+            background-color: #17a2b8;
+            color: #ffffff;
+        }
+        
+        body.dark-mode .btn-outline-warning {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+        
+        body.dark-mode .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        body.dark-mode .btn-outline-light {
+            color: #f8f9fa;
+            border-color: #f8f9fa;
+        }
+        
+        body.dark-mode .btn-outline-light:hover {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        
+        body.dark-mode .alert {
+            background-color: rgba(50, 50, 50, 0.8);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .alert-info {
+            background-color: rgba(23, 162, 184, 0.2);
+            border-color: #17a2b8;
+            color: #b8ecf0;
+        }
+        
+        body.dark-mode .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            border-color: #28a745;
+            color: #b8e6c1;
+        }
+        
+        body.dark-mode .alert-warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-color: #ffc107;
+            color: #fff3cd;
+        }
+        
+        body.dark-mode .alert-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            border-color: #dc3545;
+            color: #f5c6cb;
+        }
+        
+        body.dark-mode mark {
+            background-color: #856404;
+            color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        body.dark-mode a:not(.btn) {
+            color: #667eea;
+        }
+        
+        body.dark-mode a:not(.btn):hover {
+            color: #5a6fd8;
+        }
+        
+        body.dark-mode .modal-content {
+            background-color: rgba(40, 40, 40, 0.95);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .modal-header {
+            border-bottom-color: #495057;
+        }
+        
+        body.dark-mode .modal-footer {
+            border-top-color: #495057;
+        }
+        
+        body.dark-mode .btn-close {
+            filter: invert(1);
+        }
+        
+        body.dark-mode .output-section {
+            background: rgba(40, 40, 40, 0.8);
+            color: #e9ecef;
+            border: 1px solid #495057;
+        }
+        
+        body.dark-mode .output-section p {
+            color: #e9ecef !important;
+        }
+        
+        body.dark-mode .output-section pre {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid #495057;
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .output-section code {
+            color: #e9ecef;
+            background: transparent;
+        }
+        
+        body.dark-mode .btn-check:checked + .btn-outline-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        body.dark-mode .table {
+            color: #e9ecef;
+        }
+        
+        body.dark-mode .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.075);
+        }
+        
+        /* Light mode explicit styles (for when dark is default on system but user prefers light) */
+        body.light-mode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        body.light-mode .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #212529;
         }
     </style>
 </head>
@@ -537,11 +560,14 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h1 class="display-4 fw-bold mb-0">
-                            <i class="bi bi-magic"></i> AI Prompt Generator
+                            <i class="bi bi-magic"></i> Prompt Helper
                         </h1>
                         <p class="lead mb-0">Generate, manage, and optimize prompts for AI models</p>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
+                        <button id="themeToggle" class="btn btn-light btn-sm shadow-sm" title="Toggle Light/Dark Mode">
+                            <i class="bi bi-moon-fill" id="themeIcon"></i>
+                        </button>
                         <a href="tutorial.html" class="btn btn-light btn-sm shadow-sm" title="How to Use - Tutorial">
                             <i class="bi bi-question-circle-fill"></i> <strong>Help</strong>
                         </a>
@@ -994,22 +1020,95 @@
                                             <h6 class="mb-0"><i class="bi bi-palette2"></i> Style Reference (sref)</h6>
                                         </div>
                                         <div class="card-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="srefUrl" class="form-label fw-semibold">
-                                                        <i class="bi bi-link-45deg"></i> Reference URL
+                                            <!-- Sref Type Selector -->
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-toggles"></i> Reference Type
+                                                </label>
+                                                <div class="btn-group w-100" role="group">
+                                                    <input type="radio" class="btn-check" name="srefType" id="srefTypeUrl" value="url" checked>
+                                                    <label class="btn btn-outline-info" for="srefTypeUrl">
+                                                        <i class="bi bi-link-45deg"></i> URL
                                                     </label>
-                                                    <input type="url" class="form-control" id="srefUrl" 
-                                                           placeholder="https://example.com/style-image.jpg">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="srefWeight" class="form-label fw-semibold">
-                                                        <i class="bi bi-sliders"></i> Weight (0-1000)
+                                                    <input type="radio" class="btn-check" name="srefType" id="srefTypeCode" value="code">
+                                                    <label class="btn btn-outline-info" for="srefTypeCode">
+                                                        <i class="bi bi-hash"></i> Code
                                                     </label>
-                                                    <input type="number" class="form-control" id="srefWeight" 
-                                                           min="0" max="1000" step="50" placeholder="100">
+                                                    <input type="radio" class="btn-check" name="srefType" id="srefTypeImage" value="image">
+                                                    <label class="btn btn-outline-info" for="srefTypeImage">
+                                                        <i class="bi bi-image"></i> Upload
+                                                    </label>
                                                 </div>
                                             </div>
+                                            
+                                            <!-- URL Input (default) -->
+                                            <div id="srefUrlSection" class="sref-input-section">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-8">
+                                                        <label for="srefUrl" class="form-label fw-semibold">
+                                                            <i class="bi bi-link-45deg"></i> Reference URL
+                                                        </label>
+                                                        <input type="text" class="form-control" id="srefUrl" 
+                                                               placeholder="https://example.com/style-image.jpg">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="srefWeight" class="form-label fw-semibold">
+                                                            <i class="bi bi-sliders"></i> Weight
+                                                        </label>
+                                                        <input type="number" class="form-control" id="srefWeight" 
+                                                               min="0" max="1000" step="50" placeholder="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Code Input -->
+                                            <div id="srefCodeSection" class="sref-input-section" style="display: none;">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-8">
+                                                        <label for="srefCode" class="form-label fw-semibold">
+                                                            <i class="bi bi-hash"></i> Sref Code
+                                                        </label>
+                                                        <input type="text" class="form-control" id="srefCode" 
+                                                               placeholder="123456789 or 2342323dff">
+                                                        <small class="text-muted">Enter Midjourney style code (numbers or alphanumeric)</small>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="srefCodeWeight" class="form-label fw-semibold">
+                                                            <i class="bi bi-sliders"></i> Weight
+                                                        </label>
+                                                        <input type="number" class="form-control" id="srefCodeWeight" 
+                                                               min="0" max="1000" step="50" placeholder="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Image Upload -->
+                                            <div id="srefImageSection" class="sref-input-section" style="display: none;">
+                                                <div class="mb-3">
+                                                    <label for="srefImageUpload" class="form-label fw-semibold">
+                                                        <i class="bi bi-upload"></i> Upload Reference Image
+                                                    </label>
+                                                    <input type="file" class="form-control" id="srefImageUpload" 
+                                                           accept="image/*">
+                                                    <small class="text-muted">Upload an image to use as style reference (will be converted to data URL)</small>
+                                                </div>
+                                                <div id="srefImagePreview" class="mb-3" style="display: none;">
+                                                    <img id="srefPreviewImg" src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="app.clearSrefImage()">
+                                                        <i class="bi bi-x"></i> Remove
+                                                    </button>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-4">
+                                                        <label for="srefImageWeight" class="form-label fw-semibold">
+                                                            <i class="bi bi-sliders"></i> Weight
+                                                        </label>
+                                                        <input type="number" class="form-control" id="srefImageWeight" 
+                                                               min="0" max="1000" step="50" placeholder="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
                                             <div class="mb-3">
                                                 <label for="srefExplanation" class="form-label fw-semibold">
                                                     <i class="bi bi-chat-text"></i> Style Description
@@ -1186,6 +1285,83 @@
                     .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
                     });
+            });
+        }
+
+        // Theme Toggle (Light/Dark Mode)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Initialize theme from localStorage or system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme) {
+                // Use saved preference
+                document.body.classList.remove('light-mode', 'dark-mode');
+                document.body.classList.add(savedTheme + '-mode');
+                updateThemeIcon(savedTheme);
+            } else {
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.body.classList.add('dark-mode');
+                    updateThemeIcon('dark');
+                } else {
+                    document.body.classList.add('light-mode');
+                    updateThemeIcon('light');
+                }
+            }
+        }
+        
+        function updateThemeIcon(theme) {
+            if (themeIcon) {
+                if (theme === 'dark') {
+                    themeIcon.className = 'bi bi-sun-fill';
+                    themeToggle.title = 'Switch to Light Mode';
+                } else {
+                    themeIcon.className = 'bi bi-moon-fill';
+                    themeToggle.title = 'Switch to Dark Mode';
+                }
+            }
+        }
+        
+        function toggleTheme() {
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            document.body.classList.remove('light-mode', 'dark-mode');
+            
+            if (isDark) {
+                document.body.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                updateThemeIcon('light');
+            } else {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                updateThemeIcon('dark');
+            }
+        }
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // Initialize theme on page load
+        initTheme();
+        
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                // Only auto-switch if user hasn't set a preference
+                if (!localStorage.getItem('theme')) {
+                    document.body.classList.remove('light-mode', 'dark-mode');
+                    if (e.matches) {
+                        document.body.classList.add('dark-mode');
+                        updateThemeIcon('dark');
+                    } else {
+                        document.body.classList.add('light-mode');
+                        updateThemeIcon('light');
+                    }
+                }
             });
         }
 

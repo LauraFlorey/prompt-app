@@ -1,4 +1,4 @@
-// AI Prompt Generator App
+// Prompt Helper App
 class PromptGenerator {
     constructor() {
         this.promptLibrary = JSON.parse(localStorage.getItem('promptLibrary')) || [];
@@ -39,6 +39,9 @@ class PromptGenerator {
         // Track unsaved changes
         this.hasUnsavedChanges = false;
         this.autoSaveTimer = null;
+        
+        // Sref image data URL (for uploaded images)
+        this.srefImageDataUrl = '';
         
         // Initialize tooltip explanations
         this.tooltipExplanations = this.initTooltipExplanations();
@@ -183,6 +186,21 @@ class PromptGenerator {
                 this.clearSrefLibrary();
             });
         }
+        
+        // Sref type switching (URL, Code, Image)
+        document.querySelectorAll('input[name="srefType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.switchSrefType(e.target.value);
+            });
+        });
+        
+        // Sref image upload
+        const srefImageUpload = document.getElementById('srefImageUpload');
+        if (srefImageUpload) {
+            srefImageUpload.addEventListener('change', (e) => {
+                this.handleSrefImageUpload(e);
+            });
+        }
 
         // Template buttons
         setTimeout(() => {
@@ -296,6 +314,22 @@ class PromptGenerator {
     }
 
     getFormData() {
+        // Determine which sref type is selected
+        const srefType = document.querySelector('input[name="srefType"]:checked')?.value || 'url';
+        let srefValue = '';
+        let srefWeight = '';
+        
+        if (srefType === 'url') {
+            srefValue = document.getElementById('srefUrl')?.value || '';
+            srefWeight = document.getElementById('srefWeight')?.value || '';
+        } else if (srefType === 'code') {
+            srefValue = document.getElementById('srefCode')?.value || '';
+            srefWeight = document.getElementById('srefCodeWeight')?.value || '';
+        } else if (srefType === 'image') {
+            srefValue = this.srefImageDataUrl || '';
+            srefWeight = document.getElementById('srefImageWeight')?.value || '';
+        }
+        
         return {
             model: document.getElementById('modelSelect').value,
             type: document.getElementById('promptType').value,
@@ -308,9 +342,12 @@ class PromptGenerator {
             artStyle: document.getElementById('artStyle').value,
             composition: document.getElementById('composition').value,
             quality: document.getElementById('quality').value,
-            srefUrl: document.getElementById('srefUrl').value,
-            srefWeight: document.getElementById('srefWeight').value,
-            srefExplanation: document.getElementById('srefExplanation').value,
+            srefType: srefType,
+            srefValue: srefValue,
+            srefUrl: srefType === 'url' ? srefValue : '',
+            srefCode: srefType === 'code' ? srefValue : '',
+            srefWeight: srefWeight,
+            srefExplanation: document.getElementById('srefExplanation')?.value || '',
             outputFormat: document.getElementById('outputFormat').value
         };
     }
@@ -360,10 +397,18 @@ class PromptGenerator {
         }
         
         // Style reference validation
-        if (formData.srefUrl) {
-            if (!this.isValidUrl(formData.srefUrl)) {
-                errors.push('Style reference URL is not valid');
+        if (formData.srefValue) {
+            if (formData.srefType === 'url') {
+                if (!this.isValidUrl(formData.srefValue)) {
+                    errors.push('Style reference URL is not valid');
+                }
+            } else if (formData.srefType === 'code') {
+                // Validate sref code (alphanumeric, can have letters and numbers)
+                if (!this.isValidSrefCode(formData.srefValue)) {
+                    errors.push('Style reference code should be alphanumeric (e.g., 123456789 or 2342323dff)');
+                }
             }
+            // Image type doesn't need URL validation
             
             if (formData.srefWeight) {
                 const weight = parseInt(formData.srefWeight);
@@ -990,10 +1035,19 @@ class PromptGenerator {
         }
 
         // Add style reference (sref) if specified
-        if (formData.srefUrl) {
+        if (formData.srefValue) {
             const srefWeight = formData.srefWeight || 100;
-            prompt += ` --sref ${formData.srefUrl}`;
-            if (srefWeight !== 100) {
+            
+            if (formData.srefType === 'url' || formData.srefType === 'image') {
+                // URL or image data URL
+                prompt += ` --sref ${formData.srefValue}`;
+            } else if (formData.srefType === 'code') {
+                // Sref code (just the code number/string)
+                prompt += ` --sref ${formData.srefValue}`;
+            }
+            
+            // Add weight if not default
+            if (srefWeight && parseInt(srefWeight) !== 100) {
                 prompt += ` --sw ${srefWeight}`;
             }
         }
@@ -1122,7 +1176,7 @@ ${formData.srefWeight ? `- **Weight:** ${formData.srefWeight}` : ''}
 ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : ''}
 
 ---
-*Generated by AI Prompt Generator v2.0*`;
+*Generated by Prompt Helper v2.0*`;
     }
 
     formatAsCSV(prompt) {
@@ -1186,7 +1240,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                 </div>
                 ` : ''}
                 <hr>
-                <p><em>Generated by AI Prompt Generator v2.0</em></p>
+                <p><em>Generated by Prompt Helper v2.0</em></p>
             </div>
         `;
     }
@@ -1730,6 +1784,15 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             return false;
         }
     }
+    
+    isValidSrefCode(code) {
+        // Sref codes can be numeric or alphanumeric (e.g., 123456789 or 2342323dff)
+        // They shouldn't contain special characters except possibly hyphens
+        if (!code || typeof code !== 'string') return false;
+        const trimmed = code.trim();
+        // Allow alphanumeric codes, optionally with hyphens
+        return /^[a-zA-Z0-9-]+$/.test(trimmed) && trimmed.length >= 3;
+    }
 
     async extractEnhancements(content, filename) {
         // Try local LLM analysis first if enabled
@@ -1989,15 +2052,9 @@ Format your response as JSON:
             }
         });
 
-        // Handle page unload
-        window.addEventListener('unload', () => {
-            if (this.hasUnsavedChanges) {
-                this.performBackupSave();
-            }
-        });
-
-        // Handle pagehide (mobile browsers)
-        window.addEventListener('pagehide', () => {
+        // Handle pagehide (modern replacement for deprecated 'unload' event)
+        // Works on both desktop and mobile browsers
+        window.addEventListener('pagehide', (e) => {
             if (this.hasUnsavedChanges) {
                 this.performBackupSave();
             }
@@ -2145,26 +2202,61 @@ Format your response as JSON:
 
     // Sref Library Management Methods
     saveSrefToLibrary() {
-        const srefUrl = document.getElementById('srefUrl').value.trim();
-        const srefWeight = document.getElementById('srefWeight').value;
-        const srefExplanation = document.getElementById('srefExplanation').value.trim();
-
-        if (!srefUrl) {
-            this.showToast('Please enter a style reference URL', 'warning');
-            return;
-        }
-
-        if (!this.isValidUrl(srefUrl)) {
-            this.showToast('Please enter a valid URL', 'warning');
-            return;
+        const srefType = document.querySelector('input[name="srefType"]:checked')?.value || 'url';
+        const srefExplanation = document.getElementById('srefExplanation')?.value.trim() || '';
+        
+        let srefValue = '';
+        let srefWeight = '';
+        let srefName = '';
+        
+        if (srefType === 'url') {
+            srefValue = document.getElementById('srefUrl')?.value.trim() || '';
+            srefWeight = document.getElementById('srefWeight')?.value || '100';
+            
+            if (!srefValue) {
+                this.showToast('Please enter a style reference URL', 'warning');
+                return;
+            }
+            if (!this.isValidUrl(srefValue)) {
+                this.showToast('Please enter a valid URL', 'warning');
+                return;
+            }
+            srefName = this.extractNameFromUrl(srefValue);
+            
+        } else if (srefType === 'code') {
+            srefValue = document.getElementById('srefCode')?.value.trim() || '';
+            srefWeight = document.getElementById('srefCodeWeight')?.value || '100';
+            
+            if (!srefValue) {
+                this.showToast('Please enter a style reference code', 'warning');
+                return;
+            }
+            if (!this.isValidSrefCode(srefValue)) {
+                this.showToast('Please enter a valid sref code (alphanumeric)', 'warning');
+                return;
+            }
+            srefName = `Code: ${srefValue.substring(0, 20)}${srefValue.length > 20 ? '...' : ''}`;
+            
+        } else if (srefType === 'image') {
+            srefValue = this.srefImageDataUrl;
+            srefWeight = document.getElementById('srefImageWeight')?.value || '100';
+            
+            if (!srefValue) {
+                this.showToast('Please upload an image first', 'warning');
+                return;
+            }
+            srefName = 'Uploaded Image';
         }
 
         const srefData = {
             id: Date.now(),
-            url: srefUrl,
-            weight: srefWeight || 100,
+            type: srefType,
+            value: srefValue,
+            url: srefType === 'url' ? srefValue : '',
+            code: srefType === 'code' ? srefValue : '',
+            weight: srefWeight,
             explanation: srefExplanation || 'No description provided',
-            name: this.extractNameFromUrl(srefUrl),
+            name: srefName,
             createdAt: new Date().toISOString()
         };
 
@@ -2248,10 +2340,105 @@ Format your response as JSON:
     }
 
     clearSrefForm() {
-        document.getElementById('srefUrl').value = '';
-        document.getElementById('srefWeight').value = '';
-        document.getElementById('srefExplanation').value = '';
+        // Clear all sref inputs
+        const srefUrl = document.getElementById('srefUrl');
+        const srefWeight = document.getElementById('srefWeight');
+        const srefCode = document.getElementById('srefCode');
+        const srefCodeWeight = document.getElementById('srefCodeWeight');
+        const srefImageWeight = document.getElementById('srefImageWeight');
+        const srefExplanation = document.getElementById('srefExplanation');
+        const srefImageUpload = document.getElementById('srefImageUpload');
+        
+        if (srefUrl) srefUrl.value = '';
+        if (srefWeight) srefWeight.value = '';
+        if (srefCode) srefCode.value = '';
+        if (srefCodeWeight) srefCodeWeight.value = '';
+        if (srefImageWeight) srefImageWeight.value = '';
+        if (srefExplanation) srefExplanation.value = '';
+        if (srefImageUpload) srefImageUpload.value = '';
+        
+        // Clear image preview
+        this.clearSrefImage();
+        
+        // Reset to URL type
+        const urlRadio = document.getElementById('srefTypeUrl');
+        if (urlRadio) {
+            urlRadio.checked = true;
+            this.switchSrefType('url');
+        }
+        
         this.showToast('Style reference form cleared', 'info');
+    }
+    
+    switchSrefType(type) {
+        // Hide all sections
+        const sections = document.querySelectorAll('.sref-input-section');
+        sections.forEach(section => {
+            section.style.display = 'none';
+        });
+        
+        // Show the selected section
+        const sectionMap = {
+            'url': 'srefUrlSection',
+            'code': 'srefCodeSection',
+            'image': 'srefImageSection'
+        };
+        
+        const targetSection = document.getElementById(sectionMap[type]);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+    
+    handleSrefImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Validate it's an image
+        if (!file.type.startsWith('image/')) {
+            this.showToast('Please select an image file', 'warning');
+            return;
+        }
+        
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('Image too large. Please use an image under 5MB.', 'warning');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.srefImageDataUrl = e.target.result;
+            
+            // Show preview
+            const previewContainer = document.getElementById('srefImagePreview');
+            const previewImg = document.getElementById('srefPreviewImg');
+            
+            if (previewContainer && previewImg) {
+                previewImg.src = this.srefImageDataUrl;
+                previewContainer.style.display = 'block';
+            }
+            
+            this.showToast('Image loaded successfully!', 'success');
+        };
+        
+        reader.onerror = () => {
+            this.showToast('Error reading image file', 'error');
+        };
+        
+        reader.readAsDataURL(file);
+    }
+    
+    clearSrefImage() {
+        this.srefImageDataUrl = '';
+        
+        const previewContainer = document.getElementById('srefImagePreview');
+        const previewImg = document.getElementById('srefPreviewImg');
+        const srefImageUpload = document.getElementById('srefImageUpload');
+        
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (previewImg) previewImg.src = '';
+        if (srefImageUpload) srefImageUpload.value = '';
     }
 
     extractNameFromUrl(url) {
@@ -3746,7 +3933,7 @@ Format your response as JSON:
                 break;
                 
             case 'markdown':
-                content = `# AI Prompt Generator Library Export
+                content = `# Prompt Helper Library Export
 
 **Exported:** ${new Date().toLocaleString()}  
 **Version:** 2.0
@@ -3764,13 +3951,13 @@ ${this.promptLibrary.map(p => `### ${p.name}\n\`\`\`\n${p.startingPrompt}\n\`\`\
 ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description:** ${s.explanation}\n`).join('\n')}
 
 ---
-*Generated by AI Prompt Generator v2.0*`;
+*Generated by Prompt Helper v2.0*`;
                 filename = `${filenamePrefix}_${timestamp}.md`;
                 mimeType = 'text/markdown';
                 break;
                 
             default: // txt
-                content = `AI Prompt Generator Library Export\n`;
+                content = `Prompt Helper Library Export\n`;
                 content += `Exported: ${new Date().toLocaleString()}\n\n`;
                 content += `PROMPTS (${this.promptLibrary.length}):\n`;
                 this.promptLibrary.forEach(p => {

@@ -254,12 +254,12 @@ function createMenu() {
             label: 'Help',
             submenu: [
                 {
-                    label: 'About AI Prompt Generator',
+                    label: 'About Prompt Helper',
                     click: () => {
                         dialog.showMessageBox(mainWindow, {
                             type: 'info',
-                            title: 'About AI Prompt Generator',
-                            message: 'AI Prompt Generator',
+                            title: 'About Prompt Helper',
+                            message: 'Prompt Helper',
                             detail: 'Version 2.0.0\n\nA comprehensive tool for generating, managing, and optimizing prompts for various AI models.\n\nNew Features:\n• Local LLM integration for enhanced analysis\n• Advanced search and filtering\n• Improved mobile responsiveness\n• Dark mode support\n• Enhanced content analysis\n\nBuilt with Electron and Bootstrap 5.',
                             buttons: ['OK']
                         });

@@ -1,4 +1,4 @@
-// Service Worker for AI Prompt Generator PWA
+// Service Worker for Prompt Helper PWA
 const CACHE_NAME = 'ai-prompt-generator-v2.0.0';
 const urlsToCache = [
     './',
@@ -140,7 +140,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-        self.registration.showNotification('AI Prompt Generator', options)
+        self.registration.showNotification('Prompt Helper', options)
     );
 });
 

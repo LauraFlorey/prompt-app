@@ -1,5 +1,5 @@
 {
-  "name": "AI Prompt Generator",
+  "name": "Prompt Helper",
   "short_name": "PromptGen",
   "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, mood/color controls, local LLM integration, and advanced parameters",
   "start_url": "./index.html",
@@ -53,14 +53,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "AI Prompt Generator main interface"
+      "label": "Prompt Helper main interface"
     },
     {
       "src": "assets/screenshot-narrow.png",
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "AI Prompt Generator mobile interface"
+      "label": "Prompt Helper mobile interface"
     }
   ]
 }
