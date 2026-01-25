@@ -776,10 +776,8 @@ class PromptGenerator {
             const isRecommended = this.isModelTypeOptimal(option.value, type);
             if (isRecommended) {
                 option.style.fontWeight = 'bold';
-                option.style.backgroundColor = '#d4edda';
             } else {
                 option.style.fontWeight = 'normal';
-                option.style.backgroundColor = '';
             }
         });
     }
@@ -1029,27 +1027,35 @@ class PromptGenerator {
             enhancements.push(modelEnhancements);
         }
 
+        // Add style reference (sref) if specified.
+        // - Midjourney: keep `--sref` / `--sw` flags
+        // - Other models: preserve sref details as plain-language enhancement notes
+        let midjourneySrefSuffix = '';
+        if (formData.srefValue) {
+            const rawWeight = formData.srefWeight;
+            const hasWeight = rawWeight !== undefined && rawWeight !== null && String(rawWeight).trim() !== '';
+            const srefWeight = hasWeight ? String(rawWeight).trim() : '';
+
+            if (formData.model === 'midjourney') {
+                midjourneySrefSuffix += ` --sref ${formData.srefValue}`;
+                if (hasWeight && parseInt(srefWeight, 10) !== 100) {
+                    midjourneySrefSuffix += ` --sw ${srefWeight}`;
+                }
+            } else {
+                const typeLabel = (formData.srefType || 'url').toUpperCase();
+                const weightNote = hasWeight ? ` (weight: ${srefWeight})` : '';
+                enhancements.push(`Style reference [${typeLabel}]: ${formData.srefValue}${weightNote}`);
+            }
+        }
+
         // Combine prompt with enhancements
         if (enhancements.length > 0) {
             prompt += `, ${enhancements.join(', ')}`;
         }
 
-        // Add style reference (sref) if specified
-        if (formData.srefValue) {
-            const srefWeight = formData.srefWeight || 100;
-            
-            if (formData.srefType === 'url' || formData.srefType === 'image') {
-                // URL or image data URL
-                prompt += ` --sref ${formData.srefValue}`;
-            } else if (formData.srefType === 'code') {
-                // Sref code (just the code number/string)
-                prompt += ` --sref ${formData.srefValue}`;
-            }
-            
-            // Add weight if not default
-            if (srefWeight && parseInt(srefWeight) !== 100) {
-                prompt += ` --sw ${srefWeight}`;
-            }
+        // Append any model-specific suffixes (e.g. Midjourney sref flags)
+        if (midjourneySrefSuffix) {
+            prompt += midjourneySrefSuffix;
         }
 
         // Manual information is for notes about documents, not prompt injection
@@ -1247,28 +1253,69 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
 
     displayOutput(output, format) {
         const outputSection = document.getElementById('outputSection');
+        if (!outputSection) return;
+
+        // Clear first, then render using DOM nodes to avoid HTML injection
+        outputSection.replaceChildren();
+
+        const safeOutput = output ?? '';
         
         switch (format) {
             case 'json':
-            outputSection.innerHTML = `<pre><code>${output}</code></pre>`;
+                {
+                    const pre = document.createElement('pre');
+                    pre.className = 'mb-0';
+                    const code = document.createElement('code');
+                    code.textContent = String(safeOutput);
+                    pre.appendChild(code);
+                    outputSection.appendChild(pre);
+                }
                 break;
             case 'markdown':
                 // Convert to markdown format
-                const markdownOutput = this.formatAsMarkdown(output);
-                outputSection.innerHTML = `<pre><code>${markdownOutput}</code></pre>`;
+                {
+                    const markdownOutput = this.formatAsMarkdown(safeOutput);
+                    const pre = document.createElement('pre');
+                    pre.className = 'mb-0';
+                    const code = document.createElement('code');
+                    code.textContent = String(markdownOutput ?? '');
+                    pre.appendChild(code);
+                    outputSection.appendChild(pre);
+                }
                 break;
             case 'csv':
                 // Convert to CSV format
-                const csvOutput = this.formatAsCSV(output);
-                outputSection.innerHTML = `<pre><code>${csvOutput}</code></pre>`;
+                {
+                    const csvOutput = this.formatAsCSV(safeOutput);
+                    const pre = document.createElement('pre');
+                    pre.className = 'mb-0';
+                    const code = document.createElement('code');
+                    code.textContent = String(csvOutput ?? '');
+                    pre.appendChild(code);
+                    outputSection.appendChild(pre);
+                }
                 break;
             case 'html':
                 // Convert to HTML format
-                const htmlOutput = this.formatAsHTML(output);
-                outputSection.innerHTML = htmlOutput;
+                {
+                    const htmlOutput = this.formatAsHTML(safeOutput);
+                    // Render HTML in an isolated, sandboxed iframe so exported HTML cannot execute in host page
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'w-100 border rounded';
+                    iframe.style.minHeight = '420px';
+                    iframe.setAttribute('sandbox', '');
+                    iframe.setAttribute('referrerpolicy', 'no-referrer');
+                    iframe.srcdoc = String(htmlOutput ?? '');
+                    outputSection.appendChild(iframe);
+                }
                 break;
             default: // text
-            outputSection.innerHTML = `<p>${output}</p>`;
+                {
+                    const p = document.createElement('p');
+                    p.className = 'mb-0';
+                    p.textContent = String(safeOutput);
+                    outputSection.appendChild(p);
+                }
                 break;
         }
         
@@ -1373,13 +1420,55 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
     }
 
     clearForm() {
-        document.getElementById('promptForm').reset();
-        document.getElementById('srefUrl').value = '';
-        document.getElementById('srefWeight').value = '';
-        document.getElementById('srefExplanation').value = '';
-        document.getElementById('outputSection').innerHTML = 
-            '<p class="text-muted text-center mb-0"><i class="bi bi-arrow-up"></i> Fill out the form above and click "Generate Prompt" to see your output here</p>';
-        document.getElementById('copyOutput').disabled = true;
+        const form = document.getElementById('promptForm');
+        if (form) form.reset();
+
+        // Safely reset all possible sref inputs (url/code/image) with null checks
+        const srefUrl = document.getElementById('srefUrl');
+        const srefWeight = document.getElementById('srefWeight');
+        const srefExplanation = document.getElementById('srefExplanation');
+        const srefCode = document.getElementById('srefCode');
+        const srefCodeWeight = document.getElementById('srefCodeWeight');
+        const srefImageWeight = document.getElementById('srefImageWeight');
+        const srefImageUpload = document.getElementById('srefImageUpload');
+
+        if (srefUrl) srefUrl.value = '';
+        if (srefWeight) srefWeight.value = '';
+        if (srefExplanation) srefExplanation.value = '';
+        if (srefCode) srefCode.value = '';
+        if (srefCodeWeight) srefCodeWeight.value = '';
+        if (srefImageWeight) srefImageWeight.value = '';
+        if (srefImageUpload) srefImageUpload.value = '';
+
+        // Reset stored image data URL + any preview UI if present
+        this.srefImageDataUrl = null;
+        if (typeof this.clearSrefImage === 'function') {
+            this.clearSrefImage();
+        }
+
+        // Default type back to URL
+        const urlRadio = document.getElementById('srefTypeUrl');
+        if (urlRadio) urlRadio.checked = true;
+        if (typeof this.switchSrefType === 'function') {
+            this.switchSrefType('url');
+        }
+
+        // Reset output section (no innerHTML)
+        const outputSection = document.getElementById('outputSection');
+        if (outputSection) {
+            outputSection.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center mb-0';
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-arrow-up';
+            p.appendChild(icon);
+            p.appendChild(document.createTextNode(' Fill out the form above and click "Generate Prompt" to see your output here'));
+            outputSection.appendChild(p);
+        }
+
+        const copyBtn = document.getElementById('copyOutput');
+        if (copyBtn) copyBtn.disabled = true;
+
         this.currentOutput = null;
     }
 

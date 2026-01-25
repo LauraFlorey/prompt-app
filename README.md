@@ -1,6 +1,22 @@
-# Prompt Helper v2.1.0
+# PromptForge
 
-A comprehensive web application for generating, managing, and optimizing prompts for various AI models. Features style references (sref), 20+ AI models, local LLM integration, advanced search, mobile responsiveness, and professional prompt generation capabilities.
+Build, refine, and save prompts for modern AI models — **static, local-first, and Bootstrap 5–based**.
+
+A comprehensive web application for generating, managing, and optimizing prompts for various AI models. Features style references (sref), 20+ AI models, local LLM integration, advanced search, and professional prompt generation capabilities.
+
+## Recent updates (January 2026)
+
+- **UI/UX improvements (Bootstrap 5)**:
+  - **Progressive disclosure**: advanced fields grouped into accordions (Camera / Look / Style & Composition / Style Reference).
+  - **Primary CTA**: “Generate Prompt” is the prominent action; other actions are secondary.
+  - **Mobile polish**: sticky Generate button on small screens.
+  - **Library dock**: Library panel is sticky on desktop and “Add to Library” is collapsible for cleaner browsing.
+- **Hardened output rendering** (`app.js`):
+  - `displayOutput()` no longer injects untrusted strings via `innerHTML` for text/json/markdown/csv.
+  - HTML output is rendered in a **sandboxed iframe** to isolate scripts/styles from the host page.
+- **Model-aware style references (sref)** (`app.js`):
+  - **Midjourney** keeps `--sref` / `--sw`.
+  - Other models preserve sref details as plain-language notes (type/value/weight) instead of appending Midjourney flags.
 
 ## Features
 
@@ -32,7 +48,7 @@ A comprehensive web application for generating, managing, and optimizing prompts
 - **Style Reference Library**: Save and manage image URLs with descriptions
 - **Weight Control**: Adjust style influence (0-1000) for fine-tuning
 - **Style Descriptions**: Document the mood, aesthetic, and approach of each reference
-- **Midjourney Integration**: Automatic `--sref` and `--sw` parameter formatting
+- **Midjourney Integration**: Automatic `--sref` and `--sw` parameter formatting (Midjourney only)
 - **One-Click Loading**: Quick access to saved style references
 - **Reference Preview**: Direct links to view original style images
 
@@ -73,7 +89,7 @@ A comprehensive web application for generating, managing, and optimizing prompts
    - Select the AI model you're targeting
    - Choose the type of prompt (text-to-image, etc.)
    - Enter your base prompt
-   - Optionally add camera angle and perspective settings
+   - Optionally expand accordion sections to set advanced options (camera, look, style, etc.)
 3. **Generate**: Click "Generate Prompt" to create your enhanced prompt
 4. **Save to Library**: Save useful prompts for future use
 5. **Add Content Sources**: 
@@ -94,6 +110,14 @@ prompt-app/
 ├── index.html          # Main application interface
 ├── app.js             # Core application logic
 └── README.md          # This documentation
+```
+
+## Running locally (optional)
+
+You can open `index.html` directly, or run a tiny static server:
+
+```bash
+python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 ## Browser Compatibility
@@ -201,6 +225,22 @@ Use the export feature to transfer your library to another device or create back
 - **LocalAI**: Follow LocalAI documentation for setup
 - **Custom APIs**: Any OpenAI-compatible endpoint works
 
+## Changelog
+
+### 2026-01 (PromptForge update)
+- **Branding**: Renamed the app to **PromptForge**.
+- **UI/UX (Bootstrap 5)**:
+  - Made **Generate Prompt** the primary call-to-action.
+  - Added **progressive disclosure** via accordions for advanced fields (Camera / Look / Style & Composition / Style Reference).
+  - Improved **Library** usability with a sticky desktop dock and collapsible “Add to Library”.
+  - Added a **mobile sticky Generate** button for quicker access on small screens.
+- **Output safety hardening (`app.js`)**:
+  - `displayOutput()` renders text/json/markdown/csv via DOM nodes + `textContent` (no `innerHTML` injection).
+  - HTML output is previewed in a **sandboxed iframe** to isolate exported HTML from the host page.
+- **Model-aware sref handling (`app.js`)**:
+  - Midjourney outputs `--sref` / `--sw`; other models keep sref as plain-language notes (type/value/weight).
+- **Dark mode polish**: Reduced label glare for better readability.
+
 ## Future Enhancements
 
 - Prompt templates and presets
@@ -211,5 +251,4 @@ Use the export feature to transfer your library to another device or create back
 
 ---
 
-**Version**: 2.1.0  
-**Last Updated**: December 2025
+**Last Updated**: January 2026
