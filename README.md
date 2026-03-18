@@ -202,6 +202,38 @@ Use the export feature to transfer your library to another device or create back
   3. Prompt you to manually copy content if automatic methods fail
 - **UI issues**: Try refreshing the page or clearing browser cache
 
+## Security
+
+PromptForge is built with security best practices:
+
+### Data Privacy
+- **100% client-side**: All data stays on your device in browser `localStorage`
+- **No server uploads**: Nothing is transmitted unless you explicitly export/import
+- **Browser isolation**: Data is scoped to the domain and can't be accessed by other sites
+
+### XSS Protection
+- All library rendering uses **DOM nodes + textContent** (no `innerHTML` injection of user data)
+- Search highlighting safely escapes all user input before rendering
+- External HTML is parsed with **DOMParser** to prevent script execution
+- HTML output preview is **sandboxed in iframe** with no script execution
+- **Subresource Integrity (SRI)**: Recommended for CDN resources (see `.htaccess`)
+
+### Deployment Security (`.htaccess` included)
+When deploying to a web server, the included `.htaccess` file provides:
+- **Content Security Policy (CSP)**: Restricts resource loading and inline scripts
+- **X-Frame-Options**: Prevents clickjacking
+- **X-Content-Type-Options**: Prevents MIME sniffing
+- **Referrer-Policy**: Controls referrer information leakage
+- **HTTPS enforcement**: Ready to enable when SSL is configured
+
+### Best Practices
+- **Don't store API keys**: The app is not designed for secure key storage
+- **Trust your imports**: Only import library exports from trusted sources
+- **Run trusted LLMs**: Local LLM integration connects to `localhost` — only run verified software
+- **Keep browser updated**: Modern browsers provide additional security protections
+
+For detailed security information, see `SECURITY.md`.
+
 ## Local LLM Setup Guide
 
 ### Ollama (Recommended)
@@ -226,6 +258,18 @@ Use the export feature to transfer your library to another device or create back
 - **Custom APIs**: Any OpenAI-compatible endpoint works
 
 ## Changelog
+
+### 2026-02 (Security Hardening)
+- **XSS Protection**:
+  - Replaced all `innerHTML` library rendering with **DOM nodes + textContent**
+  - Added `escapeHtml()` helper for safe string interpolation
+  - Fixed `highlightSearchTerm()` to escape input before wrapping in `<mark>` tags
+  - Changed `extractTextFromHtml()` to use **DOMParser** instead of `innerHTML`
+  - Added `rel="noopener noreferrer"` to external links
+- **Deployment Security**:
+  - Added `.htaccess` with **Content Security Policy**, X-Frame-Options, and other security headers
+  - Prepared HTTPS enforcement (ready to enable when SSL is configured)
+- **Documentation**: Added `SECURITY.md` with full security audit and best practices
 
 ### 2026-01 (PromptForge update)
 - **Branding**: Renamed the app to **PromptForge**.

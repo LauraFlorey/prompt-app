@@ -719,7 +719,12 @@ class PromptGenerator {
         // Add new feedback
         const feedback = document.createElement('div');
         feedback.className = `field-feedback text-${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : type === 'info' ? 'info' : 'success'} small mt-1`;
-        feedback.innerHTML = `<i class="bi bi-${type === 'error' ? 'x-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i> ${message}`;
+        
+        // Safe rendering: build with DOM nodes
+        const icon = document.createElement('i');
+        icon.className = `bi bi-${type === 'error' ? 'x-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'info' ? 'info-circle' : 'check-circle'}`;
+        feedback.appendChild(icon);
+        feedback.appendChild(document.createTextNode(' ' + message)); // Safe - textContent
         
         field.parentNode.appendChild(feedback);
         
@@ -1558,32 +1563,64 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
         }
         
         if (this.promptLibrary.length === 0) {
-            libraryContainer.innerHTML = '<p class="text-muted text-center">No saved prompts yet</p>';
+            libraryContainer.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center';
+            p.textContent = 'No saved prompts yet';
+            libraryContainer.appendChild(p);
             return;
         }
 
-        const libraryHTML = this.promptLibrary.map(prompt => `
-            <div class="library-item" data-id="${prompt.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-1">${prompt.name}</h6>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadPrompt(${prompt.id})">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deletePrompt(${prompt.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <small class="text-muted">
-                    <i class="bi bi-tag"></i> ${prompt.model} | ${prompt.type}
-                    <br><i class="bi bi-clock"></i> ${new Date(prompt.createdAt).toLocaleDateString()}
-                </small>
-                <p class="mt-2 mb-0 small">${prompt.startingPrompt.substring(0, 100)}${prompt.startingPrompt.length > 100 ? '...' : ''}</p>
-            </div>
-        `).join('');
-
-        libraryContainer.innerHTML = libraryHTML;
+        // Safe DOM rendering to prevent XSS
+        libraryContainer.replaceChildren();
+        
+        this.promptLibrary.forEach(prompt => {
+            const item = document.createElement('div');
+            item.className = 'library-item';
+            item.dataset.id = prompt.id;
+            
+            // Header row with title and buttons
+            const header = document.createElement('div');
+            header.className = 'd-flex justify-content-between align-items-start mb-2';
+            
+            const title = document.createElement('h6');
+            title.className = 'mb-1';
+            title.textContent = prompt.name; // Safe - textContent
+            
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group btn-group-sm';
+            
+            const loadBtn = document.createElement('button');
+            loadBtn.className = 'btn btn-outline-primary btn-sm';
+            loadBtn.innerHTML = '<i class="bi bi-arrow-up-circle"></i>'; // Safe - no user data
+            loadBtn.onclick = () => this.loadPrompt(prompt.id);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-outline-danger btn-sm';
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>'; // Safe - no user data
+            deleteBtn.onclick = () => this.deletePrompt(prompt.id);
+            
+            btnGroup.append(loadBtn, deleteBtn);
+            header.append(title, btnGroup);
+            
+            // Metadata
+            const meta = document.createElement('small');
+            meta.className = 'text-muted';
+            meta.innerHTML = '<i class="bi bi-tag"></i> '; // Safe - no user data
+            meta.appendChild(document.createTextNode(`${prompt.model} | ${prompt.type}`));
+            meta.appendChild(document.createElement('br'));
+            meta.innerHTML += '<i class="bi bi-clock"></i> '; // Safe - no user data
+            meta.appendChild(document.createTextNode(new Date(prompt.createdAt).toLocaleDateString()));
+            
+            // Preview text
+            const preview = document.createElement('p');
+            preview.className = 'mt-2 mb-0 small';
+            const previewText = prompt.startingPrompt.substring(0, 100);
+            preview.textContent = previewText + (prompt.startingPrompt.length > 100 ? '...' : '');
+            
+            item.append(header, meta, preview);
+            libraryContainer.appendChild(item);
+        });
     }
 
     loadPrompt(id) {
@@ -1832,16 +1869,16 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
     }
 
     extractTextFromHtml(html) {
-        // Create a temporary DOM element to parse HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
+        // Use DOMParser for safe HTML parsing (prevents XSS from fetched content)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
         // Remove script and style elements
-        const scripts = tempDiv.querySelectorAll('script, style, nav, header, footer');
+        const scripts = doc.querySelectorAll('script, style, nav, header, footer');
         scripts.forEach(el => el.remove());
 
         // Get text content and clean it up
-        let text = tempDiv.textContent || tempDiv.innerText || '';
+        let text = doc.body.textContent || doc.body.innerText || '';
         
         // Clean up whitespace and normalize
         text = text.replace(/\s+/g, ' ').trim();
@@ -2071,11 +2108,11 @@ Format your response as JSON:
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center mb-1">
                         <i class="bi bi-${doc.source === 'web' ? 'globe' : 'file-text'} me-2 text-${doc.source === 'web' ? 'info' : 'primary'}"></i>
-                        <small class="fw-semibold">${doc.name}</small>
+                        <small class="fw-semibold">${this.escapeHtml(doc.name)}</small>
                     </div>
                     <small class="text-muted">
                         ${this.formatFileSize(doc.size)} | ${new Date(doc.uploadedAt).toLocaleDateString()}
-                        ${doc.url ? `<br><a href="${doc.url}" target="_blank" class="text-decoration-none small"><i class="bi bi-box-arrow-up-right"></i> View Source</a>` : ''}
+                        ${doc.url ? `<br><a href="${this.escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer" class="text-decoration-none small"><i class="bi bi-box-arrow-up-right"></i> View Source</a>` : ''}
                     </small>
                 </div>
                 <button class="btn btn-outline-danger btn-sm" onclick="app.deleteDocument(${doc.id})">
@@ -2365,37 +2402,74 @@ Format your response as JSON:
         }
         
         if (this.srefLibrary.length === 0) {
-            libraryContainer.innerHTML = '<p class="text-muted text-center">No saved style references yet</p>';
+            libraryContainer.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center';
+            p.textContent = 'No saved style references yet';
+            libraryContainer.appendChild(p);
             return;
         }
 
-        const libraryHTML = this.srefLibrary.map(sref => `
-            <div class="library-item" data-id="${sref.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${sref.name}</h6>
-                        <small class="text-muted">
-                            <i class="bi bi-sliders"></i> Weight: ${sref.weight}
-                            <br><i class="bi bi-clock"></i> ${new Date(sref.createdAt).toLocaleDateString()}
-                        </small>
-                        <p class="mt-2 mb-2 small">${sref.explanation}</p>
-                        <a href="${sref.url}" target="_blank" class="text-decoration-none small">
-                            <i class="bi bi-box-arrow-up-right"></i> View Reference
-                        </a>
-                    </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadSref(${sref.id})">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteSref(${sref.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        libraryContainer.innerHTML = libraryHTML;
+        // Safe DOM rendering to prevent XSS
+        libraryContainer.replaceChildren();
+        
+        this.srefLibrary.forEach(sref => {
+            const item = document.createElement('div');
+            item.className = 'library-item';
+            item.dataset.id = sref.id;
+            
+            // Header row
+            const header = document.createElement('div');
+            header.className = 'd-flex justify-content-between align-items-start mb-2';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'flex-grow-1';
+            
+            const title = document.createElement('h6');
+            title.className = 'mb-1';
+            title.textContent = sref.name; // Safe
+            
+            const meta = document.createElement('small');
+            meta.className = 'text-muted';
+            meta.innerHTML = '<i class="bi bi-sliders"></i> Weight: '; // Safe - no user data
+            meta.appendChild(document.createTextNode(sref.weight));
+            meta.appendChild(document.createElement('br'));
+            meta.innerHTML += '<i class="bi bi-clock"></i> '; // Safe - no user data
+            meta.appendChild(document.createTextNode(new Date(sref.createdAt).toLocaleDateString()));
+            
+            const explanation = document.createElement('p');
+            explanation.className = 'mt-2 mb-2 small';
+            explanation.textContent = sref.explanation; // Safe
+            
+            const link = document.createElement('a');
+            link.href = sref.url; // Browser auto-escapes href
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer'; // Security: prevent window.opener access
+            link.className = 'text-decoration-none small';
+            link.innerHTML = '<i class="bi bi-box-arrow-up-right"></i> '; // Safe - no user data
+            link.appendChild(document.createTextNode('View Reference'));
+            
+            contentDiv.append(title, meta, explanation, link);
+            
+            // Buttons
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group btn-group-sm';
+            
+            const loadBtn = document.createElement('button');
+            loadBtn.className = 'btn btn-outline-primary btn-sm';
+            loadBtn.innerHTML = '<i class="bi bi-arrow-up-circle"></i>'; // Safe - no user data
+            loadBtn.onclick = () => this.loadSref(sref.id);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-outline-danger btn-sm';
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>'; // Safe - no user data
+            deleteBtn.onclick = () => this.deleteSref(sref.id);
+            
+            btnGroup.append(loadBtn, deleteBtn);
+            header.append(contentDiv, btnGroup);
+            item.appendChild(header);
+            libraryContainer.appendChild(item);
+        });
     }
 
     loadSref(id) {
@@ -2917,7 +2991,11 @@ Format your response as JSON:
         );
 
         if (filteredPrompts.length === 0) {
-            libraryContainer.innerHTML = `<p class="text-muted text-center">No prompts found matching "${query}"</p>`;
+            libraryContainer.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center';
+            p.textContent = `No prompts found matching "${query}"`; // Safe
+            libraryContainer.appendChild(p);
             return;
         }
 
@@ -2935,7 +3013,7 @@ Format your response as JSON:
                     </div>
                 </div>
                 <small class="text-muted">
-                    <i class="bi bi-tag"></i> ${prompt.model} | ${prompt.type}
+                    <i class="bi bi-tag"></i> ${this.escapeHtml(prompt.model)} | ${this.escapeHtml(prompt.type)}
                     <br><i class="bi bi-clock"></i> ${new Date(prompt.createdAt).toLocaleDateString()}
                 </small>
                 <p class="mt-2 mb-0 small">${this.highlightSearchTerm(prompt.startingPrompt.substring(0, 100), query)}${prompt.startingPrompt.length > 100 ? '...' : ''}</p>
@@ -2960,7 +3038,11 @@ Format your response as JSON:
         );
 
         if (filteredSrefs.length === 0) {
-            libraryContainer.innerHTML = `<p class="text-muted text-center">No style references found matching "${query}"</p>`;
+            libraryContainer.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center';
+            p.textContent = `No style references found matching "${query}"`; // Safe
+            libraryContainer.appendChild(p);
             return;
         }
 
@@ -2970,11 +3052,11 @@ Format your response as JSON:
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${this.highlightSearchTerm(sref.name, query)}</h6>
                         <small class="text-muted">
-                            <i class="bi bi-sliders"></i> Weight: ${sref.weight}
+                            <i class="bi bi-sliders"></i> Weight: ${this.escapeHtml(String(sref.weight))}
                             <br><i class="bi bi-clock"></i> ${new Date(sref.createdAt).toLocaleDateString()}
                         </small>
                         <p class="mt-2 mb-2 small">${this.highlightSearchTerm(sref.explanation, query)}</p>
-                        <a href="${sref.url}" target="_blank" class="text-decoration-none small">
+                        <a href="${this.escapeHtml(sref.url)}" target="_blank" rel="noopener noreferrer" class="text-decoration-none small">
                             <i class="bi bi-box-arrow-up-right"></i> View Reference
                         </a>
                     </div>
@@ -2994,9 +3076,25 @@ Format your response as JSON:
     }
 
     highlightSearchTerm(text, query) {
-        if (!query.trim()) return text;
-        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-        return text.replace(regex, '<mark>$1</mark>');
+        if (!query.trim()) return this.escapeHtml(text);
+        
+        // Escape the text first
+        const escapedText = this.escapeHtml(text);
+        const escapedQuery = this.escapeHtml(query);
+        
+        // Then safely wrap matches in <mark> tags
+        const regex = new RegExp(`(${escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return escapedText.replace(regex, '<mark>$1</mark>');
+    }
+
+    escapeHtml(unsafe) {
+        if (typeof unsafe !== 'string') return '';
+        return unsafe
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     // Save Settings
@@ -3730,27 +3828,31 @@ Format your response as JSON:
         results.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (results.length === 0) {
-            resultsContainer.innerHTML = `<p class="text-muted text-center">No results found for "${query}"</p>`;
+            resultsContainer.replaceChildren();
+            const p = document.createElement('p');
+            p.className = 'text-muted text-center';
+            p.textContent = `No results found for "${query}"`; // Safe
+            resultsContainer.appendChild(p);
             return;
         }
 
         const resultsHTML = results.map(result => `
-            <div class="library-item mb-2" data-type="${result.type}" data-id="${result.data.id}">
+            <div class="library-item mb-2" data-type="${this.escapeHtml(result.type)}" data-id="${result.data.id}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-center mb-1">
                             <span class="me-2">${result.icon}</span>
                             <h6 class="mb-0">${this.highlightSearchTerm(result.title, query)}</h6>
-                            <span class="badge bg-secondary ms-2">${result.type}</span>
+                            <span class="badge bg-secondary ms-2">${this.escapeHtml(result.type)}</span>
                         </div>
                         <p class="small mb-1 text-muted">${this.highlightSearchTerm(result.content, query)}</p>
-                        <small class="text-muted">${result.metadata} | ${new Date(result.date).toLocaleDateString()}</small>
+                        <small class="text-muted">${this.escapeHtml(result.metadata)} | ${new Date(result.date).toLocaleDateString()}</small>
                     </div>
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadFromSearch('${result.type}', ${result.data.id})">
+                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadFromSearch('${this.escapeHtml(result.type)}', ${result.data.id})">
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteFromSearch('${result.type}', ${result.data.id})">
+                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteFromSearch('${this.escapeHtml(result.type)}', ${result.data.id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
