@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -295,258 +295,258 @@
             }
         }
         
-        /* Dark mode support - class-based for manual toggle */
-        body.dark-mode {
+        /* Dark mode (default) */
+        html.dark body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         
-        body.dark-mode .main-container {
+        html.dark .main-container {
             background: rgba(30, 30, 30, 0.95);
             color: #e9ecef;
         }
         
-        body.dark-mode .card {
+        html.dark .card {
             background-color: rgba(40, 40, 40, 0.8);
             border-color: #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .card-header {
+        html.dark .card-header {
             background-color: rgba(50, 50, 50, 0.8) !important;
             border-bottom-color: #495057 !important;
             color: #ffffff !important;
         }
         
-        body.dark-mode .form-control, 
-        body.dark-mode .form-select {
+        html.dark .form-control, 
+        html.dark .form-select {
             background-color: rgba(50, 50, 50, 0.8);
             border-color: #6c757d;
             color: #e9ecef;
         }
         
-        body.dark-mode .form-control:focus, 
-        body.dark-mode .form-select:focus {
+        html.dark .form-control:focus, 
+        html.dark .form-select:focus {
             background-color: rgba(50, 50, 50, 0.9);
             border-color: #667eea;
             color: #e9ecef;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         
-        body.dark-mode .form-control::placeholder {
+        html.dark .form-control::placeholder {
             color: #adb5bd;
         }
         
-        body.dark-mode .form-label {
+        html.dark .form-label {
             color: #e9ecef;
         }
         
-        body.dark-mode .library-item {
+        html.dark .library-item {
             background: rgba(40, 40, 40, 0.6);
             border-color: #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .library-item h6 {
+        html.dark .library-item h6 {
             color: #ffffff;
         }
         
-        body.dark-mode .library-item .text-muted {
+        html.dark .library-item .text-muted {
             color: #adb5bd !important;
         }
         
-        body.dark-mode .upload-zone {
+        html.dark .upload-zone {
             background: rgba(102, 126, 234, 0.1);
             border-color: #6c757d;
             color: #e9ecef;
         }
         
-        body.dark-mode .upload-zone .text-muted {
+        html.dark .upload-zone .text-muted {
             color: #adb5bd !important;
         }
         
-        body.dark-mode .text-muted {
+        html.dark .text-muted {
             color: #adb5bd !important;
         }
         
-        body.dark-mode .text-success {
+        html.dark .text-success {
             color: #75b798 !important;
         }
         
-        body.dark-mode .text-warning {
+        html.dark .text-warning {
             color: #ffc107 !important;
         }
         
-        body.dark-mode .text-danger {
+        html.dark .text-danger {
             color: #dc3545 !important;
         }
         
-        body.dark-mode .text-info {
+        html.dark .text-info {
             color: #17a2b8 !important;
         }
         
-        body.dark-mode .btn-outline-primary {
+        html.dark .btn-outline-primary {
             color: #667eea;
             border-color: #667eea;
         }
         
-        body.dark-mode .btn-outline-primary:hover {
+        html.dark .btn-outline-primary:hover {
             background-color: #667eea;
             color: #ffffff;
         }
         
-        body.dark-mode .btn-outline-secondary {
+        html.dark .btn-outline-secondary {
             color: #adb5bd;
             border-color: #6c757d;
         }
         
-        body.dark-mode .btn-outline-secondary:hover {
+        html.dark .btn-outline-secondary:hover {
             background-color: #6c757d;
             color: #ffffff;
         }
         
-        body.dark-mode .btn-outline-danger {
+        html.dark .btn-outline-danger {
             color: #dc3545;
             border-color: #dc3545;
         }
         
-        body.dark-mode .btn-outline-danger:hover {
+        html.dark .btn-outline-danger:hover {
             background-color: #dc3545;
             color: #ffffff;
         }
         
-        body.dark-mode .btn-outline-info {
+        html.dark .btn-outline-info {
             color: #17a2b8;
             border-color: #17a2b8;
         }
         
-        body.dark-mode .btn-outline-info:hover {
+        html.dark .btn-outline-info:hover {
             background-color: #17a2b8;
             color: #ffffff;
         }
         
-        body.dark-mode .btn-outline-warning {
+        html.dark .btn-outline-warning {
             color: #ffc107;
             border-color: #ffc107;
         }
         
-        body.dark-mode .btn-outline-warning:hover {
+        html.dark .btn-outline-warning:hover {
             background-color: #ffc107;
             color: #212529;
         }
         
-        body.dark-mode .btn-outline-light {
+        html.dark .btn-outline-light {
             color: #f8f9fa;
             border-color: #f8f9fa;
         }
         
-        body.dark-mode .btn-outline-light:hover {
+        html.dark .btn-outline-light:hover {
             background-color: #f8f9fa;
             color: #212529;
         }
         
-        body.dark-mode .alert {
+        html.dark .alert {
             background-color: rgba(50, 50, 50, 0.8);
             border-color: #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .alert-info {
+        html.dark .alert-info {
             background-color: rgba(23, 162, 184, 0.2);
             border-color: #17a2b8;
             color: #b8ecf0;
         }
         
-        body.dark-mode .alert-success {
+        html.dark .alert-success {
             background-color: rgba(40, 167, 69, 0.2);
             border-color: #28a745;
             color: #b8e6c1;
         }
         
-        body.dark-mode .alert-warning {
+        html.dark .alert-warning {
             background-color: rgba(255, 193, 7, 0.2);
             border-color: #ffc107;
             color: #fff3cd;
         }
         
-        body.dark-mode .alert-danger {
+        html.dark .alert-danger {
             background-color: rgba(220, 53, 69, 0.2);
             border-color: #dc3545;
             color: #f5c6cb;
         }
         
-        body.dark-mode mark {
+        html.dark mark {
             background-color: #856404;
             color: #fff3cd;
             padding: 2px 4px;
             border-radius: 3px;
         }
         
-        body.dark-mode a:not(.btn) {
+        html.dark a:not(.btn) {
             color: #667eea;
         }
         
-        body.dark-mode a:not(.btn):hover {
+        html.dark a:not(.btn):hover {
             color: #5a6fd8;
         }
         
-        body.dark-mode .modal-content {
+        html.dark .modal-content {
             background-color: rgba(40, 40, 40, 0.95);
             border-color: #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .modal-header {
+        html.dark .modal-header {
             border-bottom-color: #495057;
         }
         
-        body.dark-mode .modal-footer {
+        html.dark .modal-footer {
             border-top-color: #495057;
         }
         
-        body.dark-mode .btn-close {
+        html.dark .btn-close {
             filter: invert(1);
         }
         
-        body.dark-mode .output-section {
+        html.dark .output-section {
             background: rgba(40, 40, 40, 0.8);
             color: #e9ecef;
             border: 1px solid #495057;
         }
         
-        body.dark-mode .output-section p {
+        html.dark .output-section p {
             color: #e9ecef !important;
         }
         
-        body.dark-mode .output-section pre {
+        html.dark .output-section pre {
             background: rgba(30, 30, 30, 0.9);
             border: 1px solid #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .output-section code {
+        html.dark .output-section code {
             color: #e9ecef;
             background: transparent;
         }
         
-        body.dark-mode .btn-check:checked + .btn-outline-info {
+        html.dark .btn-check:checked + .btn-outline-info {
             background-color: #17a2b8;
             color: white;
         }
         
-        body.dark-mode .table {
+        html.dark .table {
             color: #e9ecef;
         }
         
-        body.dark-mode .table-hover tbody tr:hover {
+        html.dark .table-hover tbody tr:hover {
             background-color: rgba(255, 255, 255, 0.075);
         }
         
-        /* Light mode explicit styles (for when dark is default on system but user prefers light) */
-        body.light-mode {
+        /* Light mode override */
+        html.light-mode body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        body.light-mode .main-container {
+        html.light-mode .main-container {
             background: rgba(255, 255, 255, 0.95);
             color: #212529;
         }
@@ -1288,27 +1288,25 @@
             });
         }
 
-        // Theme Toggle (Light/Dark Mode)
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
+        const htmlEl = document.documentElement;
         
-        // Initialize theme from localStorage or system preference
+        function applyTheme(theme) {
+            htmlEl.classList.remove('dark', 'light-mode');
+            htmlEl.classList.add(theme === 'light' ? 'light-mode' : 'dark');
+            updateThemeIcon(theme);
+        }
+
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-            
             if (savedTheme) {
-                // Use saved preference
-                document.body.classList.remove('light-mode', 'dark-mode');
-                document.body.classList.add(savedTheme + '-mode');
-                updateThemeIcon(savedTheme);
+                applyTheme(savedTheme);
             } else {
-                // Check system preference
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.body.classList.add('dark-mode');
-                    updateThemeIcon('dark');
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    applyTheme('light');
                 } else {
-                    document.body.classList.add('light-mode');
-                    updateThemeIcon('light');
+                    applyTheme('dark');
                 }
             }
         }
@@ -1326,18 +1324,13 @@
         }
         
         function toggleTheme() {
-            const isDark = document.body.classList.contains('dark-mode');
-            
-            document.body.classList.remove('light-mode', 'dark-mode');
-            
+            const isDark = htmlEl.classList.contains('dark');
             if (isDark) {
-                document.body.classList.add('light-mode');
+                applyTheme('light');
                 localStorage.setItem('theme', 'light');
-                updateThemeIcon('light');
             } else {
-                document.body.classList.add('dark-mode');
+                applyTheme('dark');
                 localStorage.setItem('theme', 'dark');
-                updateThemeIcon('dark');
             }
         }
         
@@ -1345,22 +1338,12 @@
             themeToggle.addEventListener('click', toggleTheme);
         }
         
-        // Initialize theme on page load
         initTheme();
         
-        // Listen for system theme changes
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                // Only auto-switch if user hasn't set a preference
                 if (!localStorage.getItem('theme')) {
-                    document.body.classList.remove('light-mode', 'dark-mode');
-                    if (e.matches) {
-                        document.body.classList.add('dark-mode');
-                        updateThemeIcon('dark');
-                    } else {
-                        document.body.classList.add('light-mode');
-                        updateThemeIcon('light');
-                    }
+                    applyTheme(e.matches ? 'dark' : 'light');
                 }
             });
         }

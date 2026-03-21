@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download PromptForge</title>
+    <meta name="description" content="Download PromptForge desktop app — build prompts, keep your data, no account required.">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --pf-bg: #0A0E1A;
+            --pf-surface: #0F1422;
+            --pf-surface2: linear-gradient(145deg, rgba(36,46,72,0.88) 0%, rgba(22,29,50,0.96) 40%, rgba(14,19,36,1) 70%, rgba(24,32,54,0.9) 100%);
+            --pf-card-shine: inset 0 1px 0 rgba(255,255,255,0.05);
+            --pf-border: rgba(190,210,240,0.10);
+            --pf-text-primary: #D0DCEF;
+            --pf-text-secondary: #C4D4EC;
+            --pf-text-muted: #5A6A84;
+            --pf-text-ghost: #3C4C64;
+            --pf-accent: #5B9CF6;
+            --pf-accent-bg: rgba(91,156,246,0.10);
+            --pf-accent-border: rgba(91,156,246,0.34);
+            --pf-accent-gradient: linear-gradient(135deg, #3570E0, #5B9CF6);
+            --pf-success: #6EC6A0;
+            --pf-chip-bg: rgba(6,9,20,0.50);
+        }
+        html.light-mode {
+            --pf-bg: #F0F4FA;
+            --pf-surface: #FFFFFF;
+            --pf-surface2: linear-gradient(145deg, #FFFFFF 0%, #F7F9FC 60%, #EEF2F8 100%);
+            --pf-card-shine: inset 0 1px 0 rgba(255,255,255,0.9);
+            --pf-border: rgba(0,0,0,0.08);
+            --pf-text-primary: #1A2540;
+            --pf-text-secondary: #2A3A5C;
+            --pf-text-muted: #5A6A84;
+            --pf-text-ghost: #9AAAC0;
+            --pf-accent: #3570E0;
+            --pf-accent-bg: rgba(53,112,224,0.07);
+            --pf-accent-border: rgba(53,112,224,0.28);
+            --pf-accent-gradient: linear-gradient(135deg, #3570E0, #5B9CF6);
+            --pf-success: #2A9D6E;
+            --pf-chip-bg: rgba(0,0,0,0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--pf-bg);
+            color: var(--pf-text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        a { color: var(--pf-accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .dl-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 46px;
+            padding: 0 20px;
+            background: var(--pf-surface);
+            border-bottom: 0.5px solid var(--pf-border);
+        }
+        .dl-wordmark {
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+        }
+        .dl-wordmark .prompt { color: var(--pf-text-primary); }
+        .dl-wordmark .forge  { color: var(--pf-accent); }
+        .dl-theme-btn {
+            width: 28px; height: 28px;
+            border: none; border-radius: 6px;
+            background: var(--pf-chip-bg);
+            color: var(--pf-text-muted);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .dl-theme-btn:hover { color: var(--pf-text-primary); }
+
+        .dl-main {
+            flex: 1;
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 48px 20px 60px;
+            width: 100%;
+        }
+        .dl-hero {
+            text-align: center;
+            margin-bottom: 44px;
+        }
+        .dl-hero h1 {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+        .dl-hero h1 .prompt { color: var(--pf-text-primary); }
+        .dl-hero h1 .forge  { color: var(--pf-accent); }
+        .dl-hero p {
+            font-size: 16px;
+            color: var(--pf-text-secondary);
+            max-width: 420px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .dl-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 640px) {
+            .dl-cards { grid-template-columns: 1fr; }
+        }
+        .dl-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 24px 16px 20px;
+            border-radius: 10px;
+            background: var(--pf-surface2);
+            border: 1px solid var(--pf-border);
+            box-shadow: var(--pf-card-shine);
+            text-decoration: none;
+            color: var(--pf-text-primary);
+            transition: border-color 0.15s, transform 0.15s;
+        }
+        .dl-card:hover {
+            border-color: var(--pf-accent-border);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: var(--pf-text-primary);
+        }
+        .dl-card svg { flex-shrink: 0; }
+        .dl-card .dl-card-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .dl-card .dl-card-sub {
+            font-size: 11px;
+            color: var(--pf-text-muted);
+        }
+        .dl-gh-note {
+            text-align: center;
+            font-size: 11px;
+            color: var(--pf-text-ghost);
+            margin-bottom: 44px;
+        }
+
+        .dl-section {
+            margin-bottom: 36px;
+        }
+        .dl-section h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--pf-text-primary);
+        }
+        .dl-section p, .dl-section li {
+            font-size: 14px;
+            color: var(--pf-text-secondary);
+            line-height: 1.6;
+        }
+
+        .dl-or-divider {
+            text-align: center;
+            font-size: 12px;
+            color: var(--pf-text-ghost);
+            margin: 32px 0 18px;
+            position: relative;
+        }
+        .dl-or-divider::before, .dl-or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: calc(50% - 60px);
+            height: 1px;
+            background: var(--pf-border);
+        }
+        .dl-or-divider::before { left: 0; }
+        .dl-or-divider::after  { right: 0; }
+
+        .dl-browser-link {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .dl-browser-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--pf-accent-border);
+            background: var(--pf-accent-bg);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--pf-accent);
+        }
+        .dl-browser-link a:hover { text-decoration: none; background: rgba(91,156,246,0.16); }
+        .dl-browser-note {
+            text-align: center;
+            font-size: 12px;
+            color: var(--pf-text-muted);
+            max-width: 420px;
+            margin: 8px auto 0;
+            line-height: 1.5;
+        }
+
+        .dl-collapsible summary {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--pf-text-secondary);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dl-collapsible summary::-webkit-details-marker { display: none; }
+        .dl-collapsible summary .arrow {
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: var(--pf-text-muted);
+        }
+        .dl-collapsible[open] summary .arrow { transform: rotate(90deg); }
+        .dl-collapsible .dl-collapse-body {
+            margin-top: 10px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            background: var(--pf-surface);
+            border: 1px solid var(--pf-border);
+            font-size: 13px;
+            color: var(--pf-text-secondary);
+            line-height: 1.6;
+        }
+
+        .dl-footer {
+            border-top: 1px solid var(--pf-border);
+            padding: 18px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--pf-text-ghost);
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="dl-topbar">
+        <span class="dl-wordmark"><span class="prompt">Prompt</span><span class="forge">Forge</span></span>
+        <button class="dl-theme-btn" id="themeToggle" title="Toggle theme"><i class="bi bi-moon-fill"></i></button>
+    </nav>
+
+    <main class="dl-main">
+        <div class="dl-hero">
+            <h1><span class="prompt">Prompt</span><span class="forge">Forge</span></h1>
+            <p>Build prompts. Keep your data. No account required.</p>
+        </div>
+
+        <div class="dl-cards">
+            <a href="https://github.com/LauraFlorey/prompt-app/releases/latest" target="_blank" rel="noopener" class="dl-card">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.46.312 2.843.872 4.09A10.014 10.014 0 0 0 6.09 21.13c.56.56 1.194 1.04 1.89 1.42A9.96 9.96 0 0 0 12 22a9.96 9.96 0 0 0 4.02-.45M12 2c5.523 0 10 4.477 10 10a9.96 9.96 0 0 1-3.98 7.55"/><path d="M12 8a4 4 0 0 0-4 4c0 1.37.69 2.58 1.74 3.3"/><path d="M12 8a4 4 0 0 1 4 4c0 1.37-.69 2.58-1.74 3.3"/></svg>
+                <span class="dl-card-label">Download for Mac<br>(Apple Silicon)</span>
+                <span class="dl-card-sub">.dmg &middot; macOS 12+</span>
+            </a>
+            <a href="https://github.com/LauraFlorey/prompt-app/releases/latest" target="_blank" rel="noopener" class="dl-card">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.46.312 2.843.872 4.09A10.014 10.014 0 0 0 6.09 21.13c.56.56 1.194 1.04 1.89 1.42A9.96 9.96 0 0 0 12 22a9.96 9.96 0 0 0 4.02-.45M12 2c5.523 0 10 4.477 10 10a9.96 9.96 0 0 1-3.98 7.55"/><path d="M12 8a4 4 0 0 0-4 4c0 1.37.69 2.58 1.74 3.3"/><path d="M12 8a4 4 0 0 1 4 4c0 1.37-.69 2.58-1.74 3.3"/></svg>
+                <span class="dl-card-label">Download for Mac<br>(Intel)</span>
+                <span class="dl-card-sub">.dmg &middot; macOS 12+</span>
+            </a>
+            <a href="https://github.com/LauraFlorey/prompt-app/releases/latest" target="_blank" rel="noopener" class="dl-card">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v6"/></svg>
+                <span class="dl-card-label">Download for<br>Windows</span>
+                <span class="dl-card-sub">.exe &middot; Windows 10+</span>
+            </a>
+        </div>
+        <p class="dl-gh-note">You'll be taken to GitHub Releases for the latest build.</p>
+
+        <div class="dl-or-divider">or</div>
+
+        <div class="dl-browser-link">
+            <a href="index.html"><i class="bi bi-globe2"></i> Run in your browser</a>
+        </div>
+        <p class="dl-browser-note">
+            Browser version uses local storage &mdash; consider exporting backups regularly.
+            Desktop version saves to a folder you choose.
+        </p>
+
+        <div class="dl-or-divider" style="margin-top:36px;"></div>
+
+        <details class="dl-collapsible dl-section">
+            <summary><span class="arrow"><i class="bi bi-chevron-right"></i></span> Why no App Store?</summary>
+            <div class="dl-collapse-body">
+                App Stores require accounts, review delays, and platform fees.
+                PromptForge is free and direct &mdash; download the file, open it, done.
+                macOS will ask you to confirm opening a file from the internet
+                the first time. That's normal for direct-distribution apps.
+            </div>
+        </details>
+    </main>
+
+    <footer class="dl-footer">
+        <a href="index.html">Open web app</a>
+        <a href="https://github.com/LauraFlorey/prompt-app" target="_blank" rel="noopener">GitHub repo</a>
+        <span>MIT License</span>
+    </footer>
+
+    <script>
+        (function() {
+            const html = document.documentElement;
+            const btn = document.getElementById('themeToggle');
+            const icon = btn?.querySelector('i');
+
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    html.classList.remove('dark');
+                    html.classList.add('light-mode');
+                    if (icon) { icon.className = 'bi bi-sun-fill'; }
+                } else {
+                    html.classList.remove('light-mode');
+                    html.classList.add('dark');
+                    if (icon) { icon.className = 'bi bi-moon-fill'; }
+                }
+            }
+
+            const saved = localStorage.getItem('theme');
+            if (saved) applyTheme(saved);
+
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const isDark = html.classList.contains('dark');
+                    const next = isDark ? 'light' : 'dark';
+                    applyTheme(next);
+                    localStorage.setItem('theme', next);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

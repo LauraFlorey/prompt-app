@@ -1,14 +1,13 @@
 // Prompt Helper App
 class PromptGenerator {
     constructor() {
-        this.promptLibrary = JSON.parse(localStorage.getItem('promptLibrary')) || [];
-        this.uploadedDocuments = JSON.parse(localStorage.getItem('uploadedDocuments')) || [];
-        this.manualInformation = localStorage.getItem('manualInformation') || '';
-        this.srefLibrary = JSON.parse(localStorage.getItem('srefLibrary')) || [];
-        this.textNotes = JSON.parse(localStorage.getItem('textNotes')) || [];
-        
-        // Custom dropdown options
-        this.customOptions = JSON.parse(localStorage.getItem('customOptions')) || {
+        this.promptLibrary = [];
+        this.uploadedDocuments = [];
+        this.manualInformation = '';
+        this.srefLibrary = [];
+        this.textNotes = [];
+
+        this.customOptions = {
             cameraAngle: [],
             perspective: [],
             mood: [],
@@ -18,41 +17,40 @@ class PromptGenerator {
             composition: [],
             quality: []
         };
-        
-        // LLM Integration settings
-        this.llmSettings = JSON.parse(localStorage.getItem('llmSettings')) || {
+
+        this.llmSettings = {
             enabled: false,
             apiUrl: 'http://localhost:11434/api',
             model: 'llama3.1:8b',
             timeout: 10000
         };
-        
-        // Enhanced saving settings
-        this.saveSettings = JSON.parse(localStorage.getItem('saveSettings')) || {
+
+        this.saveSettings = {
             autoSave: true,
-            autoSaveInterval: 30000, // 30 seconds
+            autoSaveInterval: 30000,
             backupOnClose: true,
             showSaveStatus: true,
             lastSaveTime: null
         };
-        
-        // Track unsaved changes
+
+        this.modelRegistry = [];
+
         this.hasUnsavedChanges = false;
         this.autoSaveTimer = null;
-        
-        // Sref image data URL (for uploaded images)
+        this._debounceSaveTimer = null;
+        this._lastSaveFailed = false;
+        this._saveRetryPending = false;
         this.srefImageDataUrl = '';
-        
-        // Initialize tooltip explanations
+
         this.tooltipExplanations = this.initTooltipExplanations();
-        
-        // Initialize prompt templates
         this.promptTemplates = this.initPromptTemplates();
-        
-        this.init();
     }
 
-    init() {
+    async init() {
+        await this.initStorage();
+        await this._loadDismissedMentions();
+        this.rebuildModelDropdown();
+        this.renderConfigModelTable();
         this.setupEventListeners();
         this.setupLifecycleEvents();
         this.setupAutoSave();
@@ -63,7 +61,445 @@ class PromptGenerator {
         this.loadCustomOptions();
         this.initTooltips();
         this.updateSaveStatus();
+        this.updateStorageHealth();
         this.updateLibraryCounts();
+        this._startSaveStatusTicker();
+        this._restorePendingBadge();
+    }
+
+    async initStorage() {
+        try {
+            const data = await StorageManager.loadAll();
+            if (data.promptLibrary) this.promptLibrary = data.promptLibrary;
+            if (data.srefLibrary) this.srefLibrary = data.srefLibrary;
+            if (data.manualInformation) this.manualInformation = data.manualInformation;
+            if (data.textNotes) this.textNotes = data.textNotes;
+            if (data.customOptions) this.customOptions = { ...this.customOptions, ...data.customOptions };
+            if (data.llmSettings) this.llmSettings = { ...this.llmSettings, ...data.llmSettings };
+            if (data.modelRegistry) this.modelRegistry = data.modelRegistry;
+        } catch (e) {
+            console.warn('StorageManager.loadAll() failed, falling back to defaults:', e);
+        }
+
+        try {
+            const raw = localStorage.getItem('saveSettings');
+            if (raw) this.saveSettings = { ...this.saveSettings, ...JSON.parse(raw) };
+        } catch { /* keep defaults */ }
+
+        try {
+            const raw = localStorage.getItem('uploadedDocuments');
+            if (raw) this.uploadedDocuments = JSON.parse(raw) || [];
+        } catch { /* keep defaults */ }
+    }
+
+    getCurrentAppState() {
+        return {
+            promptLibrary: this.promptLibrary,
+            srefLibrary: this.srefLibrary,
+            manualInformation: this.manualInformation,
+            textNotes: this.textNotes,
+            customOptions: this.customOptions,
+            llmSettings: this.llmSettings,
+            modelRegistry: ModelRegistry.getAll(),
+            dismissedMentions: this._dismissedMentions || {}
+        };
+    }
+
+    rebuildModelDropdown() {
+        const select = document.getElementById('modelSelect');
+        if (!select) return;
+
+        const currentValue = select.value;
+
+        while (select.firstChild) select.removeChild(select.firstChild);
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select Model';
+        select.appendChild(placeholder);
+
+        const items = ModelRegistry.getForDropdown();
+        let currentGroup = null;
+        let optgroup = null;
+
+        for (const item of items) {
+            if (item.groupLabel !== currentGroup) {
+                currentGroup = item.groupLabel;
+                optgroup = document.createElement('optgroup');
+                optgroup.label = currentGroup;
+                select.appendChild(optgroup);
+            }
+            const opt = document.createElement('option');
+            opt.value = item.value;
+            opt.textContent = item.label;
+            optgroup.appendChild(opt);
+        }
+
+        if (currentValue) select.value = currentValue;
+    }
+
+    _getDismissedMentions() {
+        if (!this._dismissedMentions) this._dismissedMentions = {};
+        return this._dismissedMentions;
+    }
+
+    async _dismissMention(modelId, mentionUrl) {
+        const dismissed = this._getDismissedMentions();
+        dismissed[modelId] = mentionUrl;
+        this._dismissedMentions = dismissed;
+        try {
+            await StorageManager.save('dismissedMentions', dismissed);
+        } catch { /* non-critical */ }
+        this.renderConfigModelTable();
+        this._updatePendingBadge();
+    }
+
+    async _loadDismissedMentions() {
+        try {
+            const d = await StorageManager.load('dismissedMentions');
+            this._dismissedMentions = d || {};
+        } catch { this._dismissedMentions = {}; }
+    }
+
+    _isNewCandidate(model, result) {
+        if (!result || result.status !== 'found' || !result.mentionDate) return false;
+        const dismissed = this._getDismissedMentions();
+        if (dismissed[model.id] === result.mentionUrl) return false;
+        if (!model.releaseDate) return true;
+        const mentionTs = new Date(result.mentionDate).getTime();
+        const releaseTs = new Date(model.releaseDate).getTime();
+        return mentionTs > releaseTs;
+    }
+
+    _countNewCandidates() {
+        const models = ModelRegistry.getAll();
+        let count = 0;
+        for (const m of models) {
+            const r = VersionChecker.getResultForModel(m.id);
+            if (this._isNewCandidate(m, r)) count++;
+        }
+        return count;
+    }
+
+    async _updatePendingBadge() {
+        const count = this._countNewCandidates();
+        const configPill = document.querySelector('.pf-nav-pill[data-pf-tab="config"]');
+        if (!configPill) return;
+        let badge = configPill.querySelector('.pf-nav-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'pf-nav-badge';
+                configPill.appendChild(badge);
+            }
+            try { await StorageManager.save('pendingUpdateBadge', true); } catch { /* */ }
+        } else {
+            if (badge) badge.remove();
+            try { await StorageManager.save('pendingUpdateBadge', false); } catch { /* */ }
+        }
+    }
+
+    async _restorePendingBadge() {
+        try {
+            const pending = await StorageManager.load('pendingUpdateBadge');
+            if (pending) {
+                const count = this._countNewCandidates();
+                if (count > 0) {
+                    const configPill = document.querySelector('.pf-nav-pill[data-pf-tab="config"]');
+                    if (configPill && !configPill.querySelector('.pf-nav-badge')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'pf-nav-badge';
+                        configPill.appendChild(badge);
+                    }
+                }
+            }
+        } catch { /* non-critical */ }
+    }
+
+    _buildMentionCell(model, result) {
+        if (!result) return '<span class="pf-mention-ghost">—</span>';
+        switch (result.status) {
+            case 'found': {
+                const rel = this._relativeTime(result.mentionDate);
+                return `<a href="${result.mentionUrl || '#'}" target="_blank" rel="noopener" class="pf-mention-link">${rel || 'Recent'}</a>`;
+            }
+            case 'unchanged':
+                return '<span class="pf-mention-ghost">No recent posts</span>';
+            case 'unavailable':
+                return `<button type="button" class="pf-mention-manual" data-manual-check="${model.id}"><i class="bi bi-box-arrow-up-right"></i> Manual</button>`;
+            case 'error':
+                return '<span class="pf-mention-amber">Check failed</span>';
+            default:
+                return '<span class="pf-mention-ghost">—</span>';
+        }
+    }
+
+    renderConfigModelTable() {
+        const tbody = document.getElementById('modelRegistryBody');
+        if (!tbody) return;
+
+        const models = ModelRegistry.getAll();
+        tbody.innerHTML = '';
+        const self = this;
+        let newCount = 0;
+
+        for (const m of models) {
+            const result = VersionChecker.getResultForModel(m.id);
+            const isNew = this._isNewCandidate(m, result);
+            if (isNew) newCount++;
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-model-row', m.id);
+            const catLabel = m.category.charAt(0).toUpperCase() + m.category.slice(1);
+            const vLabel = m.version.startsWith('v') ? m.version : `v${m.version}`;
+            const newBadge = isNew ? `<span class="pf-new-badge" data-new-model="${m.id}">New?</span>` : '';
+            const mentionHtml = this._buildMentionCell(m, result);
+            const changelogHtml = m.changelogUrl
+                ? `<a href="${m.changelogUrl}" target="_blank" rel="noopener" class="pf-changelog-link"><i class="bi bi-box-arrow-up-right"></i> Link</a>`
+                : '<span style="color:var(--pf-text-ghost)">—</span>';
+            const delCls = m.custom ? 'pf-chip' : 'pf-chip pf-btn-disabled';
+            const delStyle = m.custom ? 'font-size:10px;color:var(--pf-text-muted)' : 'font-size:10px';
+
+            tr.innerHTML =
+                `<td>${m.name}</td>` +
+                `<td><span class="pf-cat-pill" data-cat="${m.category}">${catLabel}</span></td>` +
+                `<td><span class="pf-version-badge">${vLabel}</span>${newBadge}</td>` +
+                `<td>${mentionHtml}</td>` +
+                `<td>${changelogHtml}</td>` +
+                `<td><div class="pf-model-actions-cell">` +
+                    `<button type="button" class="pf-chip" data-edit-model="${m.id}">Edit</button>` +
+                    `<button type="button" class="${delCls}" style="${delStyle}" data-delete-model="${m.id}">` +
+                        `<i class="bi bi-trash3"></i></button>` +
+                `</div></td>`;
+            tbody.appendChild(tr);
+        }
+
+        tbody.querySelectorAll('[data-edit-model]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                self._openModelEditRow(btn.getAttribute('data-edit-model'));
+            });
+        });
+
+        tbody.querySelectorAll('[data-delete-model]').forEach(btn => {
+            if (btn.classList.contains('pf-btn-disabled')) return;
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-delete-model');
+                if (!confirm('Delete this custom model?')) return;
+                const res = await ModelRegistry.remove(id);
+                if (res.success) {
+                    self.rebuildModelDropdown();
+                    self.renderConfigModelTable();
+                    self.showToast('Model removed', 'warning');
+                } else {
+                    self.showToast(res.error || 'Cannot delete', 'danger');
+                }
+            });
+        });
+
+        tbody.querySelectorAll('[data-new-model]').forEach(badge => {
+            badge.addEventListener('click', () => {
+                const id = badge.getAttribute('data-new-model');
+                self._showNewHint(id);
+            });
+        });
+
+        tbody.querySelectorAll('[data-manual-check]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-manual-check');
+                self._showManualCheckRow(id);
+            });
+        });
+
+        const summaryEl = document.getElementById('updateSummary');
+        if (summaryEl) {
+            if (newCount > 0) {
+                summaryEl.textContent = `${newCount} model${newCount !== 1 ? 's' : ''} may have updates — review below`;
+                summaryEl.style.display = '';
+            } else {
+                summaryEl.style.display = 'none';
+            }
+        }
+
+        this._updateCheckTimestamp();
+    }
+
+    _updateCheckTimestamp() {
+        const el = document.getElementById('checkUpdatesLast');
+        if (!el) return;
+        const age = VersionChecker.getCacheAge();
+        if (age === Infinity) {
+            el.textContent = '';
+        } else if (age < 1) {
+            el.textContent = 'Last checked: just now';
+        } else {
+            el.textContent = 'Last checked: ' + this._relativeTime(new Date(Date.now() - age * 60000).toISOString());
+        }
+    }
+
+    _showNewHint(modelId) {
+        const existingHint = document.querySelector(`tr.pf-new-hint-row[data-hint-for="${modelId}"]`);
+        if (existingHint) { existingHint.remove(); return; }
+
+        document.querySelectorAll('tr.pf-new-hint-row').forEach(r => r.remove());
+
+        const result = VersionChecker.getResultForModel(modelId);
+        if (!result) return;
+        const dataRow = document.querySelector(`tr[data-model-row="${modelId}"]`);
+        if (!dataRow) return;
+
+        const colCount = dataRow.querySelectorAll('td').length;
+        const hintRow = document.createElement('tr');
+        hintRow.className = 'pf-new-hint-row';
+        hintRow.setAttribute('data-hint-for', modelId);
+
+        const td = document.createElement('td');
+        td.setAttribute('colspan', colCount);
+
+        const title = (result.latestMention || '').replace(/</g, '&lt;');
+        const dateStr = result.mentionDate ? this._relativeTime(result.mentionDate) : '';
+        const linkHref = result.mentionUrl || '#';
+
+        td.innerHTML =
+            `<div class="pf-new-hint">` +
+                `A post newer than your recorded version was found:<br>` +
+                `<span class="pf-new-hint-title">"${title}"</span> — ${dateStr}` +
+                `<div class="pf-new-hint-actions">` +
+                    `<a href="${linkHref}" target="_blank" rel="noopener" class="pf-chip">View post &#8599;</a>` +
+                    `<button type="button" class="pf-chip active" data-hint-update="${modelId}">Update version</button>` +
+                    `<button type="button" class="pf-chip" data-hint-dismiss="${modelId}">Dismiss</button>` +
+                `</div>` +
+            `</div>`;
+
+        hintRow.appendChild(td);
+        dataRow.after(hintRow);
+
+        const self = this;
+
+        hintRow.querySelector('[data-hint-update]').addEventListener('click', () => {
+            hintRow.remove();
+            self._openModelEditRow(modelId, true);
+        });
+
+        hintRow.querySelector('[data-hint-dismiss]').addEventListener('click', () => {
+            hintRow.remove();
+            self._dismissMention(modelId, result.mentionUrl);
+        });
+    }
+
+    _showManualCheckRow(modelId) {
+        const existing = document.querySelector(`tr.pf-manual-check-row[data-manual-for="${modelId}"]`);
+        if (existing) { existing.remove(); return; }
+
+        document.querySelectorAll('tr.pf-manual-check-row').forEach(r => r.remove());
+
+        const model = ModelRegistry.getAll().find(m => m.id === modelId);
+        if (!model) return;
+
+        if (model.checkUrl) window.open(model.checkUrl, '_blank', 'noopener');
+
+        const dataRow = document.querySelector(`tr[data-model-row="${modelId}"]`);
+        if (!dataRow) return;
+
+        const colCount = dataRow.querySelectorAll('td').length;
+        const manRow = document.createElement('tr');
+        manRow.className = 'pf-manual-check-row';
+        manRow.setAttribute('data-manual-for', modelId);
+
+        const td = document.createElement('td');
+        td.setAttribute('colspan', colCount);
+        td.innerHTML =
+            `<div class="pf-manual-check-form">` +
+                `<span>After checking ${model.name}'s changelog, update the version here if needed:</span>` +
+                `<input class="pf-input" data-mc-version value="${(model.version || '').replace(/"/g, '&quot;')}">` +
+                `<button type="button" class="pf-chip active" data-mc-save="${modelId}">Save</button>` +
+                `<button type="button" class="pf-chip" data-mc-nochange="${modelId}">No change</button>` +
+            `</div>`;
+
+        manRow.appendChild(td);
+        dataRow.after(manRow);
+
+        const self = this;
+
+        manRow.querySelector('[data-mc-nochange]').addEventListener('click', () => manRow.remove());
+
+        manRow.querySelector('[data-mc-save]').addEventListener('click', async () => {
+            const newVersion = manRow.querySelector('[data-mc-version]').value.trim();
+            if (!newVersion) return;
+            const today = new Date().toISOString().slice(0, 7);
+            await ModelRegistry.update(modelId, { version: newVersion, releaseDate: today });
+            manRow.remove();
+            self.rebuildModelDropdown();
+            self.renderConfigModelTable();
+            self.showToast('Version updated', 'success');
+        });
+    }
+
+    _openModelEditRow(id, focusVersion) {
+        const existing = document.querySelector(`tr.pf-model-edit-row[data-edit-for="${id}"]`);
+        if (existing) { existing.remove(); return; }
+
+        document.querySelectorAll('tr.pf-model-edit-row').forEach(r => r.remove());
+
+        const model = ModelRegistry.getAll().find(m => m.id === id);
+        if (!model) return;
+
+        const dataRow = document.querySelector(`tr[data-model-row="${id}"]`);
+        if (!dataRow) return;
+
+        const colCount = dataRow.querySelectorAll('td').length;
+        const editRow = document.createElement('tr');
+        editRow.className = 'pf-model-edit-row';
+        editRow.setAttribute('data-edit-for', id);
+
+        const td = document.createElement('td');
+        td.setAttribute('colspan', colCount);
+
+        td.innerHTML =
+            `<div class="pf-model-edit-form">` +
+                `<div class="pf-model-edit-grid">` +
+                    `<div class="pf-field"><label>Name</label>` +
+                        `<input class="pf-input" data-ef="name" value="${(model.name || '').replace(/"/g, '&quot;')}"></div>` +
+                    `<div class="pf-field"><label>Version</label>` +
+                        `<input class="pf-input" data-ef="version" value="${(model.version || '').replace(/"/g, '&quot;')}"></div>` +
+                    `<div class="pf-field"><label>Release date</label>` +
+                        `<input class="pf-input" data-ef="releaseDate" value="${model.releaseDate || ''}" placeholder="e.g. 2025-03"></div>` +
+                    `<div class="pf-field"><label>Changelog URL</label>` +
+                        `<input class="pf-input" data-ef="changelogUrl" value="${(model.changelogUrl || '').replace(/"/g, '&quot;')}"></div>` +
+                    `<div class="pf-field"><label>Check URL</label>` +
+                        `<input class="pf-input" data-ef="checkUrl" value="${(model.checkUrl || '').replace(/"/g, '&quot;')}"></div>` +
+                    `<div class="pf-field"><label>Notes</label>` +
+                        `<textarea class="pf-textarea" data-ef="notes" rows="2">${model.notes || ''}</textarea></div>` +
+                `</div>` +
+                `<div class="pf-model-edit-actions">` +
+                    `<button type="button" class="pf-chip active" data-ef-save>` +
+                        `<i class="bi bi-check-circle"></i> Save</button>` +
+                    `<button type="button" class="pf-chip" data-ef-cancel>Cancel</button>` +
+                `</div>` +
+            `</div>`;
+
+        editRow.appendChild(td);
+        dataRow.after(editRow);
+
+        if (focusVersion) {
+            const versionInput = editRow.querySelector('[data-ef="version"]');
+            if (versionInput) { versionInput.focus(); versionInput.select(); }
+        }
+
+        const self = this;
+
+        editRow.querySelector('[data-ef-cancel]').addEventListener('click', () => editRow.remove());
+
+        editRow.querySelector('[data-ef-save]').addEventListener('click', async () => {
+            const fields = {};
+            editRow.querySelectorAll('[data-ef]').forEach(el => {
+                const key = el.getAttribute('data-ef');
+                fields[key] = el.value.trim();
+            });
+            await ModelRegistry.update(id, fields);
+            self.rebuildModelDropdown();
+            self.renderConfigModelTable();
+            self.showToast('Model updated', 'success');
+        });
     }
 
     updateLibraryCounts() {
@@ -2142,11 +2578,19 @@ Format your response as JSON:
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    saveManualInformation() {
+    async saveManualInformation() {
         const manualInfo = document.getElementById('manualInfo').value;
         this.manualInformation = manualInfo;
-        localStorage.setItem('manualInformation', manualInfo);
-        this.showToast('Document notes saved!', 'success');
+        try {
+            await StorageManager.save('manualInformation', manualInfo);
+            this.showToast('Document notes saved!', 'success');
+        } catch (e) {
+            console.error('saveManualInformation failed:', e);
+            this._lastSaveFailed = true;
+            this._saveRetryPending = true;
+            this.updateSaveStatus();
+            this.updateStorageHealth();
+        }
     }
 
     loadManualInformation() {
@@ -2157,8 +2601,19 @@ Format your response as JSON:
         // }
     }
 
-    saveToLocalStorage(key, data) {
-        localStorage.setItem(key, JSON.stringify(data));
+    async saveToLocalStorage(key, data) {
+        const smKeys = ['promptLibrary', 'srefLibrary', 'manualInformation', 'textNotes', 'customOptions', 'llmSettings', 'modelRegistry'];
+        if (smKeys.includes(key)) {
+            try {
+                await StorageManager.save(key, data);
+            } catch (e) {
+                console.error(`StorageManager.save('${key}') failed:`, e);
+                this._lastSaveFailed = true;
+                this._saveRetryPending = true;
+            }
+        } else {
+            try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ }
+        }
         this.markAsChanged();
     }
 
@@ -2188,16 +2643,17 @@ Format your response as JSON:
     }
 
     setupAutoSave() {
+        // Debounced save is now triggered by markAsChanged; keep interval as fallback
         if (this.saveSettings.autoSave && this.saveSettings.autoSaveInterval > 0) {
             this.startAutoSave();
         }
     }
 
     startAutoSave() {
-        this.stopAutoSave(); // Clear any existing timer
+        this.stopAutoSave();
         this.autoSaveTimer = setInterval(() => {
             if (this.hasUnsavedChanges) {
-                this.autoSave();
+                this._executeSave();
             }
         }, this.saveSettings.autoSaveInterval);
     }
@@ -2209,38 +2665,98 @@ Format your response as JSON:
         }
     }
 
+    _scheduleDebouncedSave() {
+        if (this._debounceSaveTimer) clearTimeout(this._debounceSaveTimer);
+        this._debounceSaveTimer = setTimeout(() => {
+            this._debounceSaveTimer = null;
+            if (this.hasUnsavedChanges) this._executeSave();
+        }, 3000);
+    }
+
+    async _executeSave() {
+        try {
+            await StorageManager.saveAll(this.getCurrentAppState());
+            try { localStorage.setItem('uploadedDocuments', JSON.stringify(this.uploadedDocuments)); } catch { /* quota */ }
+            try { localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings)); } catch { /* non-critical */ }
+            this._lastSaveFailed = false;
+            this._saveRetryPending = false;
+            this.markAsSaved();
+        } catch (error) {
+            console.error('Save failed:', error);
+            this._lastSaveFailed = true;
+            this._saveRetryPending = true;
+            this.updateSaveStatus();
+            this.updateStorageHealth();
+        }
+    }
+
+    async retrySave() {
+        this._saveRetryPending = false;
+        this.updateSaveStatus();
+        await this._executeSave();
+    }
+
     markAsChanged() {
         this.hasUnsavedChanges = true;
         this.updateSaveStatus();
+        this._scheduleDebouncedSave();
+        if (this._saveRetryPending) {
+            this._saveRetryPending = false;
+            this._executeSave();
+        }
     }
 
     markAsSaved() {
         this.hasUnsavedChanges = false;
         this.saveSettings.lastSaveTime = new Date().toISOString();
-        localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings));
+        try { localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings)); } catch { /* non-critical */ }
         this.updateSaveStatus();
+        this.updateStorageHealth();
     }
 
-    autoSave() {
-        try {
-            this.saveAllData();
-            this.showToast('Auto-saved successfully!', 'success');
-        } catch (error) {
-            console.error('Auto-save failed:', error);
-            this.showToast('Auto-save failed. Please save manually.', 'warning');
+    async autoSave() {
+        await this._executeSave();
+    }
+
+    async saveAllData() {
+        await this._executeSave();
+    }
+
+    _relativeTime(iso) {
+        if (!iso) return null;
+        const diff = Date.now() - new Date(iso).getTime();
+        if (diff < 30000) return 'just now';
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins === 1) return '1 min ago';
+        if (mins < 60) return mins + ' min ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs === 1) return '1 hr ago';
+        if (hrs < 24) return hrs + ' hr ago';
+        return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    updateStorageHealth() {
+        const dot = document.getElementById('storageHealthDot');
+        if (!dot) return;
+        dot.classList.remove('green', 'amber', 'red');
+        if (this._lastSaveFailed) {
+            dot.classList.add('red');
+            dot.title = 'Last save failed — click for Config';
+        } else {
+            const mode = StorageManager.getMode();
+            const ready = StorageManager.isReady();
+            if (mode === 'localstorage') {
+                dot.classList.add('amber');
+                dot.title = 'Using browser storage — click for Config';
+            } else if (ready) {
+                dot.classList.add('green');
+                dot.title = 'Storage OK — click for Config';
+            } else {
+                dot.classList.add('amber');
+                dot.title = 'Storage not configured — click for Config';
+            }
         }
-    }
-
-    saveAllData() {
-        // Save all libraries and data
-        this.saveToLocalStorage('promptLibrary', this.promptLibrary);
-        this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
-        this.saveToLocalStorage('srefLibrary', this.srefLibrary);
-        this.saveToLocalStorage('textNotes', this.textNotes);
-        localStorage.setItem('manualInformation', this.manualInformation);
-        localStorage.setItem('llmSettings', JSON.stringify(this.llmSettings));
-        
-        this.markAsSaved();
     }
 
     performBackupSave() {
@@ -2283,24 +2799,46 @@ Format your response as JSON:
     }
 
     updateSaveStatus() {
-        const saveStatusElement = document.getElementById('saveStatus');
-        if (!saveStatusElement) return;
+        const el = document.getElementById('saveStatus');
+        if (!el) return;
+
+        const dot = el.querySelector('.pf-save-dot');
+        const txt = el.querySelector('.pf-save-text');
+
+        if (!dot || !txt) return;
+
+        el.onclick = null;
+
+        if (this._lastSaveFailed) {
+            el.className = 'pf-save-chip error';
+            txt.textContent = 'Save failed — click to retry';
+            el.onclick = () => this.retrySave();
+            return;
+        }
 
         if (this.hasUnsavedChanges) {
-            saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-warning"></i> Unsaved changes';
-            saveStatusElement.className = 'badge bg-warning text-dark';
-        } else {
-            const lastSave = this.saveSettings.lastSaveTime;
-            if (lastSave) {
-                const saveTime = new Date(lastSave);
-                const timeStr = saveTime.toLocaleTimeString();
-                saveStatusElement.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> Saved ${timeStr}`;
-                saveStatusElement.className = 'badge bg-success';
-            } else {
-                saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-muted"></i> No changes';
-                saveStatusElement.className = 'badge bg-secondary';
-            }
+            el.className = 'pf-save-chip unsaved';
+            txt.textContent = 'Unsaved';
+            return;
         }
+
+        const lastSave = this.saveSettings.lastSaveTime;
+        if (lastSave) {
+            const rel = this._relativeTime(lastSave);
+            el.className = 'pf-save-chip';
+            txt.textContent = 'Saved ' + rel;
+        } else {
+            el.className = 'pf-save-chip idle';
+            txt.textContent = 'No changes';
+        }
+    }
+
+    _startSaveStatusTicker() {
+        setInterval(() => {
+            if (!this.hasUnsavedChanges && !this._lastSaveFailed && this.saveSettings.lastSaveTime) {
+                this.updateSaveStatus();
+            }
+        }, 30000);
     }
 
     showToast(message, type = 'info') {
@@ -3207,9 +3745,8 @@ Format your response as JSON:
             lastSaveTime: this.saveSettings.lastSaveTime
         };
         
-        localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings));
+        try { localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings)); } catch { /* non-critical */ }
         
-        // Restart auto-save with new settings
         if (this.saveSettings.autoSave) {
             this.startAutoSave();
         } else {
@@ -3459,16 +3996,24 @@ Format your response as JSON:
         testBtn.innerHTML = '<i class="bi bi-wifi"></i> Test Connection';
     }
 
-    saveLLMSettings(modal) {
+    async saveLLMSettings(modal) {
         this.llmSettings = {
             enabled: modal.querySelector('#llmEnabled').checked,
             apiUrl: modal.querySelector('#llmApiUrl').value,
             model: modal.querySelector('#llmModel').value,
             timeout: parseInt(modal.querySelector('#llmTimeout').value)
         };
-        
-        localStorage.setItem('llmSettings', JSON.stringify(this.llmSettings));
-        this.showToast('LLM settings saved!', 'success');
+
+        try {
+            await StorageManager.save('llmSettings', this.llmSettings);
+            this.showToast('LLM settings saved!', 'success');
+        } catch (e) {
+            console.error('saveLLMSettings failed:', e);
+            this._lastSaveFailed = true;
+            this._saveRetryPending = true;
+            this.updateSaveStatus();
+            this.updateStorageHealth();
+        }
     }
 
     // Unified Library Functions
@@ -3906,22 +4451,27 @@ Format your response as JSON:
         }
     }
 
-    clearAllLibrary() {
+    async clearAllLibrary() {
         if (confirm('Are you sure you want to clear ALL library content? This action cannot be undone.')) {
             this.promptLibrary = [];
             this.srefLibrary = [];
             this.uploadedDocuments = [];
             this.textNotes = [];
             this.manualInformation = '';
-            
-            this.saveToLocalStorage('promptLibrary', this.promptLibrary);
-            this.saveToLocalStorage('srefLibrary', this.srefLibrary);
-            this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
-            this.saveToLocalStorage('textNotes', this.textNotes);
-            localStorage.removeItem('manualInformation');
+
+            try {
+                await StorageManager.saveAll(this.getCurrentAppState());
+            } catch (e) {
+                console.error('clearAllLibrary save failed:', e);
+                this._lastSaveFailed = true;
+                this.updateSaveStatus();
+                this.updateStorageHealth();
+            }
+            try { localStorage.setItem('uploadedDocuments', JSON.stringify(this.uploadedDocuments)); } catch { /* quota */ }
             
             this.updateLibraryCounts();
-            document.getElementById('unifiedSearchResults').innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
+            const sr = document.getElementById('unifiedSearchResults');
+            if (sr) sr.innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
             this.showToast('All library content cleared!', 'warning');
         }
     }
@@ -4159,6 +4709,7 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
         }
 
         this.downloadFile(content, filename, mimeType);
+        try { localStorage.setItem('pf_last_export', new Date().toISOString()); } catch { /* non-critical */ }
         this.showToast(`Library exported as ${filename}`, 'success');
     }
 
@@ -4418,8 +4969,20 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
 }
 
 // Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new PromptGenerator();
+document.addEventListener('DOMContentLoaded', async () => {
+    await ModelRegistry.init();
+    await VersionChecker.init();
+    const app = new PromptGenerator();
+    await app.init();
+    window.app = app;
+
+    // Scheduled auto-check: if cache > 24h or empty, run silently in background
+    if (VersionChecker.getCacheAge() > 1440) {
+        VersionChecker.checkAll().then(() => {
+            app.renderConfigModelTable();
+            app._updatePendingBadge();
+        }).catch(e => console.warn('Background version check failed:', e));
+    }
 });
 
 // Export for global access

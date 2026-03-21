@@ -1,8 +1,62 @@
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+const FILE_NAME = 'promptforge-data.json';
+const CONFIG_NAME = 'config.json';
 
 // Keep a global reference of the window object
 let mainWindow;
+
+// ── Data path configuration ──────────────────────────────────────
+
+function getDefaultDataPath() {
+    return path.join(app.getPath('userData'), 'PromptForge');
+}
+
+function getConfigPath() {
+    return path.join(app.getPath('userData'), CONFIG_NAME);
+}
+
+function readConfig() {
+    try {
+        const raw = fs.readFileSync(getConfigPath(), 'utf8');
+        return JSON.parse(raw);
+    } catch {
+        return {};
+    }
+}
+
+function writeConfig(config) {
+    fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2), 'utf8');
+}
+
+function getDataPath() {
+    const config = readConfig();
+    return config.dataPath || getDefaultDataPath();
+}
+
+function getDataFilePath() {
+    return path.join(getDataPath(), FILE_NAME);
+}
+
+function ensureDataDir() {
+    const dir = getDataPath();
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+}
+
+function isWritable(dirPath) {
+    try {
+        const testFile = path.join(dirPath, '.pf_write_test');
+        fs.writeFileSync(testFile, '');
+        fs.unlinkSync(testFile);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 function createWindow() {
     // Create the browser window
@@ -13,8 +67,9 @@ function createWindow() {
         minHeight: 600,
         icon: path.join(__dirname, 'assets/icon.png'),
         webPreferences: {
-            nodeIntegration: false,
+            preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
+            nodeIntegration: false,
             enableRemoteModule: false,
             webSecurity: true
         },
@@ -305,6 +360,89 @@ function createMenu() {
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 }
+
+// ── IPC Handlers ─────────────────────────────────────────────────
+
+ipcMain.handle('pf:getDataPath', async () => {
+    return getDataPath();
+});
+
+ipcMain.handle('pf:setDataPath', async (_event, newPath) => {
+    try {
+        if (!fs.existsSync(newPath)) {
+            return { success: false, error: 'Path does not exist' };
+        }
+        if (!isWritable(newPath)) {
+            return { success: false, error: 'Path is not writable' };
+        }
+        const config = readConfig();
+        config.dataPath = newPath;
+        writeConfig(config);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('pf:chooseFolder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        title: 'Choose PromptForge Data Folder',
+        properties: ['openDirectory', 'createDirectory']
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+        return { success: false };
+    }
+    const chosen = result.filePaths[0];
+    const config = readConfig();
+    config.dataPath = chosen;
+    writeConfig(config);
+    return { success: true, path: chosen };
+});
+
+ipcMain.handle('pf:readData', async () => {
+    try {
+        const filePath = getDataFilePath();
+        if (!fs.existsSync(filePath)) return null;
+        const raw = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(raw);
+    } catch (e) {
+        console.error('pf:readData error:', e.message);
+        return null;
+    }
+});
+
+ipcMain.handle('pf:writeData', async (_event, dataObject) => {
+    try {
+        ensureDataDir();
+        const filePath = getDataFilePath();
+        const tmpPath = filePath + '.tmp';
+        const json = JSON.stringify(dataObject, null, 2);
+        fs.writeFileSync(tmpPath, json, 'utf8');
+        fs.renameSync(tmpPath, filePath);
+        return { success: true };
+    } catch (e) {
+        console.error('pf:writeData error:', e.message);
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('pf:getStorageInfo', async () => {
+    const filePath = getDataFilePath();
+    const exists = fs.existsSync(filePath);
+    let fileSizeBytes = 0;
+    let lastModified = null;
+    if (exists) {
+        const stat = fs.statSync(filePath);
+        fileSizeBytes = stat.size;
+        lastModified = stat.mtime.toISOString();
+    }
+    return {
+        path: getDataPath(),
+        exists,
+        fileSizeBytes,
+        lastModified
+    };
+});
 
 // App event handlers
 app.whenReady().then(createWindow);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -191,77 +191,77 @@
             border: 2px dashed #ccc;
         }
         
-        /* Dark mode support - class-based */
-        body.dark-mode {
+        /* Dark mode (default) */
+        html.dark body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         
-        body.dark-mode .main-container {
+        html.dark .main-container {
             background: rgba(30, 30, 30, 0.95);
             color: #e9ecef;
         }
         
-        body.dark-mode .feature-card {
+        html.dark .feature-card {
             background-color: rgba(40, 40, 40, 0.8);
             border-color: #495057;
             color: #e9ecef;
         }
         
-        body.dark-mode .feature-card .card-header {
+        html.dark .feature-card .card-header {
             border-bottom-color: #495057;
         }
         
-        body.dark-mode .step-content h5 {
+        html.dark .step-content h5 {
             color: #ffffff;
         }
         
-        body.dark-mode .tip-box {
+        html.dark .tip-box {
             background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
             color: #e9ecef;
         }
         
-        body.dark-mode .tip-box.warning {
+        html.dark .tip-box.warning {
             background: linear-gradient(135deg, #44403c 0%, #292524 100%);
         }
         
-        body.dark-mode .tip-box.success {
+        html.dark .tip-box.success {
             background: linear-gradient(135deg, #1a4d2e 0%, #0d3321 100%);
         }
         
-        body.dark-mode .toc-link {
+        html.dark .toc-link {
             color: #9cb3f0;
         }
         
-        body.dark-mode .toc-link:hover {
+        html.dark .toc-link:hover {
             background: rgba(102, 126, 234, 0.2);
         }
         
-        body.dark-mode .keyboard-shortcut {
+        html.dark .keyboard-shortcut {
             background: #374151;
             border-color: #4b5563;
             color: #e5e7eb;
         }
         
-        body.dark-mode .screenshot-placeholder {
+        html.dark .screenshot-placeholder {
             background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
             color: #9ca3af;
             border-color: #4b5563;
         }
         
-        body.dark-mode .table {
+        html.dark .table {
             color: #e9ecef;
         }
         
-        body.dark-mode .text-muted {
+        html.dark .text-muted {
             color: #adb5bd !important;
         }
         
-        /* Light mode explicit */
-        body.light-mode {
+        /* Light mode override */
+        html.light-mode body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        body.light-mode .main-container {
+        html.light-mode .main-container {
             background: rgba(255, 255, 255, 0.95);
             color: #212529;
         }
@@ -752,21 +752,23 @@
         // Theme Toggle (Light/Dark Mode)
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
+        const htmlEl = document.documentElement;
         
+        function applyTheme(theme) {
+            htmlEl.classList.remove('dark', 'light-mode');
+            htmlEl.classList.add(theme === 'light' ? 'light-mode' : 'dark');
+            updateThemeIcon(theme);
+        }
+
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-            
             if (savedTheme) {
-                document.body.classList.remove('light-mode', 'dark-mode');
-                document.body.classList.add(savedTheme + '-mode');
-                updateThemeIcon(savedTheme);
+                applyTheme(savedTheme);
             } else {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.body.classList.add('dark-mode');
-                    updateThemeIcon('dark');
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    applyTheme('light');
                 } else {
-                    document.body.classList.add('light-mode');
-                    updateThemeIcon('light');
+                    applyTheme('dark');
                 }
             }
         }
@@ -784,17 +786,13 @@
         }
         
         function toggleTheme() {
-            const isDark = document.body.classList.contains('dark-mode');
-            document.body.classList.remove('light-mode', 'dark-mode');
-            
+            const isDark = htmlEl.classList.contains('dark');
             if (isDark) {
-                document.body.classList.add('light-mode');
+                applyTheme('light');
                 localStorage.setItem('theme', 'light');
-                updateThemeIcon('light');
             } else {
-                document.body.classList.add('dark-mode');
+                applyTheme('dark');
                 localStorage.setItem('theme', 'dark');
-                updateThemeIcon('dark');
             }
         }
         
@@ -807,14 +805,7 @@
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 if (!localStorage.getItem('theme')) {
-                    document.body.classList.remove('light-mode', 'dark-mode');
-                    if (e.matches) {
-                        document.body.classList.add('dark-mode');
-                        updateThemeIcon('dark');
-                    } else {
-                        document.body.classList.add('light-mode');
-                        updateThemeIcon('light');
-                    }
+                    applyTheme(e.matches ? 'dark' : 'light');
                 }
             });
         }
