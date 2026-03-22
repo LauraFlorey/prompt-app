@@ -6,22 +6,25 @@
     <title>Download PromptForge</title>
     <meta name="description" content="Download PromptForge desktop app — build prompts, keep your data, no account required.">
     <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --pf-bg: #0A0E1A;
-            --pf-surface: #0F1422;
+            --pf-bg: #0B0E14;
+            --pf-surface: #161B26;
             --pf-surface2: linear-gradient(145deg, rgba(36,46,72,0.88) 0%, rgba(22,29,50,0.96) 40%, rgba(14,19,36,1) 70%, rgba(24,32,54,0.9) 100%);
             --pf-card-shine: inset 0 1px 0 rgba(255,255,255,0.05);
-            --pf-border: rgba(190,210,240,0.10);
-            --pf-text-primary: #D0DCEF;
-            --pf-text-secondary: #C4D4EC;
+            --pf-border: #2D3545;
+            --pf-text-primary: #FFFFFF;
+            --pf-text-secondary: #94A3B8;
             --pf-text-muted: #5A6A84;
             --pf-text-ghost: #3C4C64;
-            --pf-accent: #5B9CF6;
-            --pf-accent-bg: rgba(91,156,246,0.10);
-            --pf-accent-border: rgba(91,156,246,0.34);
-            --pf-accent-gradient: linear-gradient(135deg, #3570E0, #5B9CF6);
+            --pf-accent: #00F2FF;
+            --pf-accent-bg: rgba(0,242,255,0.10);
+            --pf-accent-border: rgba(0,242,255,0.34);
+            --pf-accent-gradient: linear-gradient(135deg, #00F2FF, #A855F7);
             --pf-success: #6EC6A0;
             --pf-chip-bg: rgba(6,9,20,0.50);
         }
@@ -38,14 +41,14 @@
             --pf-accent: #3570E0;
             --pf-accent-bg: rgba(53,112,224,0.07);
             --pf-accent-border: rgba(53,112,224,0.28);
-            --pf-accent-gradient: linear-gradient(135deg, #3570E0, #5B9CF6);
+            --pf-accent-gradient: linear-gradient(135deg, #00F2FF, #A855F7);
             --pf-success: #2A9D6E;
             --pf-chip-bg: rgba(0,0,0,0.04);
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Outfit', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
             background: var(--pf-bg);
             color: var(--pf-text-primary);
             min-height: 100vh;
@@ -204,7 +207,7 @@
             font-weight: 500;
             color: var(--pf-accent);
         }
-        .dl-browser-link a:hover { text-decoration: none; background: rgba(91,156,246,0.16); }
+        .dl-browser-link a:hover { text-decoration: none; background: rgba(0,242,255,0.16); }
         .dl-browser-note {
             text-align: center;
             font-size: 12px;
