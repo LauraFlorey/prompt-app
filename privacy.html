@@ -3,314 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security & Privacy - PromptForge</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Security & Privacy - Prompt Forge</title>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #1a4d5c 0%, #2d5a68 100%);
-            min-height: 100vh;
-            padding: 2rem 0;
-        }
-        .privacy-container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 3rem;
-        }
-        .hero-icon {
-            font-size: 4rem;
-            color: #1a4d5c;
-            margin-bottom: 1rem;
-        }
-        .info-box {
-            background: #f8f9fa;
-            border-left: 4px solid #28a745;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-radius: 6px;
-        }
-        .info-box.blue {
-            border-left-color: #0d6efd;
-        }
-        .info-box.warning {
-            border-left-color: #ffc107;
-            background: #fff9e6;
-        }
-        .check-item {
-            display: flex;
-            align-items: start;
-            margin: 1rem 0;
-        }
-        .check-item i {
-            color: #28a745;
-            font-size: 1.5rem;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-        h1 {
-            color: #1a4d5c;
-            font-weight: bold;
-        }
-        h2 {
-            color: #2d5a68;
-            font-weight: 600;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        .btn-back {
-            background: #1a4d5c;
-            color: white;
-            border: none;
-        }
-        .btn-back:hover {
-            background: #2d5a68;
-            color: white;
-        }
-    </style>
+    <link href="tailwind.css" rel="stylesheet">
+    <link href="styles/app.css" rel="stylesheet">
 </head>
-<body>
-    <div class="privacy-container">
-        <div class="text-center mb-4">
-            <i class="bi bi-shield-check hero-icon"></i>
-            <h1>Security & Privacy Information</h1>
-            <p class="lead text-muted">Your data stays on your device. Always.</p>
-        </div>
+<body style="background-color: #0B0E14; color: #E2E8F0; min-height: 100vh;">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="pf-card">
+            <div class="pf-card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-shield-check text-6xl mb-4 text-cyan-400 inline-block"></i>
+                    <h1 class="text-3xl font-bold text-slate-100">Security & Privacy Information</h1>
+                    <p class="text-lg text-muted">Your data stays on your device. Always.</p>
+                </div>
 
-        <div class="info-box">
-            <h5><i class="bi bi-lock-fill me-2"></i>100% Private & Local</h5>
-            <p class="mb-0">
-                PromptForge is a <strong>completely client-side web application</strong>. All your prompts, style references, 
-                and settings are stored in your browser's local storage on <strong>your device only</strong>. Nothing is 
-                uploaded to any server—not even ours.
-            </p>
-        </div>
+                <div class="pf-alert pf-alert-success mb-6">
+                    <h5 class="font-bold mb-2"><i class="bi bi-lock-fill mr-2"></i>100% Private & Local</h5>
+                    <p class="mb-0">
+                        Prompt Forge is a <strong>completely client-side web application</strong>. All your prompts, style references,
+                        and settings are stored in your browser's local storage on <strong>your device only</strong>. Nothing is
+                        uploaded to any server—not even ours.
+                    </p>
+                </div>
 
-        <h2><i class="bi bi-database me-2"></i>What Data is Stored?</h2>
-        <p>When you use PromptForge, the following information is stored locally in your browser:</p>
-        
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>Saved Prompts</strong> - Any prompts you save to your library
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>Style References (sref)</strong> - Image URLs, weights, and descriptions you save
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>Uploaded Documents</strong> - Any files or web content you add for reference
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>LLM Settings</strong> - API URLs and model names (if you use local LLM integration)
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>App Preferences</strong> - Custom dropdown options, theme choice (light/dark mode)
-            </div>
-        </div>
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-database mr-2"></i>What Data is Stored?</h2>
+                <p>When you use Prompt Forge, the following information is stored locally in your browser:</p>
 
-        <h2><i class="bi bi-cloud-slash me-2"></i>What is NOT Stored?</h2>
-        
-        <div class="info-box blue">
-            <p class="mb-0">
-                <strong>We do not collect, transmit, or store any of your data on our servers.</strong> There is no 
-                user database, no cloud storage, no tracking cookies, and no analytics that identify you personally.
-            </p>
-        </div>
-
-        <h2><i class="bi bi-arrow-repeat me-2"></i>How Your Data Moves</h2>
-        <p>Your data only leaves your device in these situations (and only when you choose):</p>
-
-        <table class="table table-bordered mt-3">
-            <thead class="table-light">
-                <tr>
-                    <th width="40%">Action</th>
-                    <th>What Happens</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>You click "Export"</strong></td>
-                    <td>Downloads a JSON file to your device (stays on your computer)</td>
-                </tr>
-                <tr>
-                    <td><strong>You share your export file</strong></td>
-                    <td>Only if you manually send the file to someone else</td>
-                </tr>
-                <tr>
-                    <td><strong>Browser sync is enabled</strong></td>
-                    <td>Chrome/Firefox may sync your localStorage to your own account (encrypted)</td>
-                </tr>
-                <tr>
-                    <td><strong>Fetching web content</strong></td>
-                    <td>App may use CORS proxies to fetch public web pages (no personal data sent)</td>
-                </tr>
-                <tr>
-                    <td><strong>Using local LLM</strong></td>
-                    <td>Connects to localhost only—your computer, not external servers</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h2><i class="bi bi-shield-check me-2"></i>Security Features</h2>
-        <p>We've implemented multiple layers of protection:</p>
-
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>XSS Protection</strong> - All user input is safely escaped to prevent malicious scripts
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>Sandboxed Output</strong> - HTML previews run in isolated iframes with no script execution
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>Content Security Policy</strong> - Restricts what resources the app can load
-            </div>
-        </div>
-        <div class="check-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-                <strong>No External Dependencies</strong> - Only loads Bootstrap and icons from trusted CDNs
-            </div>
-        </div>
-
-        <h2><i class="bi bi-exclamation-triangle me-2"></i>Important Notes</h2>
-
-        <div class="info-box warning">
-            <h6><i class="bi bi-info-circle me-2"></i>Your Data is Device-Specific</h6>
-            <p>
-                Because everything is stored locally, your prompts and settings are tied to this specific browser 
-                on this device. If you switch browsers, computers, or clear your browser data, you'll need to 
-                re-import your library from an export file.
-            </p>
-            <p class="mb-0">
-                <strong>Recommendation:</strong> Regularly export your library as a backup 
-                (click "Export All" in the app).
-            </p>
-        </div>
-
-        <div class="info-box warning">
-            <h6><i class="bi bi-key me-2"></i>Don't Store API Keys</h6>
-            <p class="mb-0">
-                While your data is private, localStorage is not encrypted. If you're using LLM integration, 
-                only connect to <strong>local</strong> instances (localhost). Never store production API keys 
-                for commercial services in the app.
-            </p>
-        </div>
-
-        <h2><i class="bi bi-question-circle me-2"></i>Common Questions</h2>
-
-        <div class="accordion" id="faqAccordion">
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                        Can you see my prompts?
-                    </button>
-                </h2>
-                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        <strong>No.</strong> We cannot see, access, or recover your prompts. They exist only in your 
-                        browser's localStorage on your device. We don't have a database or any way to access your data.
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Saved Prompts</strong> - Any prompts you save to your library
                     </div>
                 </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                        What happens if I clear my browser cache?
-                    </button>
-                </h2>
-                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Your saved library data will be deleted. That's why we recommend exporting your library regularly 
-                        as a backup. You can re-import it anytime using the "Import" button in the app.
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Style References (sref)</strong> - Image URLs, weights, and descriptions you save
                     </div>
                 </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                        Can I use this app offline?
-                    </button>
-                </h2>
-                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Yes! Once the page loads, PromptForge works completely offline. You can generate prompts, 
-                        manage your library, and use all features without an internet connection. (Note: Fetching 
-                        web content and LLM integration require connectivity.)
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Uploaded Documents</strong> - Any files or web content you add for reference
                     </div>
                 </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                        Is my data encrypted?
-                    </button>
-                </h2>
-                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Browser localStorage is not encrypted by default. However, since your data never leaves your device, 
-                        it's protected by your device's security (password, encryption, etc.). For maximum security, use 
-                        device encryption and keep your operating system updated.
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>LLM Settings</strong> - API URLs and model names (if you use local LLM integration)
                     </div>
                 </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                        Do you comply with GDPR/privacy laws?
-                    </button>
-                </h2>
-                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Because we don't collect, transmit, or store any personal data on our servers, GDPR and most 
-                        privacy regulations don't apply in the traditional sense. We simply provide the tool—you control 
-                        all your data locally.
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>App Preferences</strong> - Custom dropdown options, theme choice (light/dark mode)
                     </div>
                 </div>
+
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-cloud-slash mr-2"></i>What is NOT Stored?</h2>
+
+                <div class="pf-alert pf-alert-info mb-6">
+                    <p class="mb-0">
+                        <strong>We do not collect, transmit, or store any of your data on our servers.</strong> There is no
+                        user database, no cloud storage, no tracking cookies, and no analytics that identify you personally.
+                    </p>
+                </div>
+
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-arrow-repeat mr-2"></i>How Your Data Moves</h2>
+                <p>Your data only leaves your device in these situations (and only when you choose):</p>
+
+                <table class="pf-table mt-3 w-full">
+                    <thead>
+                        <tr class="bg-slate-800/50">
+                            <th class="w-[40%]">Action</th>
+                            <th>What Happens</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>You click "Export"</strong></td>
+                            <td>Downloads a JSON file to your device (stays on your computer)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>You share your export file</strong></td>
+                            <td>Only if you manually send the file to someone else</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Browser sync is enabled</strong></td>
+                            <td>Chrome/Firefox may sync your localStorage to your own account (encrypted)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fetching web content</strong></td>
+                            <td>App may use CORS proxies to fetch public web pages (no personal data sent)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Using local LLM</strong></td>
+                            <td>Connects to localhost only—your computer, not external servers</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-shield-check mr-2"></i>Security Features</h2>
+                <p>We've implemented multiple layers of protection:</p>
+
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>XSS Protection</strong> - All user input is safely escaped to prevent malicious scripts
+                    </div>
+                </div>
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Sandboxed Output</strong> - HTML previews run in isolated iframes with no script execution
+                    </div>
+                </div>
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Content Security Policy</strong> - Restricts what resources the app can load
+                    </div>
+                </div>
+                <div class="flex items-start my-4">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-2xl mr-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>No External Dependencies</strong> - Only loads Bootstrap and icons from trusted CDNs
+                    </div>
+                </div>
+
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-exclamation-triangle mr-2"></i>Important Notes</h2>
+
+                <div class="pf-alert pf-alert-warning mb-6">
+                    <h6 class="font-bold mb-2"><i class="bi bi-info-circle mr-2"></i>Your Data is Device-Specific</h6>
+                    <p>
+                        Because everything is stored locally, your prompts and settings are tied to this specific browser
+                        on this device. If you switch browsers, computers, or clear your browser data, you'll need to
+                        re-import your library from an export file.
+                    </p>
+                    <p class="mb-0">
+                        <strong>Recommendation:</strong> Regularly export your library as a backup
+                        (click "Export All" in the app).
+                    </p>
+                </div>
+
+                <div class="pf-alert pf-alert-warning mb-6">
+                    <h6 class="font-bold mb-2"><i class="bi bi-key mr-2"></i>Don't Store API Keys</h6>
+                    <p class="mb-0">
+                        While your data is private, localStorage is not encrypted. If you're using LLM integration,
+                        only connect to <strong>local</strong> instances (localhost). Never store production API keys
+                        for commercial services in the app.
+                    </p>
+                </div>
+
+                <h2 class="mt-8 mb-4 text-xl font-semibold text-slate-200"><i class="bi bi-question-circle mr-2"></i>Common Questions</h2>
+
+                <div class="pf-accordion">
+                    <details class="pf-accordion-item">
+                        <summary>Can you see my prompts?</summary>
+                        <div class="pf-accordion-content">
+                            <strong>No.</strong> We cannot see, access, or recover your prompts. They exist only in your
+                            browser's localStorage on your device. We don't have a database or any way to access your data.
+                        </div>
+                    </details>
+
+                    <details class="pf-accordion-item">
+                        <summary>What happens if I clear my browser cache?</summary>
+                        <div class="pf-accordion-content">
+                            Your saved library data will be deleted. That's why we recommend exporting your library regularly
+                            as a backup. You can re-import it anytime using the "Import" button in the app.
+                        </div>
+                    </details>
+
+                    <details class="pf-accordion-item">
+                        <summary>Can I use this app offline?</summary>
+                        <div class="pf-accordion-content">
+                            Yes! Once the page loads, Prompt Forge works completely offline. You can generate prompts,
+                            manage your library, and use all features without an internet connection. (Note: Fetching
+                            web content and LLM integration require connectivity.)
+                        </div>
+                    </details>
+
+                    <details class="pf-accordion-item">
+                        <summary>Is my data encrypted?</summary>
+                        <div class="pf-accordion-content">
+                            Browser localStorage is not encrypted by default. However, since your data never leaves your device,
+                            it's protected by your device's security (password, encryption, etc.). For maximum security, use
+                            device encryption and keep your operating system updated.
+                        </div>
+                    </details>
+
+                    <details class="pf-accordion-item">
+                        <summary>Do you comply with GDPR/privacy laws?</summary>
+                        <div class="pf-accordion-content">
+                            Because we don't collect, transmit, or store any personal data on our servers, GDPR and most
+                            privacy regulations don't apply in the traditional sense. We simply provide the tool—you control
+                            all your data locally.
+                        </div>
+                    </details>
+                </div>
+
+                <hr class="my-12 border-slate-700/80">
+
+                <div class="text-center">
+                    <h4 class="mb-3 text-lg font-semibold text-slate-100">Your Privacy is Our Priority</h4>
+                    <p class="text-muted mb-4">
+                        Prompt Forge is designed with privacy by default. We believe your creative work should stay yours.
+                    </p>
+                    <a href="index.html" class="pf-btn pf-btn-primary pf-btn-lg">
+                        <i class="bi bi-arrow-left mr-2"></i>Back to Prompt Forge
+                    </a>
+                </div>
             </div>
-        </div>
-
-        <hr class="my-5">
-
-        <div class="text-center">
-            <h4 class="mb-3">Your Privacy is Our Priority</h4>
-            <p class="text-muted mb-4">
-                PromptForge is designed with privacy by default. We believe your creative work should stay yours.
-            </p>
-            <a href="index.html" class="btn btn-back btn-lg">
-                <i class="bi bi-arrow-left me-2"></i>Back to PromptForge
-            </a>
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

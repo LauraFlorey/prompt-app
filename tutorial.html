@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,422 +10,141 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --header-gradient: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-            --accent-color: #667eea;
-        }
-        
-        body {
-            background: var(--primary-gradient);
-            min-height: 100vh;
-            font-family: 'Outfit', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-        }
-        
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            max-width: 1000px;
-        }
-        
-        .header-section {
-            background: var(--header-gradient);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            padding: 2rem;
-            text-align: center;
-        }
-        
-        .content-section {
-            padding: 2rem;
-        }
-        
-        .feature-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            margin-bottom: 1.5rem;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        }
-        
-        .feature-card .card-header {
-            border-radius: 15px 15px 0 0;
-            font-weight: 600;
-        }
-        
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-gradient);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-        
-        .step-item {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            align-items: flex-start;
-        }
-        
-        .step-content {
-            flex: 1;
-        }
-        
-        .step-content h5 {
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        
-        .tip-box {
-            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
-            border-left: 4px solid var(--accent-color);
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin: 1rem 0;
-        }
-        
-        .tip-box.warning {
-            border-left-color: #ffc107;
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        }
-        
-        .tip-box.success {
-            border-left-color: #28a745;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-        }
-        
-        .keyboard-shortcut {
-            display: inline-block;
-            background: #f1f3f4;
-            border: 1px solid #dadce0;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        
-        .model-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            margin: 2px;
-        }
-        
-        .model-badge.image {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .model-badge.video {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-        
-        .model-badge.text {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-        
-        .toc-link {
-            color: var(--accent-color);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            display: block;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-        
-        .toc-link:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #5a6fd8;
-        }
-        
-        .back-to-app {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        
-        .example-prompt {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            border-radius: 10px;
-            padding: 1rem;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
-        }
-        
-        .example-prompt .highlight {
-            color: #9cdcfe;
-        }
-        
-        .example-prompt .param {
-            color: #ce9178;
-        }
-        
-        .screenshot-placeholder {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 10px;
-            padding: 3rem;
-            text-align: center;
-            color: #666;
-            border: 2px dashed #ccc;
-        }
-        
-        /* Dark mode (default) */
-        html.dark body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        }
-        
-        html.dark .main-container {
-            background: rgba(30, 30, 30, 0.95);
-            color: #e9ecef;
-        }
-        
-        html.dark .feature-card {
-            background-color: rgba(40, 40, 40, 0.8);
-            border-color: #495057;
-            color: #e9ecef;
-        }
-        
-        html.dark .feature-card .card-header {
-            border-bottom-color: #495057;
-        }
-        
-        html.dark .step-content h5 {
-            color: #ffffff;
-        }
-        
-        html.dark .tip-box {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-            color: #e9ecef;
-        }
-        
-        html.dark .tip-box.warning {
-            background: linear-gradient(135deg, #44403c 0%, #292524 100%);
-        }
-        
-        html.dark .tip-box.success {
-            background: linear-gradient(135deg, #1a4d2e 0%, #0d3321 100%);
-        }
-        
-        html.dark .toc-link {
-            color: #9cb3f0;
-        }
-        
-        html.dark .toc-link:hover {
-            background: rgba(102, 126, 234, 0.2);
-        }
-        
-        html.dark .keyboard-shortcut {
-            background: #374151;
-            border-color: #4b5563;
-            color: #e5e7eb;
-        }
-        
-        html.dark .screenshot-placeholder {
-            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-            color: #9ca3af;
-            border-color: #4b5563;
-        }
-        
-        html.dark .table {
-            color: #e9ecef;
-        }
-        
-        html.dark .text-muted {
-            color: #adb5bd !important;
-        }
-        
-        /* Light mode override */
-        html.light-mode body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        html.light-mode .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            color: #212529;
-        }
-        
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .header-section {
-                padding: 1.5rem;
-            }
-            
-            .content-section {
-                padding: 1rem;
-            }
-            
-            .back-to-app {
-                bottom: 10px;
-                right: 10px;
-            }
-        }
-    </style>
+    <link href="tailwind.css" rel="stylesheet">
+    <link href="styles/app.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="main-container">
+<body style="background-color: #0B0E14; color: #E2E8F0; min-height: 100vh;">
+    <div class="w-full px-4">
+        <div class="max-w-[1000px] mx-auto my-5 max-md:my-2 max-md:mx-2 rounded-[20px] overflow-hidden border border-white/10 bg-slate-900/90 backdrop-blur-md shadow-2xl">
             <!-- Header Section -->
-            <header class="header-section">
-                <div class="d-flex justify-content-end mb-2">
-                    <button id="themeToggle" class="btn btn-light btn-sm shadow-sm" title="Toggle Light/Dark Mode">
-                        <i class="bi bi-moon-fill" id="themeIcon"></i>
-                    </button>
-                </div>
-                <h1 class="display-5 fw-bold mb-2">
+            <header class="bg-gradient-to-br from-sky-400 to-cyan-400 text-white rounded-t-[20px] p-8 max-md:p-6 text-center">
+                <h1 class="text-4xl font-bold mb-2">
                     <i class="bi bi-book"></i> Prompt Helper
                 </h1>
-                <p class="lead mb-0">Complete Tutorial & How-To Guide</p>
-                <a href="index.html" class="btn btn-light btn-sm mt-3">
+                <p class="text-xl text-white/90 mb-0">Complete Tutorial & How-To Guide</p>
+                <a href="index.html" class="pf-btn pf-btn-outline-light pf-btn-sm mt-3">
                     <i class="bi bi-arrow-left"></i> Back to App
                 </a>
             </header>
 
             <!-- Content Section -->
-            <main class="content-section">
+            <main class="p-8 max-md:p-4">
                 <!-- Table of Contents -->
-                <nav class="card feature-card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Table of Contents</h5>
+                <nav class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-violet-600 to-purple-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-list-ul"></i> Table of Contents</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <a href="#getting-started" class="toc-link"><i class="bi bi-play-circle"></i> Getting Started</a>
-                                <a href="#creating-prompts" class="toc-link"><i class="bi bi-pencil-square"></i> Creating Prompts</a>
-                                <a href="#models" class="toc-link"><i class="bi bi-cpu"></i> Supported Models</a>
-                                <a href="#parameters" class="toc-link"><i class="bi bi-sliders"></i> Parameters Explained</a>
+                    <div class="pf-card-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <a href="#getting-started" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-play-circle"></i> Getting Started</a>
+                                <a href="#creating-prompts" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-pencil-square"></i> Creating Prompts</a>
+                                <a href="#models" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-cpu"></i> Supported Models</a>
+                                <a href="#parameters" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-sliders"></i> Parameters Explained</a>
                             </div>
-                            <div class="col-md-6">
-                                <a href="#style-references" class="toc-link"><i class="bi bi-palette2"></i> Style References (Sref)</a>
-                                <a href="#library" class="toc-link"><i class="bi bi-collection"></i> Using the Library</a>
-                                <a href="#templates" class="toc-link"><i class="bi bi-layout-text-window"></i> Quick Templates</a>
-                                <a href="#tips" class="toc-link"><i class="bi bi-lightbulb"></i> Pro Tips</a>
+                            <div>
+                                <a href="#style-references" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-palette2"></i> Style References (Sref)</a>
+                                <a href="#library" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-collection"></i> Using the Library</a>
+                                <a href="#templates" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-layout-text-window"></i> Quick Templates</a>
+                                <a href="#tips" class="block rounded-lg px-4 py-2 text-indigo-300 no-underline transition hover:bg-violet-500/20"><i class="bi bi-lightbulb"></i> Pro Tips</a>
                             </div>
                         </div>
                     </div>
                 </nav>
 
                 <!-- Getting Started -->
-                <section id="getting-started" class="card feature-card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="bi bi-play-circle"></i> Getting Started</h5>
+                <section id="getting-started" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-emerald-600 to-green-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-play-circle"></i> Getting Started</h5>
                     </div>
-                    <div class="card-body">
-                        <p class="lead">Prompt Helper helps you create optimized prompts for AI image, video, and text generation models.</p>
+                    <div class="pf-card-body">
+                        <p class="text-lg text-slate-300">Prompt Helper helps you create optimized prompts for AI image, video, and text generation models.</p>
                         
-                        <div class="step-item">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h5>Select Your Model</h5>
+                        <div class="flex gap-4 mb-6 items-start">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold text-lg">1</div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-white font-semibold mb-2">Select Your Model</h5>
                                 <p>Choose the AI model you'll be using from the dropdown. Each model has specific optimizations applied automatically.</p>
                             </div>
                         </div>
                         
-                        <div class="step-item">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h5>Choose Prompt Type</h5>
+                        <div class="flex gap-4 mb-6 items-start">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold text-lg">2</div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-white font-semibold mb-2">Choose Prompt Type</h5>
                                 <p>Select what kind of generation you're doing: Text-to-Image, Image-to-Video, Text-to-Video, etc.</p>
                             </div>
                         </div>
                         
-                        <div class="step-item">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h5>Enter Your Base Prompt</h5>
+                        <div class="flex gap-4 mb-6 items-start">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold text-lg">3</div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-white font-semibold mb-2">Enter Your Base Prompt</h5>
                                 <p>Write your core idea in the "Starting Prompt" field. This is the foundation of your generated prompt.</p>
                             </div>
                         </div>
                         
-                        <div class="step-item">
-                            <div class="step-number">4</div>
-                            <div class="step-content">
-                                <h5>Customize Parameters</h5>
+                        <div class="flex gap-4 mb-6 items-start">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold text-lg">4</div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-white font-semibold mb-2">Customize Parameters</h5>
                                 <p>Fine-tune your prompt with camera angles, mood, lighting, art style, and more.</p>
                             </div>
                         </div>
                         
-                        <div class="step-item">
-                            <div class="step-number">5</div>
-                            <div class="step-content">
-                                <h5>Generate & Copy</h5>
+                        <div class="flex gap-4 mb-6 items-start">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold text-lg">5</div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-white font-semibold mb-2">Generate & Copy</h5>
                                 <p>Click "Generate Prompt" to see your optimized prompt, then copy it to use in your AI tool.</p>
                             </div>
                         </div>
                         
-                        <div class="tip-box success">
+                        <div class="rounded-lg border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-slate-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-lightning-charge"></i> Quick Tip:</strong> Use the Quick Templates to instantly fill in common settings for different use cases!
                         </div>
                     </div>
                 </section>
 
                 <!-- Creating Prompts -->
-                <section id="creating-prompts" class="card feature-card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Creating Effective Prompts</h5>
+                <section id="creating-prompts" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-cyan-500 to-sky-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-pencil-square"></i> Creating Effective Prompts</h5>
                     </div>
-                    <div class="card-body">
-                        <h6 class="fw-bold">Writing Your Base Prompt</h6>
+                    <div class="pf-card-body">
+                        <h6 class="font-bold">Writing Your Base Prompt</h6>
                         <p>Your starting prompt should describe the core subject or scene. Be specific but concise:</p>
                         
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="tip-box warning">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <div class="rounded-lg border-l-4 border-amber-400 bg-gradient-to-br from-amber-950/40 to-stone-900 p-4 my-4 text-slate-200">
                                     <strong>❌ Too Vague:</strong><br>
                                     "A woman in a field"
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="tip-box success">
+                            <div>
+                                <div class="rounded-lg border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-slate-900 p-4 my-4 text-slate-200">
                                     <strong>✅ Better:</strong><br>
                                     "A young woman with flowing red hair standing in a sunlit meadow of wildflowers"
                                 </div>
                             </div>
                         </div>
                         
-                        <h6 class="fw-bold">Example Generated Prompt</h6>
-                        <div class="example-prompt">
-                            <span class="highlight">A young woman with flowing red hair standing in a sunlit meadow of wildflowers</span>, 
-                            <span class="param">eye-level view</span>, 
-                            <span class="param">medium perspective</span>, 
-                            <span class="param">peaceful mood</span>, 
-                            <span class="param">golden hour color palette</span>, 
-                            <span class="param">natural light lighting</span>, 
-                            <span class="param">portrait-photography style</span>, 
-                            <span class="param">rule-of-thirds composition</span>, 
-                            <span class="param">ultra high quality</span>
+                        <h6 class="font-bold">Example Generated Prompt</h6>
+                        <div class="rounded-lg bg-[#1e1e1e] p-4 font-mono text-sm text-[#d4d4d4] overflow-x-auto">
+                            <span class="text-[#9cdcfe]">A young woman with flowing red hair standing in a sunlit meadow of wildflowers</span>, 
+                            <span class="text-[#ce9178]">eye-level view</span>, 
+                            <span class="text-[#ce9178]">medium perspective</span>, 
+                            <span class="text-[#ce9178]">peaceful mood</span>, 
+                            <span class="text-[#ce9178]">golden hour color palette</span>, 
+                            <span class="text-[#ce9178]">natural light lighting</span>, 
+                            <span class="text-[#ce9178]">portrait-photography style</span>, 
+                            <span class="text-[#ce9178]">rule-of-thirds composition</span>, 
+                            <span class="text-[#ce9178]">ultra high quality</span>
                         </div>
                         
-                        <div class="tip-box mt-3">
+                        <div class="rounded-lg border-l-4 border-violet-500 bg-gradient-to-br from-slate-700 to-slate-900 p-4 my-4 text-slate-200 mt-3">
                             <strong><i class="bi bi-info-circle"></i> How It Works:</strong> 
                             The generator automatically combines your base prompt with the parameters you select, creating a comprehensive prompt optimized for your chosen AI model.
                         </div>
@@ -433,43 +152,43 @@
                 </section>
 
                 <!-- Supported Models -->
-                <section id="models" class="card feature-card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-cpu"></i> Supported Models</h5>
+                <section id="models" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-violet-600 to-purple-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-cpu"></i> Supported Models</h5>
                     </div>
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Image Generation</h6>
+                    <div class="pf-card-body">
+                        <h6 class="font-bold mb-3">Image Generation</h6>
                         <p>
-                            <span class="model-badge image">Midjourney</span>
-                            <span class="model-badge image">DALL-E 3</span>
-                            <span class="model-badge image">Stable Diffusion</span>
-                            <span class="model-badge image">Flux.1</span>
-                            <span class="model-badge image">Ideogram 2.0</span>
-                            <span class="model-badge image">Leonardo AI</span>
-                            <span class="model-badge image">Adobe Firefly</span>
-                            <span class="model-badge image">Google Imagen 3</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Midjourney</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">DALL-E 3</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Stable Diffusion</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Flux.1</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Ideogram 2.0</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Leonardo AI</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Adobe Firefly</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">Google Imagen 3</span>
                         </p>
                         
-                        <h6 class="fw-bold mb-3 mt-4">Video Generation</h6>
+                        <h6 class="font-bold mb-3 mt-4">Video Generation</h6>
                         <p>
-                            <span class="model-badge video">OpenAI Sora</span>
-                            <span class="model-badge video">Google Veo 2</span>
-                            <span class="model-badge video">Runway ML</span>
-                            <span class="model-badge video">Pika Labs</span>
-                            <span class="model-badge video">Luma Dream Machine</span>
-                            <span class="model-badge video">Kling AI</span>
-                            <span class="model-badge video">Hailuo</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">OpenAI Sora</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Google Veo 2</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Runway ML</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Pika Labs</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Luma Dream Machine</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Kling AI</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white">Hailuo</span>
                         </p>
                         
-                        <h6 class="fw-bold mb-3 mt-4">Text & Multimodal</h6>
+                        <h6 class="font-bold mb-3 mt-4">Text & Multimodal</h6>
                         <p>
-                            <span class="model-badge text">GPT-4</span>
-                            <span class="model-badge text">Claude</span>
-                            <span class="model-badge text">Google Gemini</span>
-                            <span class="model-badge text">Meta Llama</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-sky-400 to-cyan-400 text-white">GPT-4</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-sky-400 to-cyan-400 text-white">Claude</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-sky-400 to-cyan-400 text-white">Google Gemini</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm m-0.5 bg-gradient-to-r from-sky-400 to-cyan-400 text-white">Meta Llama</span>
                         </p>
                         
-                        <div class="tip-box">
+                        <div class="rounded-lg border-l-4 border-violet-500 bg-gradient-to-br from-slate-700 to-slate-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-gear"></i> Model-Specific Optimizations:</strong> 
                             Each model receives tailored enhancements. For example, Midjourney prompts include style and quality parameters, while Stable Diffusion prompts focus on quality keywords.
                         </div>
@@ -477,13 +196,13 @@
                 </section>
 
                 <!-- Parameters Explained -->
-                <section id="parameters" class="card feature-card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-sliders"></i> Parameters Explained</h5>
+                <section id="parameters" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-900 border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-sliders"></i> Parameters Explained</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
+                    <div class="pf-card-body">
+                        <div class="overflow-x-auto">
+                            <table class="pf-table">
                                 <thead>
                                     <tr>
                                         <th>Parameter</th>
@@ -536,7 +255,7 @@
                             </table>
                         </div>
                         
-                        <div class="tip-box success">
+                        <div class="rounded-lg border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-slate-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-plus-circle"></i> Custom Options:</strong> 
                             Click the <strong>+</strong> button next to any dropdown to add your own custom values! These are saved for future use.
                         </div>
@@ -544,14 +263,14 @@
                 </section>
 
                 <!-- Style References -->
-                <section id="style-references" class="card feature-card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="bi bi-palette2"></i> Style References (Sref)</h5>
+                <section id="style-references" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-cyan-500 to-sky-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-palette2"></i> Style References (Sref)</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="pf-card-body">
                         <p>Style References allow you to provide a reference image URL that AI models can use to match a specific visual style.</p>
                         
-                        <h6 class="fw-bold">How to Use Style References</h6>
+                        <h6 class="font-bold">How to Use Style References</h6>
                         <ol>
                             <li><strong>Find a Reference:</strong> Locate an image online that has the style you want to emulate</li>
                             <li><strong>Copy the URL:</strong> Right-click the image and copy its direct URL (ending in .jpg, .png, etc.)</li>
@@ -560,41 +279,41 @@
                             <li><strong>Add Description:</strong> Note what style elements you want to capture</li>
                         </ol>
                         
-                        <div class="tip-box warning">
+                        <div class="rounded-lg border-l-4 border-amber-400 bg-gradient-to-br from-amber-950/40 to-stone-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-exclamation-triangle"></i> Note:</strong> 
                             Style references are primarily used with Midjourney (--sref parameter). Other models may handle style references differently or not support them.
                         </div>
                         
-                        <h6 class="fw-bold mt-4">Saving Style References</h6>
+                        <h6 class="font-bold mt-4">Saving Style References</h6>
                         <p>Click "Save to Sref Library" to save useful style references for reuse. You can search and apply them from the Library section.</p>
                     </div>
                 </section>
 
                 <!-- Library -->
-                <section id="library" class="card feature-card">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0"><i class="bi bi-collection"></i> Using the Library</h5>
+                <section id="library" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-slate-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-collection"></i> Using the Library</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="pf-card-body">
                         <p>The Library stores all your saved content in your browser for easy access.</p>
                         
-                        <h6 class="fw-bold">What You Can Store</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <ul class="list-unstyled">
-                                    <li><i class="bi bi-lightning text-warning"></i> <strong>Prompts</strong> - Your saved generated prompts</li>
-                                    <li><i class="bi bi-file-earmark-text text-primary"></i> <strong>Documents</strong> - Uploaded reference files</li>
+                        <h6 class="font-bold">What You Can Store</h6>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <ul class="list-none p-0 m-0">
+                                    <li><i class="bi bi-lightning text-amber-400"></i> <strong>Prompts</strong> - Your saved generated prompts</li>
+                                    <li><i class="bi bi-file-earmark-text text-violet-400"></i> <strong>Documents</strong> - Uploaded reference files</li>
                                 </ul>
                             </div>
-                            <div class="col-md-6">
-                                <ul class="list-unstyled">
-                                    <li><i class="bi bi-palette text-info"></i> <strong>Style References</strong> - Saved sref URLs</li>
-                                    <li><i class="bi bi-sticky text-success"></i> <strong>Notes</strong> - Text notes and snippets</li>
+                            <div>
+                                <ul class="list-none p-0 m-0">
+                                    <li><i class="bi bi-palette text-cyan-400"></i> <strong>Style References</strong> - Saved sref URLs</li>
+                                    <li><i class="bi bi-sticky text-emerald-400"></i> <strong>Notes</strong> - Text notes and snippets</li>
                                 </ul>
                             </div>
                         </div>
                         
-                        <h6 class="fw-bold mt-4">Adding Content</h6>
+                        <h6 class="font-bold mt-4">Adding Content</h6>
                         <p>Use the "Add to Library" dropdown to add:</p>
                         <ul>
                             <li><strong>📄 Document</strong> - Upload PDF, TXT, or other text files</li>
@@ -604,10 +323,10 @@
                             <li><strong>⚡ Quick Prompt</strong> - Manually add a prompt to your library</li>
                         </ul>
                         
-                        <h6 class="fw-bold mt-4">Searching</h6>
+                        <h6 class="font-bold mt-4">Searching</h6>
                         <p>Use the search box to find content across all your saved items. Toggle the checkboxes to filter by type.</p>
                         
-                        <div class="tip-box">
+                        <div class="rounded-lg border-l-4 border-violet-500 bg-gradient-to-br from-slate-700 to-slate-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-cloud-download"></i> Export & Backup:</strong> 
                             Use the "Export All" button to download all your library content as a JSON file. This is great for backups or transferring to another device.
                         </div>
@@ -615,51 +334,51 @@
                 </section>
 
                 <!-- Templates -->
-                <section id="templates" class="card feature-card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="bi bi-layout-text-window"></i> Quick Templates</h5>
+                <section id="templates" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-gradient-to-r from-emerald-600 to-green-600 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-layout-text-window"></i> Quick Templates</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="pf-card-body">
                         <p>Quick Templates pre-fill the form with optimized settings for common use cases:</p>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-primary">🎨</span> Image Generation</h6>
-                                        <small class="text-muted">General image creation with balanced settings</small>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-purple">🎨</span> Image Generation</h6>
+                                        <p class="text-sm text-muted">General image creation with balanced settings</p>
                                     </div>
                                 </div>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-success">📸</span> Portrait Photography</h6>
-                                        <small class="text-muted">Optimized for portraits with soft lighting and shallow depth</small>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-success">📸</span> Portrait Photography</h6>
+                                        <p class="text-sm text-muted">Optimized for portraits with soft lighting and shallow depth</p>
                                     </div>
                                 </div>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-info">🎭</span> Character Design</h6>
-                                        <small class="text-muted">Perfect for character concepts and illustrations</small>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-cyan">🎭</span> Character Design</h6>
+                                        <p class="text-sm text-muted">Perfect for character concepts and illustrations</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-warning text-dark">📦</span> Product Photography</h6>
-                                        <small class="text-muted">Clean, professional product shots</small>
+                            <div>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-warning">📦</span> Product Photography</h6>
+                                        <p class="text-sm text-muted">Clean, professional product shots</p>
                                     </div>
                                 </div>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-danger">🎬</span> Video Generation</h6>
-                                        <small class="text-muted">Cinematic settings for AI video models</small>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-danger">🎬</span> Video Generation</h6>
+                                        <p class="text-sm text-muted">Cinematic settings for AI video models</p>
                                     </div>
                                 </div>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6><span class="badge bg-secondary">🎞️</span> Animation Style</h6>
-                                        <small class="text-muted">Settings for animated or cartoon styles</small>
+                                <div class="pf-card mb-3">
+                                    <div class="pf-card-body">
+                                        <h6 class="font-semibold"><span class="pf-badge pf-badge-muted">🎞️</span> Animation Style</h6>
+                                        <p class="text-sm text-muted">Settings for animated or cartoon styles</p>
                                     </div>
                                 </div>
                             </div>
@@ -668,32 +387,32 @@
                 </section>
 
                 <!-- Pro Tips -->
-                <section id="tips" class="card feature-card">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Pro Tips & Keyboard Shortcuts</h5>
+                <section id="tips" class="pf-card mb-6 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                    <div class="pf-card-head bg-slate-800 text-white border-b-0">
+                        <h5 class="mb-0 text-base font-semibold"><i class="bi bi-lightbulb"></i> Pro Tips & Keyboard Shortcuts</h5>
                     </div>
-                    <div class="card-body">
-                        <h6 class="fw-bold">Keyboard Shortcuts</h6>
-                        <div class="table-responsive mb-4">
-                            <table class="table">
+                    <div class="pf-card-body">
+                        <h6 class="font-bold">Keyboard Shortcuts</h6>
+                        <div class="overflow-x-auto mb-4">
+                            <table class="pf-table">
                                 <tbody>
                                     <tr>
-                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">Enter</span></td>
+                                        <td><span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">Ctrl</span> + <span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">Enter</span></td>
                                         <td>Generate prompt</td>
                                     </tr>
                                     <tr>
-                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">S</span></td>
+                                        <td><span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">Ctrl</span> + <span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">S</span></td>
                                         <td>Save prompt to library</td>
                                     </tr>
                                     <tr>
-                                        <td><span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">C</span></td>
+                                        <td><span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">Ctrl</span> + <span class="inline-block rounded border border-slate-600 bg-slate-700 px-2 py-0.5 font-mono text-sm text-slate-200 shadow">C</span></td>
                                         <td>Copy generated output (when output is visible)</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         
-                        <h6 class="fw-bold">Best Practices</h6>
+                        <h6 class="font-bold">Best Practices</h6>
                         <ul>
                             <li><strong>Be Specific:</strong> The more detail in your base prompt, the better the results</li>
                             <li><strong>Match Model to Task:</strong> Use image models for images, video models for videos</li>
@@ -703,7 +422,7 @@
                             <li><strong>Try Different Formats:</strong> Use JSON output for structured data or Markdown for documentation</li>
                         </ul>
                         
-                        <h6 class="fw-bold mt-4">Output Formats</h6>
+                        <h6 class="font-bold mt-4">Output Formats</h6>
                         <ul>
                             <li><strong>Plain Text:</strong> Simple prompt ready to paste (default)</li>
                             <li><strong>JSON:</strong> Structured data with all parameters</li>
@@ -712,7 +431,7 @@
                             <li><strong>HTML:</strong> Web-ready formatted output</li>
                         </ul>
                         
-                        <div class="tip-box success">
+                        <div class="rounded-lg border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-slate-900 p-4 my-4 text-slate-200">
                             <strong><i class="bi bi-download"></i> Install as App:</strong> 
                             Click the "Install App" button (when available) to add this tool to your desktop or phone home screen for quick access!
                         </div>
@@ -721,7 +440,7 @@
 
                 <!-- Footer -->
                 <div class="text-center py-4">
-                    <a href="index.html" class="btn btn-primary btn-lg">
+                    <a href="index.html" class="pf-btn pf-btn-primary pf-btn-lg">
                         <i class="bi bi-arrow-left"></i> Start Using the App
                     </a>
                 </div>
@@ -730,12 +449,9 @@
     </div>
 
     <!-- Back to App Button -->
-    <a href="index.html" class="btn btn-primary back-to-app shadow-lg">
+    <a href="index.html" class="pf-btn pf-btn-primary fixed bottom-5 right-5 z-[1000] max-md:bottom-2.5 max-md:right-2.5 shadow-lg">
         <i class="bi bi-arrow-left"></i> Back to App
     </a>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         // Smooth scrolling for anchor links
@@ -751,67 +467,6 @@
                 }
             });
         });
-        
-        // Theme Toggle (Light/Dark Mode)
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const htmlEl = document.documentElement;
-        
-        function applyTheme(theme) {
-            htmlEl.classList.remove('dark', 'light-mode');
-            htmlEl.classList.add(theme === 'light' ? 'light-mode' : 'dark');
-            updateThemeIcon(theme);
-        }
-
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            } else {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-                    applyTheme('light');
-                } else {
-                    applyTheme('dark');
-                }
-            }
-        }
-        
-        function updateThemeIcon(theme) {
-            if (themeIcon) {
-                if (theme === 'dark') {
-                    themeIcon.className = 'bi bi-sun-fill';
-                    themeToggle.title = 'Switch to Light Mode';
-                } else {
-                    themeIcon.className = 'bi bi-moon-fill';
-                    themeToggle.title = 'Switch to Dark Mode';
-                }
-            }
-        }
-        
-        function toggleTheme() {
-            const isDark = htmlEl.classList.contains('dark');
-            if (isDark) {
-                applyTheme('light');
-                localStorage.setItem('theme', 'light');
-            } else {
-                applyTheme('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-        
-        if (themeToggle) {
-            themeToggle.addEventListener('click', toggleTheme);
-        }
-        
-        initTheme();
-        
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    applyTheme(e.matches ? 'dark' : 'light');
-                }
-            });
-        }
     </script>
 </body>
 </html>

@@ -172,7 +172,7 @@
                 return result;
             } catch (e) {
                 if (e.rateLimited) throw e;
-                console.warn(`VersionChecker: Feed check failed for ${model.id}:`, e.message);
+                console.debug(`VersionChecker: Feed check failed for ${model.id}:`, e.message);
                 result.status = 'error';
                 return result;
             }
@@ -376,7 +376,7 @@
 
         async init() {
             await loadCache();
-            console.log(`VersionChecker ready — ${_cache.length} cached results, age: ${this.getCacheAge()} min`);
+            console.debug(`VersionChecker ready — ${_cache.length} cached results, age: ${this.getCacheAge()} min`);
         },
 
         async checkModel(modelId) {
@@ -387,7 +387,7 @@
 
         async checkAll() {
             if (this.getCacheAge() < CACHE_TTL_MIN) {
-                console.log('VersionChecker: Using cached results (age: ' + Math.round(this.getCacheAge()) + ' min)');
+                console.debug('VersionChecker: Using cached results (age: ' + Math.round(this.getCacheAge()) + ' min)');
                 return _cache;
             }
 
@@ -406,7 +406,7 @@
                     if (e.rateLimited && !rateLimitRetried) {
                         rateLimitHit = true;
                         rateLimitRetried = true;
-                        console.warn(`VersionChecker: Rate limited at model ${model.id}. Pausing ${RATE_LIMIT_PAUSE_MS}ms then retrying.`);
+                        console.debug(`VersionChecker: Rate limited at model ${model.id}. Pausing ${RATE_LIMIT_PAUSE_MS}ms then retrying.`);
                         await new Promise(r => setTimeout(r, RATE_LIMIT_PAUSE_MS));
                         try {
                             const r = await checkSingleModel(model);
@@ -442,7 +442,7 @@
                 window.dispatchEvent(new CustomEvent('pf:versionCheckComplete', { detail }));
             } catch { /* no event support */ }
 
-            console.log(`VersionChecker: checked ${results.length} models — ` +
+            console.debug(`VersionChecker: checked ${results.length} models — ` +
                 `${results.filter(r => r.status === 'found').length} found, ` +
                 `${results.filter(r => r.status === 'unchanged').length} unchanged, ` +
                 `${results.filter(r => r.status === 'unavailable').length} unavailable, ` +

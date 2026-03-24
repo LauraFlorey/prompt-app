@@ -1,11 +1,11 @@
 {
-  "name": "Prompt Helper",
-  "short_name": "PromptGen",
+  "name": "Prompt Forge",
+  "short_name": "Prompt Forge",
   "description": "A comprehensive AI prompt generation tool with style references, 20+ AI models, mood/color controls, local LLM integration, and advanced parameters",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
+  "background_color": "#0B0E14",
+  "theme_color": "#0B0E14",
   "orientation": "portrait-primary",
   "categories": ["productivity", "utilities", "design"],
   "lang": "en-US",
@@ -53,14 +53,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Prompt Helper main interface"
+      "label": "Prompt Forge main interface"
     },
     {
       "src": "assets/screenshot-narrow.png",
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Prompt Helper mobile interface"
+      "label": "Prompt Forge mobile interface"
     }
   ]
 }

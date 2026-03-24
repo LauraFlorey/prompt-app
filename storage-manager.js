@@ -359,7 +359,7 @@
 
     async function init() {
         await restoreHandle();
-        console.log(`StorageManager ready \u2014 mode: ${mode}`);
+        console.debug(`StorageManager ready \u2014 mode: ${mode}`);
     }
 
     init();

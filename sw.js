@@ -1,13 +1,13 @@
 // Service Worker for Prompt Helper PWA
-const CACHE_NAME = 'ai-prompt-generator-v2.0.0';
+const CACHE_NAME = 'ai-prompt-generator-v3.0.0';
 const urlsToCache = [
     './',
     './index.html',
     './app.js',
+    './tailwind.css',
+    './styles/app.css',
     './manifest.json',
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
-    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css',
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js'
+    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];
 
 // Install event - cache resources

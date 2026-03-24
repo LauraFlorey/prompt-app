@@ -1,3 +1,32 @@
+const PfModal = {
+    show(el) {
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(() => el.classList.add('show'));
+    },
+    hide(el) {
+        el.classList.remove('show');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+            el.dispatchEvent(new Event('pf:hidden'));
+            el.remove();
+        }, 200);
+    },
+    create(html) {
+        const overlay = document.createElement('div');
+        overlay.className = 'pf-modal-overlay';
+        overlay.innerHTML = html;
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) PfModal.hide(overlay);
+        });
+        overlay.querySelectorAll('[data-pf-dismiss="modal"]').forEach(btn => {
+            btn.addEventListener('click', () => PfModal.hide(overlay));
+        });
+        document.body.appendChild(overlay);
+        PfModal.show(overlay);
+        return overlay;
+    }
+};
+
 // Prompt Helper App
 class PromptGenerator {
     constructor() {
@@ -42,6 +71,7 @@ class PromptGenerator {
         
         // Sref image data URL (for uploaded images)
         this.srefImageDataUrl = '';
+        this.srefFormImageDataUrl = '';
         
         // Initialize tooltip explanations
         this.tooltipExplanations = this.initTooltipExplanations();
@@ -165,41 +195,47 @@ class PromptGenerator {
         // URL fetching - moved to dynamic form creation in showAddItemForm
         // Original URL fetch setup moved to dynamic form creation
 
-        // Sref functionality
-        const saveSref = document.getElementById('saveSref');
-        if (saveSref) {
-            saveSref.addEventListener('click', () => {
-                this.saveSrefToLibrary();
-            });
+        // Sref Library form (now on Library side)
+        const srefFormSave = document.getElementById('srefFormSave');
+        if (srefFormSave) {
+            srefFormSave.addEventListener('click', () => this.saveSrefFromForm());
         }
 
-        const clearSref = document.getElementById('clearSref');
-        if (clearSref) {
-            clearSref.addEventListener('click', () => {
-                this.clearSrefForm();
-            });
+        const srefFormClear = document.getElementById('srefFormClear');
+        if (srefFormClear) {
+            srefFormClear.addEventListener('click', () => this.clearSrefLibraryForm());
         }
 
-        const clearSrefLibrary = document.getElementById('clearSrefLibrary');
-        if (clearSrefLibrary) {
-            clearSrefLibrary.addEventListener('click', () => {
-                this.clearSrefLibrary();
-            });
-        }
-        
-        // Sref type switching (URL, Code, Image)
-        document.querySelectorAll('input[name="srefType"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                this.switchSrefType(e.target.value);
-            });
+        // Sref form type switching (URL, Code, Image) — Library form
+        document.querySelectorAll('input[name="srefFormType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => this.switchSrefFormType(e.target.value));
         });
-        
-        // Sref image upload
-        const srefImageUpload = document.getElementById('srefImageUpload');
-        if (srefImageUpload) {
-            srefImageUpload.addEventListener('change', (e) => {
-                this.handleSrefImageUpload(e);
-            });
+
+        // Sref form image upload
+        const srefFormImageUpload = document.getElementById('srefFormImageUpload');
+        if (srefFormImageUpload) {
+            srefFormImageUpload.addEventListener('change', (e) => this.handleSrefFormImageUpload(e));
+        }
+
+        // Studio compact picker
+        const srefPicker = document.getElementById('srefPicker');
+        if (srefPicker) {
+            srefPicker.addEventListener('change', (e) => this.onSrefPickerChange(e.target.value));
+        }
+
+        const srefPickerClear = document.getElementById('srefPickerClear');
+        if (srefPickerClear) {
+            srefPickerClear.addEventListener('click', () => this.clearActiveSref());
+        }
+
+        const srefPickerNew = document.getElementById('srefPickerNew');
+        if (srefPickerNew) {
+            srefPickerNew.addEventListener('click', () => this.openSrefCreator());
+        }
+
+        const srefPickerManage = document.getElementById('srefPickerManage');
+        if (srefPickerManage) {
+            srefPickerManage.addEventListener('click', () => this.scrollToSrefLibrary());
         }
 
         // Template buttons
@@ -530,21 +566,19 @@ class PromptGenerator {
     }
 
     showValidationModal(errors, warnings) {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header ${errors.length > 0 ? 'bg-danger text-white' : 'bg-warning text-dark'}">
-                        <h5 class="modal-title">
+        PfModal.create(`
+            <div class="pf-modal-dialog">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header ${errors.length > 0 ? 'bg-red-600 text-white' : 'bg-amber-400 text-slate-900'}">
+                        <h5 class="pf-modal-title">
                             <i class="bi bi-${errors.length > 0 ? 'exclamation-triangle' : 'info-circle'}"></i>
                             ${errors.length > 0 ? 'Validation Errors' : 'Validation Warnings'}
                         </h5>
-                        <button type="button" class="btn-close ${errors.length > 0 ? 'btn-close-white' : ''}" data-bs-dismiss="modal"></button>
+                        <button type="button" class="pf-btn-close ${errors.length > 0 ? 'text-white' : ''}" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="pf-modal-body">
                         ${errors.length > 0 ? `
-                        <div class="alert alert-danger">
+                        <div class="pf-alert pf-alert-danger">
                             <h6><i class="bi bi-x-circle"></i> Please fix these errors:</h6>
                             <ul class="mb-0">
                                 ${errors.map(e => `<li>${e}</li>`).join('')}
@@ -552,7 +586,7 @@ class PromptGenerator {
                         </div>
                         ` : ''}
                         ${warnings.length > 0 ? `
-                        <div class="alert alert-warning">
+                        <div class="pf-alert pf-alert-warning">
                             <h6><i class="bi bi-exclamation-triangle"></i> Recommendations:</h6>
                             <ul class="mb-0">
                                 ${warnings.map(w => `<li>${w}</li>`).join('')}
@@ -560,24 +594,15 @@ class PromptGenerator {
                         </div>
                         ` : ''}
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Close</button>
                         ${errors.length === 0 ? `
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Anyway</button>
+                        <button type="button" class="pf-btn pf-btn-primary" data-pf-dismiss="modal">Continue Anyway</button>
                         ` : ''}
                     </div>
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Remove modal when hidden
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
-        });
+        `);
     }
 
     setupRealTimeValidation() {
@@ -718,7 +743,7 @@ class PromptGenerator {
 
         // Add new feedback
         const feedback = document.createElement('div');
-        feedback.className = `field-feedback text-${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : type === 'info' ? 'info' : 'success'} small mt-1`;
+        feedback.className = `field-feedback text-${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : type === 'info' ? 'info' : 'success'} text-sm mt-1`;
         feedback.innerHTML = `<i class="bi bi-${type === 'error' ? 'x-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i> ${message}`;
         
         field.parentNode.appendChild(feedback);
@@ -897,9 +922,9 @@ class PromptGenerator {
 
         // Create suggestions dropdown
         const suggestionsContainer = document.createElement('div');
-        suggestionsContainer.className = 'prompt-suggestions dropdown-menu show';
+        suggestionsContainer.className = 'prompt-suggestions';
         suggestionsContainer.innerHTML = suggestions.map(suggestion => 
-            `<button class="dropdown-item" type="button" onclick="app.applySuggestion('${suggestion.replace(/'/g, "\\'")}')">${suggestion}</button>`
+            `<button class="pf-dropdown-item" type="button" onclick="app.applySuggestion('${suggestion.replace(/'/g, "\\'")}')">${suggestion}</button>`
         ).join('');
         
         // Position and show suggestions
@@ -1294,13 +1319,13 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                 const button = document.getElementById('copyOutput');
                 const originalText = button.innerHTML;
                 button.innerHTML = '<i class="bi bi-check"></i> Copied!';
-                button.classList.add('btn-success');
-                button.classList.remove('btn-outline-primary');
+                button.classList.remove('pf-btn-outline-purple');
+                button.classList.add('pf-btn-success');
                 
                 setTimeout(() => {
                     button.innerHTML = originalText;
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-outline-primary');
+                    button.classList.remove('pf-btn-success');
+                    button.classList.add('pf-btn-outline-purple');
                 }, 2000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
@@ -1374,10 +1399,25 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
 
     clearForm() {
         document.getElementById('promptForm').reset();
-        document.getElementById('srefUrl').value = '';
-        document.getElementById('srefWeight').value = '';
-        document.getElementById('srefExplanation').value = '';
-        document.getElementById('outputSection').innerHTML = 
+
+        // Clear active sref (hidden fields + picker)
+        ['srefUrl', 'srefWeight', 'srefCode', 'srefCodeWeight', 'srefImageWeight'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const srefExplanation = document.getElementById('srefExplanation');
+        if (srefExplanation) srefExplanation.value = '';
+        this.srefImageDataUrl = '';
+
+        const urlRadio = document.getElementById('srefTypeUrl');
+        if (urlRadio) urlRadio.checked = true;
+
+        const picker = document.getElementById('srefPicker');
+        if (picker) picker.value = '';
+        const pickerPreview = document.getElementById('srefPickerPreview');
+        if (pickerPreview) pickerPreview.style.display = 'none';
+
+        document.getElementById('outputSection').innerHTML =
             '<p class="text-muted text-center mb-0"><i class="bi bi-arrow-up"></i> Fill out the form above and click "Generate Prompt" to see your output here</p>';
         document.getElementById('copyOutput').disabled = true;
         this.currentOutput = null;
@@ -1475,13 +1515,13 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
 
         const libraryHTML = this.promptLibrary.map(prompt => `
             <div class="library-item" data-id="${prompt.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex justify-between items-start mb-2">
                     <h6 class="mb-1">${prompt.name}</h6>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadPrompt(${prompt.id})">
+                    <div class="flex gap-1 flex-wrap">
+                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="app.loadPrompt(${prompt.id})">
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deletePrompt(${prompt.id})">
+                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deletePrompt(${prompt.id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -1490,7 +1530,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                     <i class="bi bi-tag"></i> ${prompt.model} | ${prompt.type}
                     <br><i class="bi bi-clock"></i> ${new Date(prompt.createdAt).toLocaleDateString()}
                 </small>
-                <p class="mt-2 mb-0 small">${prompt.startingPrompt.substring(0, 100)}${prompt.startingPrompt.length > 100 ? '...' : ''}</p>
+                <p class="mt-2 mb-0 text-sm">${prompt.startingPrompt.substring(0, 100)}${prompt.startingPrompt.length > 100 ? '...' : ''}</p>
             </div>
         `).join('');
 
@@ -1978,18 +2018,18 @@ Format your response as JSON:
         }
 
         const filesHTML = this.uploadedDocuments.map(doc => `
-            <div class="uploaded-file d-flex justify-content-between align-items-center p-2 border rounded mb-2">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center mb-1">
-                        <i class="bi bi-${doc.source === 'web' ? 'globe' : 'file-text'} me-2 text-${doc.source === 'web' ? 'info' : 'primary'}"></i>
-                        <small class="fw-semibold">${doc.name}</small>
+            <div class="uploaded-file flex justify-between items-center p-2 border rounded mb-2">
+                <div class="grow">
+                    <div class="flex items-center mb-1">
+                        <i class="bi bi-${doc.source === 'web' ? 'globe' : 'file-text'} mr-2 text-${doc.source === 'web' ? 'info' : 'primary'}"></i>
+                        <small class="font-semibold">${doc.name}</small>
                     </div>
                     <small class="text-muted">
                         ${this.formatFileSize(doc.size)} | ${new Date(doc.uploadedAt).toLocaleDateString()}
                         ${doc.url ? `<br><a href="${doc.url}" target="_blank" class="text-decoration-none small"><i class="bi bi-box-arrow-up-right"></i> View Source</a>` : ''}
                     </small>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" onclick="app.deleteDocument(${doc.id})">
+                <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deleteDocument(${doc.id})">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -2162,17 +2202,17 @@ Format your response as JSON:
 
         if (this.hasUnsavedChanges) {
             saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-warning"></i> Unsaved changes';
-            saveStatusElement.className = 'badge bg-warning text-dark';
+            saveStatusElement.className = 'pf-badge pf-badge-warning';
         } else {
             const lastSave = this.saveSettings.lastSaveTime;
             if (lastSave) {
                 const saveTime = new Date(lastSave);
                 const timeStr = saveTime.toLocaleTimeString();
                 saveStatusElement.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> Saved ${timeStr}`;
-                saveStatusElement.className = 'badge bg-success';
+                saveStatusElement.className = 'pf-badge pf-badge-success';
             } else {
                 saveStatusElement.innerHTML = '<i class="bi bi-circle-fill text-muted"></i> No changes';
-                saveStatusElement.className = 'badge bg-secondary';
+                saveStatusElement.className = 'pf-badge pf-badge-muted';
             }
         }
     }
@@ -2180,13 +2220,14 @@ Format your response as JSON:
     showToast(message, type = 'info') {
         // Create a simple toast notification
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+        const alertVariant = type === 'error' ? 'danger' : type;
+        toast.className = `pf-alert pf-alert-${alertVariant} fixed top-0 right-0 m-3 z-[10000] max-w-sm`;
         toast.style.zIndex = '9999';
         toast.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+            <div class="flex items-center">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' || type === 'danger' ? 'x-circle' : 'info-circle'} mr-2"></i>
                 ${message}
-                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                <button type="button" class="pf-btn-close ml-auto" onclick="this.parentElement.parentElement.remove()">&times;</button>
             </div>
         `;
         
@@ -2201,51 +2242,32 @@ Format your response as JSON:
     }
 
     // Sref Library Management Methods
-    saveSrefToLibrary() {
-        const srefType = document.querySelector('input[name="srefType"]:checked')?.value || 'url';
-        const srefExplanation = document.getElementById('srefExplanation')?.value.trim() || '';
-        
+    saveSrefFromForm() {
+        const srefType = document.querySelector('input[name="srefFormType"]:checked')?.value || 'url';
+        const explanation = document.getElementById('srefFormExplanation')?.value.trim() || '';
+        const customName = document.getElementById('srefFormName')?.value.trim() || '';
+
         let srefValue = '';
         let srefWeight = '';
         let srefName = '';
-        
+
         if (srefType === 'url') {
-            srefValue = document.getElementById('srefUrl')?.value.trim() || '';
-            srefWeight = document.getElementById('srefWeight')?.value || '100';
-            
-            if (!srefValue) {
-                this.showToast('Please enter a style reference URL', 'warning');
-                return;
-            }
-            if (!this.isValidUrl(srefValue)) {
-                this.showToast('Please enter a valid URL', 'warning');
-                return;
-            }
-            srefName = this.extractNameFromUrl(srefValue);
-            
+            srefValue = document.getElementById('srefFormUrl')?.value.trim() || '';
+            srefWeight = document.getElementById('srefFormWeight')?.value || '100';
+            if (!srefValue) { this.showToast('Please enter a style reference URL', 'warning'); return; }
+            if (!this.isValidUrl(srefValue)) { this.showToast('Please enter a valid URL', 'warning'); return; }
+            srefName = customName || this.extractNameFromUrl(srefValue);
         } else if (srefType === 'code') {
-            srefValue = document.getElementById('srefCode')?.value.trim() || '';
-            srefWeight = document.getElementById('srefCodeWeight')?.value || '100';
-            
-            if (!srefValue) {
-                this.showToast('Please enter a style reference code', 'warning');
-                return;
-            }
-            if (!this.isValidSrefCode(srefValue)) {
-                this.showToast('Please enter a valid sref code (alphanumeric)', 'warning');
-                return;
-            }
-            srefName = `Code: ${srefValue.substring(0, 20)}${srefValue.length > 20 ? '...' : ''}`;
-            
+            srefValue = document.getElementById('srefFormCode')?.value.trim() || '';
+            srefWeight = document.getElementById('srefFormCodeWeight')?.value || '100';
+            if (!srefValue) { this.showToast('Please enter a style reference code', 'warning'); return; }
+            if (!this.isValidSrefCode(srefValue)) { this.showToast('Please enter a valid sref code (alphanumeric)', 'warning'); return; }
+            srefName = customName || `Code: ${srefValue.substring(0, 20)}${srefValue.length > 20 ? '...' : ''}`;
         } else if (srefType === 'image') {
-            srefValue = this.srefImageDataUrl;
-            srefWeight = document.getElementById('srefImageWeight')?.value || '100';
-            
-            if (!srefValue) {
-                this.showToast('Please upload an image first', 'warning');
-                return;
-            }
-            srefName = 'Uploaded Image';
+            srefValue = this.srefFormImageDataUrl || '';
+            srefWeight = document.getElementById('srefFormImageWeight')?.value || '100';
+            if (!srefValue) { this.showToast('Please upload an image first', 'warning'); return; }
+            srefName = customName || 'Uploaded Image';
         }
 
         const srefData = {
@@ -2255,76 +2277,212 @@ Format your response as JSON:
             url: srefType === 'url' ? srefValue : '',
             code: srefType === 'code' ? srefValue : '',
             weight: srefWeight,
-            explanation: srefExplanation || 'No description provided',
+            explanation: explanation || 'No description provided',
             name: srefName,
             createdAt: new Date().toISOString()
         };
 
         this.srefLibrary.unshift(srefData);
         this.saveToLocalStorage('srefLibrary', this.srefLibrary);
-        this.loadSrefLibrary();
+        this.renderSrefLibraryList();
+        this.populateSrefPicker();
         this.updateLibraryCounts();
+        this.clearSrefLibraryForm();
         this.showToast('Style reference saved to library!', 'success');
     }
 
     loadSrefLibrary() {
-        const libraryContainer = document.getElementById('srefLibrary');
-        
-        // Element no longer exists in unified interface
-        if (!libraryContainer) {
-            return;
-        }
-        
-        if (this.srefLibrary.length === 0) {
-            libraryContainer.innerHTML = '<p class="text-muted text-center">No saved style references yet</p>';
-            return;
-        }
-
-        const libraryHTML = this.srefLibrary.map(sref => `
-            <div class="library-item" data-id="${sref.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${sref.name}</h6>
-                        <small class="text-muted">
-                            <i class="bi bi-sliders"></i> Weight: ${sref.weight}
-                            <br><i class="bi bi-clock"></i> ${new Date(sref.createdAt).toLocaleDateString()}
-                        </small>
-                        <p class="mt-2 mb-2 small">${sref.explanation}</p>
-                        <a href="${sref.url}" target="_blank" class="text-decoration-none small">
-                            <i class="bi bi-box-arrow-up-right"></i> View Reference
-                        </a>
-                    </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadSref(${sref.id})">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteSref(${sref.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        libraryContainer.innerHTML = libraryHTML;
+        this.renderSrefLibraryList();
+        this.populateSrefPicker();
     }
 
-    loadSref(id) {
-        const sref = this.srefLibrary.find(s => s.id === id);
-        if (sref) {
-            document.getElementById('srefUrl').value = sref.url;
-            document.getElementById('srefWeight').value = sref.weight;
-            document.getElementById('srefExplanation').value = sref.explanation;
-            this.showToast('Style reference loaded!', 'info');
+    renderSrefLibraryList() {
+        const container = document.getElementById('srefLibraryList');
+        if (!container) return;
+
+        if (this.srefLibrary.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center text-sm">No saved style references yet</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+
+        this.srefLibrary.forEach(sref => {
+            const item = document.createElement('div');
+            item.className = 'library-item';
+            item.dataset.id = sref.id;
+            item.style.cssText = 'padding: 10px; margin-bottom: 8px; border: 1px solid rgba(100,116,139,0.3); border-radius: 8px; background: rgba(30,41,59,0.5);';
+
+            const header = document.createElement('div');
+            header.style.cssText = 'display: flex; justify-content: space-between; align-items: start;';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.style.cssText = 'flex: 1; min-width: 0;';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 2px;';
+            title.textContent = sref.name;
+
+            const typeLabel = document.createElement('div');
+            typeLabel.style.cssText = 'font-size: 14px; color: #94a3b8;';
+            typeLabel.textContent = `${(sref.type || 'url').toUpperCase()} · Weight: ${sref.weight}`;
+
+            const desc = document.createElement('div');
+            desc.style.cssText = 'font-size: 14px; color: #94a3b8; margin-top: 4px;';
+            desc.textContent = sref.explanation;
+
+            contentDiv.append(title, typeLabel, desc);
+
+            const btnGroup = document.createElement('div');
+            btnGroup.style.cssText = 'display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px;';
+
+            const useBtn = document.createElement('button');
+            useBtn.className = 'pf-btn pf-btn-outline-purple pf-btn-sm';
+            useBtn.textContent = 'Use';
+            useBtn.onclick = () => this.applySrefToStudio(sref.id);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'pf-btn pf-btn-outline-danger pf-btn-sm';
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            deleteBtn.onclick = () => this.deleteSref(sref.id);
+
+            btnGroup.append(useBtn, deleteBtn);
+            header.append(contentDiv, btnGroup);
+            item.appendChild(header);
+            container.appendChild(item);
+        });
+    }
+
+    populateSrefPicker() {
+        const picker = document.getElementById('srefPicker');
+        if (!picker) return;
+
+        const currentVal = picker.value;
+        picker.innerHTML = '<option value="">None</option>';
+
+        this.srefLibrary.forEach(sref => {
+            const opt = document.createElement('option');
+            opt.value = String(sref.id);
+            opt.textContent = `${sref.name} (${(sref.type || 'url').toUpperCase()})`;
+            picker.appendChild(opt);
+        });
+
+        if (currentVal && this.srefLibrary.find(s => String(s.id) === currentVal)) {
+            picker.value = currentVal;
+        }
+    }
+
+    applySrefToStudio(id) {
+        const sref = this.srefLibrary.find(s => String(s.id) === String(id));
+        if (!sref) return;
+
+        const type = sref.type || 'url';
+        const typeRadio = document.getElementById('srefTypeUrl');
+        if (type === 'code') {
+            const r = document.getElementById('srefTypeCode'); if (r) r.checked = true;
+        } else if (type === 'image') {
+            const r = document.getElementById('srefTypeImage'); if (r) r.checked = true;
+        } else {
+            if (typeRadio) typeRadio.checked = true;
+        }
+
+        const srefUrl = document.getElementById('srefUrl');
+        const srefWeight = document.getElementById('srefWeight');
+        const srefCode = document.getElementById('srefCode');
+        const srefCodeWeight = document.getElementById('srefCodeWeight');
+        const srefImageWeight = document.getElementById('srefImageWeight');
+        const srefExplanation = document.getElementById('srefExplanation');
+
+        if (srefUrl) srefUrl.value = sref.url || '';
+        if (srefCode) srefCode.value = sref.code || '';
+        if (srefExplanation) srefExplanation.value = sref.explanation || '';
+
+        if (type === 'url') {
+            if (srefWeight) srefWeight.value = sref.weight || '';
+        } else if (type === 'code') {
+            if (srefCodeWeight) srefCodeWeight.value = sref.weight || '';
+        } else if (type === 'image') {
+            this.srefImageDataUrl = sref.value || '';
+            if (srefImageWeight) srefImageWeight.value = sref.weight || '';
+        }
+
+        const picker = document.getElementById('srefPicker');
+        if (picker) picker.value = String(sref.id);
+
+        this.updateSrefPickerPreview(sref);
+        this.showToast('Style reference applied!', 'info');
+    }
+
+    onSrefPickerChange(val) {
+        if (!val) {
+            this.clearActiveSref();
+            return;
+        }
+        this.applySrefToStudio(val);
+    }
+
+    clearActiveSref() {
+        ['srefUrl', 'srefWeight', 'srefCode', 'srefCodeWeight', 'srefImageWeight'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const expl = document.getElementById('srefExplanation');
+        if (expl) expl.value = '';
+        this.srefImageDataUrl = '';
+
+        const typeRadio = document.getElementById('srefTypeUrl');
+        if (typeRadio) typeRadio.checked = true;
+
+        const picker = document.getElementById('srefPicker');
+        if (picker) picker.value = '';
+
+        const preview = document.getElementById('srefPickerPreview');
+        if (preview) preview.style.display = 'none';
+
+        this.showToast('Style reference cleared', 'info');
+    }
+
+    updateSrefPickerPreview(sref) {
+        const preview = document.getElementById('srefPickerPreview');
+        if (!preview) return;
+
+        preview.style.display = 'block';
+        const name = document.getElementById('srefPickerName');
+        const type = document.getElementById('srefPickerType');
+        const desc = document.getElementById('srefPickerDesc');
+
+        if (name) name.textContent = sref.name;
+        if (type) type.textContent = `${(sref.type || 'url').toUpperCase()} · Weight: ${sref.weight}`;
+        if (desc) desc.textContent = sref.explanation || '';
+    }
+
+    openSrefCreator() {
+        this.scrollToSrefLibrary();
+        setTimeout(() => {
+            const formPanel = document.getElementById('srefFormPanel');
+            if (formPanel) formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+    }
+
+    scrollToSrefLibrary() {
+        const srefCard = document.getElementById('srefFormPanel')?.closest('.pf-card');
+        if (srefCard) {
+            srefCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
     deleteSref(id) {
         if (confirm('Are you sure you want to delete this style reference?')) {
-            this.srefLibrary = this.srefLibrary.filter(s => s.id !== id);
+            this.srefLibrary = this.srefLibrary.filter(s => String(s.id) !== String(id));
             this.saveToLocalStorage('srefLibrary', this.srefLibrary);
-            this.loadSrefLibrary();
+            this.renderSrefLibraryList();
+            this.populateSrefPicker();
             this.updateLibraryCounts();
+
+            const picker = document.getElementById('srefPicker');
+            if (picker && picker.value === String(id)) {
+                this.clearActiveSref();
+            }
             this.showToast('Style reference deleted!', 'warning');
         }
     }
@@ -2333,112 +2491,68 @@ Format your response as JSON:
         if (confirm('Are you sure you want to clear all style references? This action cannot be undone.')) {
             this.srefLibrary = [];
             this.saveToLocalStorage('srefLibrary', this.srefLibrary);
-            this.loadSrefLibrary();
+            this.renderSrefLibraryList();
+            this.populateSrefPicker();
+            this.clearActiveSref();
             this.updateLibraryCounts();
             this.showToast('Style reference library cleared!', 'warning');
         }
     }
 
-    clearSrefForm() {
-        // Clear all sref inputs
-        const srefUrl = document.getElementById('srefUrl');
-        const srefWeight = document.getElementById('srefWeight');
-        const srefCode = document.getElementById('srefCode');
-        const srefCodeWeight = document.getElementById('srefCodeWeight');
-        const srefImageWeight = document.getElementById('srefImageWeight');
-        const srefExplanation = document.getElementById('srefExplanation');
-        const srefImageUpload = document.getElementById('srefImageUpload');
-        
-        if (srefUrl) srefUrl.value = '';
-        if (srefWeight) srefWeight.value = '';
-        if (srefCode) srefCode.value = '';
-        if (srefCodeWeight) srefCodeWeight.value = '';
-        if (srefImageWeight) srefImageWeight.value = '';
-        if (srefExplanation) srefExplanation.value = '';
-        if (srefImageUpload) srefImageUpload.value = '';
-        
-        // Clear image preview
-        this.clearSrefImage();
-        
-        // Reset to URL type
-        const urlRadio = document.getElementById('srefTypeUrl');
+    clearSrefLibraryForm() {
+        ['srefFormUrl', 'srefFormWeight', 'srefFormCode', 'srefFormCodeWeight',
+         'srefFormImageWeight', 'srefFormExplanation', 'srefFormName'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const upload = document.getElementById('srefFormImageUpload');
+        if (upload) upload.value = '';
+
+        this.clearSrefFormImage();
+
+        const urlRadio = document.getElementById('srefFormTypeUrl');
         if (urlRadio) {
             urlRadio.checked = true;
-            this.switchSrefType('url');
-        }
-        
-        this.showToast('Style reference form cleared', 'info');
-    }
-    
-    switchSrefType(type) {
-        // Hide all sections
-        const sections = document.querySelectorAll('.sref-input-section');
-        sections.forEach(section => {
-            section.style.display = 'none';
-        });
-        
-        // Show the selected section
-        const sectionMap = {
-            'url': 'srefUrlSection',
-            'code': 'srefCodeSection',
-            'image': 'srefImageSection'
-        };
-        
-        const targetSection = document.getElementById(sectionMap[type]);
-        if (targetSection) {
-            targetSection.style.display = 'block';
+            this.switchSrefFormType('url');
         }
     }
-    
-    handleSrefImageUpload(event) {
+
+    switchSrefFormType(type) {
+        document.querySelectorAll('.sref-form-section').forEach(s => { s.style.display = 'none'; });
+        const map = { 'url': 'srefFormUrlSection', 'code': 'srefFormCodeSection', 'image': 'srefFormImageSection' };
+        const target = document.getElementById(map[type]);
+        if (target) target.style.display = 'block';
+    }
+
+    handleSrefFormImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
-        // Validate it's an image
-        if (!file.type.startsWith('image/')) {
-            this.showToast('Please select an image file', 'warning');
-            return;
-        }
-        
-        // Check file size (limit to 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            this.showToast('Image too large. Please use an image under 5MB.', 'warning');
-            return;
-        }
-        
+        if (!file.type.startsWith('image/')) { this.showToast('Please select an image file', 'warning'); return; }
+        if (file.size > 5 * 1024 * 1024) { this.showToast('Image too large. Please use an image under 5MB.', 'warning'); return; }
+
         const reader = new FileReader();
         reader.onload = (e) => {
-            this.srefImageDataUrl = e.target.result;
-            
-            // Show preview
-            const previewContainer = document.getElementById('srefImagePreview');
-            const previewImg = document.getElementById('srefPreviewImg');
-            
+            this.srefFormImageDataUrl = e.target.result;
+            const previewContainer = document.getElementById('srefFormImagePreview');
+            const previewImg = document.getElementById('srefFormPreviewImg');
             if (previewContainer && previewImg) {
-                previewImg.src = this.srefImageDataUrl;
+                previewImg.src = this.srefFormImageDataUrl;
                 previewContainer.style.display = 'block';
             }
-            
             this.showToast('Image loaded successfully!', 'success');
         };
-        
-        reader.onerror = () => {
-            this.showToast('Error reading image file', 'error');
-        };
-        
+        reader.onerror = () => { this.showToast('Error reading image file', 'error'); };
         reader.readAsDataURL(file);
     }
-    
-    clearSrefImage() {
-        this.srefImageDataUrl = '';
-        
-        const previewContainer = document.getElementById('srefImagePreview');
-        const previewImg = document.getElementById('srefPreviewImg');
-        const srefImageUpload = document.getElementById('srefImageUpload');
-        
+
+    clearSrefFormImage() {
+        this.srefFormImageDataUrl = '';
+        const previewContainer = document.getElementById('srefFormImagePreview');
+        const previewImg = document.getElementById('srefFormPreviewImg');
+        const upload = document.getElementById('srefFormImageUpload');
         if (previewContainer) previewContainer.style.display = 'none';
         if (previewImg) previewImg.src = '';
-        if (srefImageUpload) srefImageUpload.value = '';
+        if (upload) upload.value = '';
     }
 
     extractNameFromUrl(url) {
@@ -2738,7 +2852,7 @@ Format your response as JSON:
         document.body.appendChild(this.tooltip);
 
         // Find all select elements and add tooltip functionality
-        const selects = document.querySelectorAll('.form-select');
+        const selects = document.querySelectorAll('.pf-select');
         
         selects.forEach(select => {
             // Add event listeners to the select element for showing tooltips on hover
@@ -2834,13 +2948,13 @@ Format your response as JSON:
 
         const libraryHTML = filteredPrompts.map(prompt => `
             <div class="library-item" data-id="${prompt.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex justify-between items-start mb-2">
                     <h6 class="mb-1">${this.highlightSearchTerm(prompt.name, query)}</h6>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadPrompt(${prompt.id})">
+                    <div class="flex gap-1 flex-wrap">
+                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="app.loadPrompt(${prompt.id})">
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deletePrompt(${prompt.id})">
+                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deletePrompt(${prompt.id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -2857,51 +2971,42 @@ Format your response as JSON:
     }
 
     searchSref(query) {
-        const libraryContainer = document.getElementById('srefLibrary');
-        
+        const container = document.getElementById('srefLibraryList');
+        if (!container) return;
+
         if (!query.trim()) {
-            this.loadSrefLibrary();
+            this.renderSrefLibraryList();
             return;
         }
 
-        const filteredSrefs = this.srefLibrary.filter(sref => 
+        const filteredSrefs = this.srefLibrary.filter(sref =>
             sref.name.toLowerCase().includes(query.toLowerCase()) ||
             sref.explanation.toLowerCase().includes(query.toLowerCase()) ||
-            sref.url.toLowerCase().includes(query.toLowerCase())
+            (sref.url || '').toLowerCase().includes(query.toLowerCase())
         );
 
         if (filteredSrefs.length === 0) {
-            libraryContainer.innerHTML = `<p class="text-muted text-center">No style references found matching "${query}"</p>`;
+            container.innerHTML = `<p class="text-muted text-center text-sm">No style references found matching "${query}"</p>`;
             return;
         }
 
         const libraryHTML = filteredSrefs.map(sref => `
-            <div class="library-item" data-id="${sref.id}">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${this.highlightSearchTerm(sref.name, query)}</h6>
-                        <small class="text-muted">
-                            <i class="bi bi-sliders"></i> Weight: ${sref.weight}
-                            <br><i class="bi bi-clock"></i> ${new Date(sref.createdAt).toLocaleDateString()}
-                        </small>
-                        <p class="mt-2 mb-2 small">${this.highlightSearchTerm(sref.explanation, query)}</p>
-                        <a href="${sref.url}" target="_blank" class="text-decoration-none small">
-                            <i class="bi bi-box-arrow-up-right"></i> View Reference
-                        </a>
+            <div class="library-item" data-id="${sref.id}" style="padding: 10px; margin-bottom: 8px; border: 1px solid rgba(100,116,139,0.3); border-radius: 8px; background: rgba(30,41,59,0.5);">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">${this.highlightSearchTerm(sref.name, query)}</div>
+                        <div style="font-size: 14px; color: #94a3b8;">${(sref.type || 'url').toUpperCase()} · Weight: ${sref.weight}</div>
+                        <div style="font-size: 14px; color: #94a3b8; margin-top: 4px;">${this.highlightSearchTerm(sref.explanation, query)}</div>
                     </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadSref(${sref.id})">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteSref(${sref.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <div style="display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px;">
+                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="app.applySrefToStudio(${sref.id})">Use</button>
+                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deleteSref(${sref.id})"><i class="bi bi-trash"></i></button>
                     </div>
                 </div>
             </div>
         `).join('');
 
-        libraryContainer.innerHTML = libraryHTML;
+        container.innerHTML = libraryHTML;
     }
 
     highlightSearchTerm(text, query) {
@@ -2912,20 +3017,18 @@ Format your response as JSON:
 
     // Save Settings
     showSaveSettings() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-gear"></i> Save Settings</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        const overlay = PfModal.create(`
+            <div class="pf-modal-dialog">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title"><i class="bi bi-gear"></i> Save Settings</h5>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="pf-modal-body">
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="autoSaveEnabled" ${this.saveSettings.autoSave ? 'checked' : ''}>
-                                <label class="form-check-label" for="autoSaveEnabled">
+                            <div class="pf-form-check">
+                                <input class="pf-form-check-input" type="checkbox" id="autoSaveEnabled" ${this.saveSettings.autoSave ? 'checked' : ''}>
+                                <label class="pf-form-check-label" for="autoSaveEnabled">
                                     Enable Auto-Save
                                 </label>
                             </div>
@@ -2933,15 +3036,15 @@ Format your response as JSON:
                         </div>
                         
                         <div class="mb-3">
-                            <label for="autoSaveInterval" class="form-label">Auto-Save Interval (seconds)</label>
-                            <input type="number" class="form-control" id="autoSaveInterval" value="${this.saveSettings.autoSaveInterval / 1000}" min="5" max="300">
+                            <label for="autoSaveInterval" class="pf-label-text">Auto-Save Interval (seconds)</label>
+                            <input type="number" class="pf-input-field" id="autoSaveInterval" value="${this.saveSettings.autoSaveInterval / 1000}" min="5" max="300">
                             <small class="text-muted">How often to auto-save (5-300 seconds)</small>
                         </div>
                         
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="backupOnCloseEnabled" ${this.saveSettings.backupOnClose ? 'checked' : ''}>
-                                <label class="form-check-label" for="backupOnCloseEnabled">
+                            <div class="pf-form-check">
+                                <input class="pf-form-check-input" type="checkbox" id="backupOnCloseEnabled" ${this.saveSettings.backupOnClose ? 'checked' : ''}>
+                                <label class="pf-form-check-label" for="backupOnCloseEnabled">
                                     Backup on App Close
                                 </label>
                             </div>
@@ -2949,9 +3052,9 @@ Format your response as JSON:
                         </div>
                         
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="showSaveStatusEnabled" ${this.saveSettings.showSaveStatus ? 'checked' : ''}>
-                                <label class="form-check-label" for="showSaveStatusEnabled">
+                            <div class="pf-form-check">
+                                <input class="pf-form-check-input" type="checkbox" id="showSaveStatusEnabled" ${this.saveSettings.showSaveStatus ? 'checked' : ''}>
+                                <label class="pf-form-check-label" for="showSaveStatusEnabled">
                                     Show Save Status
                                 </label>
                             </div>
@@ -2959,15 +3062,15 @@ Format your response as JSON:
                         </div>
                         
                         <div class="mb-3">
-                            <button type="button" class="btn btn-outline-primary btn-sm me-2" id="manualSaveBtn">
+                            <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm mr-2" id="manualSaveBtn">
                                 <i class="bi bi-save"></i> Save Now
                             </button>
-                            <button type="button" class="btn btn-outline-info btn-sm" id="viewBackupsBtn">
+                            <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm" id="viewBackupsBtn">
                                 <i class="bi bi-archive"></i> View Backups
                             </button>
                         </div>
                         
-                        <div class="alert alert-info">
+                        <div class="pf-alert pf-alert-info">
                             <small>
                                 <strong>Save Features:</strong><br>
                                 • Auto-save every 30 seconds (configurable)<br>
@@ -2978,36 +3081,26 @@ Format your response as JSON:
                             </small>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="saveSaveSettings">Save Settings</button>
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Cancel</button>
+                        <button type="button" class="pf-btn pf-btn-primary" id="saveSaveSettings">Save Settings</button>
                     </div>
                 </div>
             </div>
-        `;
+        `);
         
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Event listeners
-        document.getElementById('manualSaveBtn').addEventListener('click', () => {
+        overlay.querySelector('#manualSaveBtn').addEventListener('click', () => {
             this.autoSave();
         });
         
-        document.getElementById('viewBackupsBtn').addEventListener('click', () => {
+        overlay.querySelector('#viewBackupsBtn').addEventListener('click', () => {
+            PfModal.hide(overlay);
             this.showBackupManager();
-            bsModal.hide();
         });
         
-        document.getElementById('saveSaveSettings').addEventListener('click', () => {
-            this.saveSaveSettings(modal);
-            bsModal.hide();
-        });
-        
-        // Clean up modal when hidden
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
+        overlay.querySelector('#saveSaveSettings').addEventListener('click', () => {
+            this.saveSaveSettings(overlay);
+            PfModal.hide(overlay);
         });
     }
 
@@ -3033,9 +3126,6 @@ Format your response as JSON:
     }
 
     showBackupManager() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        
         const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('backup_'));
         const backupList = backupKeys.map(key => {
             const backup = JSON.parse(localStorage.getItem(key));
@@ -3046,18 +3136,18 @@ Format your response as JSON:
             };
         }).sort((a, b) => new Date(b.time) - new Date(a.time));
         
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-archive"></i> Backup Manager</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        PfModal.create(`
+            <div class="pf-modal-dialog pf-modal-lg">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title"><i class="bi bi-archive"></i> Backup Manager</h5>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="pf-modal-body">
                         ${backupList.length === 0 ? 
                             '<p class="text-muted text-center">No backups found</p>' :
-                            `<div class="table-responsive">
-                                <table class="table table-sm">
+                            `<div class="overflow-x-auto">
+                                <table class="pf-table text-sm">
                                     <thead>
                                         <tr>
                                             <th>Date/Time</th>
@@ -3071,10 +3161,10 @@ Format your response as JSON:
                                                 <td>${new Date(backup.time).toLocaleString()}</td>
                                                 <td>${Math.round(backup.size / 1024)} KB</td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-outline-primary" onclick="window.app.restoreBackup('${backup.key}')">
+                                                    <button class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="window.app.restoreBackup('${backup.key}')">
                                                         <i class="bi bi-arrow-clockwise"></i> Restore
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="window.app.deleteBackup('${backup.key}')">
+                                                    <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="window.app.deleteBackup('${backup.key}')">
                                                         <i class="bi bi-trash"></i> Delete
                                                     </button>
                                                 </td>
@@ -3085,24 +3175,15 @@ Format your response as JSON:
                             </div>`
                         }
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-danger" onclick="window.app.clearAllBackups()">
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Close</button>
+                        <button type="button" class="pf-btn pf-btn-danger" onclick="window.app.clearAllBackups()">
                             <i class="bi bi-trash"></i> Clear All Backups
                         </button>
                     </div>
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Clean up modal when hidden
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
-        });
+        `);
     }
 
     restoreBackup(backupKey) {
@@ -3138,7 +3219,7 @@ Format your response as JSON:
             this.showToast('Backup deleted', 'warning');
             // Refresh the backup manager
             setTimeout(() => {
-                const modal = document.querySelector('.modal.show');
+                const modal = document.querySelector('.pf-modal-overlay.show');
                 if (modal) modal.remove();
                 this.showBackupManager();
             }, 500);
@@ -3155,20 +3236,18 @@ Format your response as JSON:
 
     // LLM Settings
     showLLMSettings() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-cpu"></i> Local LLM Settings</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        const overlay = PfModal.create(`
+            <div class="pf-modal-dialog">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title"><i class="bi bi-cpu"></i> Local LLM Settings</h5>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="pf-modal-body">
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="llmEnabled" ${this.llmSettings.enabled ? 'checked' : ''}>
-                                <label class="form-check-label" for="llmEnabled">
+                            <div class="pf-form-check">
+                                <input class="pf-form-check-input" type="checkbox" id="llmEnabled" ${this.llmSettings.enabled ? 'checked' : ''}>
+                                <label class="pf-form-check-label" for="llmEnabled">
                                     Enable Local LLM Analysis
                                 </label>
                             </div>
@@ -3176,30 +3255,30 @@ Format your response as JSON:
                         </div>
                         
                         <div class="mb-3">
-                            <label for="llmApiUrl" class="form-label">API URL</label>
-                            <input type="text" class="form-control" id="llmApiUrl" value="${this.llmSettings.apiUrl}" placeholder="http://localhost:11434/api">
+                            <label for="llmApiUrl" class="pf-label-text">API URL</label>
+                            <input type="text" class="pf-input-field" id="llmApiUrl" value="${this.llmSettings.apiUrl}" placeholder="http://localhost:11434/api">
                             <small class="text-muted">Ollama default: http://localhost:11434/api</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="llmModel" class="form-label">Model Name</label>
-                            <input type="text" class="form-control" id="llmModel" value="${this.llmSettings.model}" placeholder="llama3.1:8b">
+                            <label for="llmModel" class="pf-label-text">Model Name</label>
+                            <input type="text" class="pf-input-field" id="llmModel" value="${this.llmSettings.model}" placeholder="llama3.1:8b">
                             <small class="text-muted">Available models will be detected automatically</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="llmTimeout" class="form-label">Timeout (ms)</label>
-                            <input type="number" class="form-control" id="llmTimeout" value="${this.llmSettings.timeout}" min="1000" max="60000">
+                            <label for="llmTimeout" class="pf-label-text">Timeout (ms)</label>
+                            <input type="number" class="pf-input-field" id="llmTimeout" value="${this.llmSettings.timeout}" min="1000" max="60000">
                         </div>
                         
                         <div class="mb-3">
-                            <button type="button" class="btn btn-outline-info btn-sm" id="testLLMConnection">
+                            <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm" id="testLLMConnection">
                                 <i class="bi bi-wifi"></i> Test Connection
                             </button>
-                            <span id="connectionStatus" class="ms-2"></span>
+                            <span id="connectionStatus" class="ml-2"></span>
                         </div>
                         
-                        <div class="alert alert-info">
+                        <div class="pf-alert pf-alert-info">
                             <small>
                                 <strong>Supported LLM Services:</strong><br>
                                 • Ollama (recommended)<br>
@@ -3209,30 +3288,21 @@ Format your response as JSON:
                             </small>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="saveLLMSettings">Save Settings</button>
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Cancel</button>
+                        <button type="button" class="pf-btn pf-btn-primary" id="saveLLMSettings">Save Settings</button>
                     </div>
                 </div>
             </div>
-        `;
+        `);
         
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Event listeners
-        document.getElementById('testLLMConnection').addEventListener('click', async () => {
-            await this.testLLMConnection(modal);
+        overlay.querySelector('#testLLMConnection').addEventListener('click', async () => {
+            await this.testLLMConnection(overlay);
         });
         
-        document.getElementById('saveLLMSettings').addEventListener('click', () => {
-            this.saveLLMSettings(modal);
-            bsModal.hide();
-        });
-        
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
+        overlay.querySelector('#saveLLMSettings').addEventListener('click', () => {
+            this.saveLLMSettings(overlay);
+            PfModal.hide(overlay);
         });
     }
 
@@ -3297,11 +3367,11 @@ Format your response as JSON:
             case 'document':
                 contentDiv.innerHTML = `
                     <div class="upload-zone" id="uploadZone">
-                        <i class="bi bi-cloud-arrow-up text-primary mb-2"></i>
+                        <i class="bi bi-cloud-arrow-up text-cyan-400 mb-2"></i>
                         <h6>Drag & Drop Files</h6>
-                        <p class="text-muted small mb-2">or click to browse</p>
+                        <p class="text-muted text-sm mb-2">or click to browse</p>
                         <input type="file" id="fileInput" multiple accept=".txt,.json,.md,.pdf,.doc,.docx" style="display: none;">
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('fileInput').click()">
+                        <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="document.getElementById('fileInput').click()">
                             <i class="bi bi-folder2-open"></i> Browse
                         </button>
                     </div>
@@ -3311,9 +3381,9 @@ Format your response as JSON:
                 
             case 'website':
                 contentDiv.innerHTML = `
-                    <div class="input-group mb-2">
-                        <input type="url" class="form-control" id="urlInput" placeholder="https://example.com/ai-guide">
-                        <button class="btn btn-outline-info" type="button" id="fetchUrlBtn">
+                    <div class="flex w-full min-w-0 mb-2 rounded-lg overflow-hidden border border-slate-600">
+                        <input type="url" class="pf-input-field grow min-w-0 rounded-none border-0 border-r border-slate-600" id="urlInput" placeholder="https://example.com/ai-guide">
+                        <button class="pf-btn pf-btn-outline-cyan rounded-none shrink-0 border-0 border-l border-slate-600" type="button" id="fetchUrlBtn">
                             <i class="bi bi-download"></i> Fetch
                         </button>
                     </div>
@@ -3324,9 +3394,9 @@ Format your response as JSON:
                 
             case 'text':
                 contentDiv.innerHTML = `
-                    <textarea class="form-control mb-2" id="textNoteInput" rows="4" 
+                    <textarea class="pf-input-field mb-2" id="textNoteInput" rows="4" 
                               placeholder="Enter your notes here..."></textarea>
-                    <button type="button" class="btn btn-outline-success btn-sm w-100" id="saveTextNote">
+                    <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm w-full" id="saveTextNote">
                         <i class="bi bi-save"></i> Save Note
                     </button>
                 `;
@@ -3336,20 +3406,20 @@ Format your response as JSON:
             case 'sref':
                 contentDiv.innerHTML = `
                     <div class="mb-2">
-                        <input type="url" class="form-control mb-2" id="srefUrlInput" 
+                        <input type="url" class="pf-input-field mb-2" id="srefUrlInput" 
                                placeholder="https://example.com/style-image.jpg">
-                        <div class="row">
-                            <div class="col-6">
-                                <input type="number" class="form-control" id="srefWeightInput" 
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <input type="number" class="pf-input-field" id="srefWeightInput" 
                                        min="0" max="1000" step="50" placeholder="Weight (100)">
                             </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-outline-info btn-sm w-100" id="saveSrefFromUnified">
+                            <div>
+                                <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm w-full" id="saveSrefFromUnified">
                                     <i class="bi bi-save"></i> Save
                                 </button>
                             </div>
                         </div>
-                        <textarea class="form-control mt-2" id="srefExplanationInput" rows="2" 
+                        <textarea class="pf-input-field mt-2" id="srefExplanationInput" rows="2" 
                                   placeholder="Style description..."></textarea>
                     </div>
                 `;
@@ -3359,13 +3429,13 @@ Format your response as JSON:
             case 'prompt':
                 contentDiv.innerHTML = `
                     <div class="mb-2">
-                        <input type="text" class="form-control mb-2" id="quickPromptName" 
+                        <input type="text" class="pf-input-field mb-2" id="quickPromptName" 
                                placeholder="Prompt name...">
-                        <textarea class="form-control mb-2" id="quickPromptText" rows="3" 
+                        <textarea class="pf-input-field mb-2" id="quickPromptText" rows="3" 
                                   placeholder="Enter prompt text..."></textarea>
-                        <div class="row">
-                            <div class="col-6">
-                                <select class="form-select" id="quickPromptModel">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <select class="pf-select" id="quickPromptModel">
                                     <option value="">Model (optional)</option>
                                     <option value="midjourney">Midjourney</option>
                                     <option value="dalle3">DALL-E 3</option>
@@ -3373,8 +3443,8 @@ Format your response as JSON:
                                     <option value="custom">Custom</option>
                                 </select>
                             </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-outline-success btn-sm w-100" id="saveQuickPrompt">
+                            <div>
+                                <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm w-full" id="saveQuickPrompt">
                                     <i class="bi bi-save"></i> Save
                                 </button>
                             </div>
@@ -3493,6 +3563,8 @@ Format your response as JSON:
 
                         this.srefLibrary.unshift(srefData);
                         this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                        this.renderSrefLibraryList();
+                        this.populateSrefPicker();
                         this.updateLibraryCounts();
                         
                         // Clear form
@@ -3647,21 +3719,21 @@ Format your response as JSON:
 
         const resultsHTML = results.map(result => `
             <div class="library-item mb-2" data-type="${result.type}" data-id="${result.data.id}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center mb-1">
-                            <span class="me-2">${result.icon}</span>
+                <div class="flex justify-between items-start">
+                    <div class="grow">
+                        <div class="flex items-center mb-1">
+                            <span class="mr-2">${result.icon}</span>
                             <h6 class="mb-0">${this.highlightSearchTerm(result.title, query)}</h6>
-                            <span class="badge bg-secondary ms-2">${result.type}</span>
+                            <span class="pf-badge pf-badge-muted ml-2">${result.type}</span>
                         </div>
-                        <p class="small mb-1 text-muted">${this.highlightSearchTerm(result.content, query)}</p>
+                        <p class="text-sm mb-1 text-muted">${this.highlightSearchTerm(result.content, query)}</p>
                         <small class="text-muted">${result.metadata} | ${new Date(result.date).toLocaleDateString()}</small>
                     </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" onclick="app.loadFromSearch('${result.type}', ${result.data.id})">
+                    <div class="flex gap-1 flex-wrap">
+                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm" onclick="app.loadFromSearch('${result.type}', ${result.data.id})">
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="app.deleteFromSearch('${result.type}', ${result.data.id})">
+                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deleteFromSearch('${result.type}', ${result.data.id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -3678,7 +3750,7 @@ Format your response as JSON:
                 this.loadPrompt(id);
                 break;
             case 'sref':
-                this.loadSref(id);
+                this.applySrefToStudio(id);
                 break;
             case 'document':
                 this.showToast('Document loaded for reference', 'info');
@@ -3697,8 +3769,14 @@ Format your response as JSON:
                     this.saveToLocalStorage('promptLibrary', this.promptLibrary);
                     break;
                 case 'sref':
-                    this.srefLibrary = this.srefLibrary.filter(s => s.id !== id);
+                    this.srefLibrary = this.srefLibrary.filter(s => String(s.id) !== String(id));
                     this.saveToLocalStorage('srefLibrary', this.srefLibrary);
+                    this.renderSrefLibraryList();
+                    this.populateSrefPicker();
+                    const picker = document.getElementById('srefPicker');
+                    if (picker && picker.value === String(id)) {
+                        this.clearActiveSref();
+                    }
                     break;
                 case 'document':
                     this.uploadedDocuments = this.uploadedDocuments.filter(d => d.id !== id);
@@ -3730,47 +3808,48 @@ Format your response as JSON:
             localStorage.removeItem('manualInformation');
             
             this.updateLibraryCounts();
+            this.renderSrefLibraryList();
+            this.populateSrefPicker();
+            this.clearActiveSref();
             document.getElementById('unifiedSearchResults').innerHTML = '<p class="text-muted text-center">Use search above to find content</p>';
             this.showToast('All library content cleared!', 'warning');
         }
     }
 
     showExportAllModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-download"></i> Export All Prompts</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        const overlay = PfModal.create(`
+            <div class="pf-modal-dialog pf-modal-lg">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title"><i class="bi bi-download"></i> Export All Prompts</h5>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Export Format</label>
-                                <select class="form-select" id="exportFormat">
+                    <div class="pf-modal-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="pf-label-text">Export Format</label>
+                                <select class="pf-select" id="exportFormat">
                                     <option value="json">JSON</option>
                                     <option value="csv">CSV</option>
                                     <option value="markdown">Markdown</option>
                                     <option value="txt">Plain Text</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Include Metadata</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
-                                    <label class="form-check-label" for="includeMetadata">
+                            <div>
+                                <label class="pf-label-text">Include Metadata</label>
+                                <div class="pf-form-check">
+                                    <input class="pf-form-check-input" type="checkbox" id="includeMetadata" checked>
+                                    <label class="pf-form-check-label" for="includeMetadata">
                                         Include timestamps and settings
                                     </label>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Filename Prefix</label>
-                            <input type="text" class="form-control" id="filenamePrefix" value="prompt_library_export">
+                            <label class="pf-label-text">Filename Prefix</label>
+                            <input type="text" class="pf-input-field" id="filenamePrefix" value="prompt_library_export">
                         </div>
-                        <div class="alert alert-info">
+                        <div class="pf-alert pf-alert-info">
                             <strong>Library Statistics:</strong><br>
                             • ${this.promptLibrary.length} saved prompts<br>
                             • ${this.srefLibrary.length} style references<br>
@@ -3778,112 +3857,90 @@ Format your response as JSON:
                             • ${this.textNotes.length} text notes
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="confirmExportAll">
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Cancel</button>
+                        <button type="button" class="pf-btn pf-btn-primary" id="confirmExportAll">
                             <i class="bi bi-download"></i> Export All
                         </button>
                     </div>
                 </div>
             </div>
-        `;
+        `);
         
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Event listener for export button
-        modal.querySelector('#confirmExportAll').addEventListener('click', () => {
-            const format = modal.querySelector('#exportFormat').value;
-            const includeMetadata = modal.querySelector('#includeMetadata').checked;
-            const filenamePrefix = modal.querySelector('#filenamePrefix').value;
+        overlay.querySelector('#confirmExportAll').addEventListener('click', () => {
+            const format = overlay.querySelector('#exportFormat').value;
+            const includeMetadata = overlay.querySelector('#includeMetadata').checked;
+            const filenamePrefix = overlay.querySelector('#filenamePrefix').value;
             
             this.exportAllData(format, includeMetadata, filenamePrefix);
-            bsModal.hide();
-            modal.remove();
-        });
-        
-        // Remove modal when hidden
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
+            PfModal.hide(overlay);
         });
     }
 
     showBatchOperationsModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-gear"></i> Batch Operations</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        PfModal.create(`
+            <div class="pf-modal-dialog pf-modal-lg">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title"><i class="bi bi-gear"></i> Batch Operations</h5>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6><i class="bi bi-download"></i> Export Operations</h6>
+                    <div class="pf-modal-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="pf-card">
+                                    <div class="pf-card-head">
+                                        <h6 class="mb-0"><i class="bi bi-download"></i> Export Operations</h6>
                                     </div>
-                                    <div class="card-body">
-                                        <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('prompts')">
+                                    <div class="pf-card-body">
+                                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm w-full mb-2" onclick="app.exportSelectedLibrary('prompts')">
                                             <i class="bi bi-collection"></i> Export Prompt Library
                                         </button>
-                                        <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('srefs')">
+                                        <button class="pf-btn pf-btn-outline-cyan pf-btn-sm w-full mb-2" onclick="app.exportSelectedLibrary('srefs')">
                                             <i class="bi bi-palette2"></i> Export Style References
                                         </button>
-                                        <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('documents')">
+                                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm w-full mb-2" onclick="app.exportSelectedLibrary('documents')">
                                             <i class="bi bi-file-earmark-text"></i> Export Documents
                                         </button>
-                                        <button class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="app.exportSelectedLibrary('notes')">
+                                        <button class="pf-btn pf-btn-outline-purple pf-btn-sm w-full mb-2" onclick="app.exportSelectedLibrary('notes')">
                                             <i class="bi bi-sticky"></i> Export Text Notes
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6><i class="bi bi-trash"></i> Cleanup Operations</h6>
+                            <div>
+                                <div class="pf-card">
+                                    <div class="pf-card-head">
+                                        <h6 class="mb-0"><i class="bi bi-trash"></i> Cleanup Operations</h6>
                                     </div>
-                                    <div class="card-body">
-                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('prompts')">
+                                    <div class="pf-card-body">
+                                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm w-full mb-2" onclick="app.bulkDelete('prompts')">
                                             <i class="bi bi-collection"></i> Clear Prompt Library
                                         </button>
-                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('srefs')">
+                                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm w-full mb-2" onclick="app.bulkDelete('srefs')">
                                             <i class="bi bi-palette2"></i> Clear Style References
                                         </button>
-                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('documents')">
+                                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm w-full mb-2" onclick="app.bulkDelete('documents')">
                                             <i class="bi bi-file-earmark-text"></i> Clear Documents
                                         </button>
-                                        <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="app.bulkDelete('notes')">
+                                        <button class="pf-btn pf-btn-outline-danger pf-btn-sm w-full mb-2" onclick="app.bulkDelete('notes')">
                                             <i class="bi bi-sticky"></i> Clear Text Notes
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="alert alert-warning mt-3">
+                        <div class="pf-alert pf-alert-warning mt-3">
                             <i class="bi bi-exclamation-triangle"></i>
                             <strong>Warning:</strong> Delete operations cannot be undone. Make sure to export your data first if you want to keep a backup.
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        // Remove modal when hidden
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
-        });
+        `);
     }
 
     exportAllData(format, includeMetadata, filenamePrefix) {
@@ -4120,12 +4177,6 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
     }
 
     manageCustomOptions() {
-        // Create a modal to view and delete custom options
-        const modal = document.createElement('div');
-        modal.className = 'modal fade show';
-        modal.style.display = 'block';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        
         const labels = {
             cameraAngle: 'Camera Angle',
             perspective: 'Perspective/Scale',
@@ -4144,11 +4195,11 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
             if (options && options.length > 0) {
                 optionsHTML += `
                     <div class="mb-3">
-                        <h6 class="fw-semibold">${labels[key]}</h6>
+                        <h6 class="font-semibold">${labels[key]}</h6>
                         ${options.map((opt, idx) => `
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                            <div class="flex justify-between items-center mb-2 p-2 border border-slate-600 rounded-lg">
                                 <span>${opt.label}</span>
-                                <button class="btn btn-sm btn-outline-danger" onclick="app.deleteCustomOption('${key}', ${idx})">
+                                <button type="button" class="pf-btn pf-btn-outline-danger pf-btn-sm" onclick="app.deleteCustomOption('${key}', ${idx})">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
                             </div>
@@ -4162,26 +4213,24 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
             optionsHTML = '<p class="text-muted text-center">No custom options yet. Click the + button next to any dropdown to add custom values.</p>';
         }
         
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
+        PfModal.create(`
+            <div class="pf-modal-dialog pf-modal-lg">
+                <div class="pf-modal-content">
+                    <div class="pf-modal-header">
+                        <h5 class="pf-modal-title">
                             <i class="bi bi-gear"></i> Manage Custom Options
                         </h5>
-                        <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                        <button type="button" class="pf-btn-close" data-pf-dismiss="modal" aria-label="Close">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="pf-modal-body" style="max-height:70vh;overflow-y:auto;">
                         ${optionsHTML}
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                    <div class="pf-modal-footer">
+                        <button type="button" class="pf-btn pf-btn-secondary" data-pf-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(modal);
+        `);
     }
 
     deleteCustomOption(dropdownId, index) {
@@ -4218,8 +4267,9 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
         this.showToast('Custom option deleted', 'warning');
         
         // Refresh the management modal if it's open
-        const modal = document.querySelector('.modal');
+        const modal = document.querySelector('.pf-modal-overlay');
         if (modal) {
+            document.body.style.overflow = '';
             modal.remove();
             this.manageCustomOptions();
         }

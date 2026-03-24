@@ -93,7 +93,7 @@
                 console.warn('ModelRegistry.init — storage read failed, using seed data:', e);
                 _registry = JSON.parse(JSON.stringify(SEED_DATA));
             }
-            console.log(`ModelRegistry ready — ${_registry.length} models loaded`);
+            console.debug(`ModelRegistry ready — ${_registry.length} models loaded`);
         },
 
         getAll() {
