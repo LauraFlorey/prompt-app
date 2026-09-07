@@ -1,34 +1,32 @@
 # PromptForge Security Headers
-# For HostGator deployment
+# For HostGator / shared hosting deployment
 
 <IfModule mod_headers.c>
     # Prevent clickjacking attacks
-    Header always set X-Frame-Options "SAMEORIGIN"
-    
+    Header always set X-Frame-Options "DENY"
+
     # Enable XSS protection in legacy browsers
     Header always set X-XSS-Protection "1; mode=block"
-    
+
     # Prevent MIME type sniffing
     Header always set X-Content-Type-Options "nosniff"
-    
+
     # Control referrer information
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    
+
     # Content Security Policy
-    # Allows app to function with Bootstrap CDN and local LLM connections
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:* https://api.allorigins.win https://corsproxy.io; frame-src 'self';"
-    
-    # Force HTTPS if SSL is enabled on your domain
-    # Uncomment the line below once you have SSL/HTTPS set up
-    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Allows Google Fonts, Bootstrap Icons CDN, and CORS proxies used by the app
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' http://localhost:* https://api.allorigins.win https://corsproxy.io https://cors-anywhere.herokuapp.com https://thingproxy.freeboard.io; frame-src 'self';"
+
+    # Force HTTPS / HSTS
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
-# Force HTTPS redirect (uncomment once SSL is enabled)
-# <IfModule mod_rewrite.c>
-#     RewriteEngine On
-#     RewriteCond %{HTTPS} off
-#     RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
-# </IfModule>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
 
 # Disable directory listing
 Options -Indexes

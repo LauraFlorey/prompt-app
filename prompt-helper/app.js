@@ -242,7 +242,7 @@ class PromptGenerator {
         setTimeout(() => {
             document.querySelectorAll('[data-template]').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const templateType = e.target.getAttribute('data-template');
+                    const templateType = e.currentTarget.getAttribute('data-template');
                     this.applyTemplate(templateType);
                 });
             });
@@ -1430,37 +1430,44 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
             return;
         }
 
-        // Apply template values to form fields
-        const fields = [
-            'model', 'type', 'startingPrompt', 'cameraAngle', 'perspective', 
-            'mood', 'colorScheme', 'lighting', 'artStyle', 'composition', 'quality'
-        ];
+        const fieldIdMap = {
+            model: 'modelSelect',
+            type: 'promptType',
+            startingPrompt: 'startingPrompt',
+            cameraAngle: 'cameraAngle',
+            perspective: 'perspective',
+            mood: 'mood',
+            colorScheme: 'colorScheme',
+            lighting: 'lighting',
+            artStyle: 'artStyle',
+            composition: 'composition',
+            quality: 'quality'
+        };
 
-        fields.forEach(field => {
-            const element = document.getElementById(field === 'model' ? 'modelSelect' : 
-                                                  field === 'type' ? 'promptType' : 
-                                                  field === 'startingPrompt' ? 'startingPrompt' :
-                                                  field === 'cameraAngle' ? 'cameraAngle' :
-                                                  field === 'perspective' ? 'perspective' :
-                                                  field === 'mood' ? 'mood' :
-                                                  field === 'colorScheme' ? 'colorScheme' :
-                                                  field === 'lighting' ? 'lighting' :
-                                                  field === 'artStyle' ? 'artStyle' :
-                                                  field === 'composition' ? 'composition' :
-                                                  'quality');
+        Object.entries(fieldIdMap).forEach(([field, elementId]) => {
+            const element = document.getElementById(elementId);
             if (element && template[field]) {
-                element.value = template[field];
+                const hasOption = element.tagName === 'SELECT'
+                    ? Array.from(element.options).some(o => o.value === template[field])
+                    : true;
+                if (hasOption) {
+                    element.value = template[field];
+                }
             }
         });
 
-        // Show success message
+        this.updateFormProgress();
+        if (typeof this._updateTimeline === 'function') {
+            this._updateTimeline();
+        }
+
         const templateNames = {
-            'image-generation': '🎨 Image Generation',
-            'portrait-photography': '📸 Portrait Photography',
-            'character-design': '🎭 Character Design',
-            'product-photography': '📦 Product Photography',
-            'video-generation': '🎬 Video Generation',
-            'animation-style': '🎞️ Animation Style'
+            'image-generation': 'Image Generation',
+            'portrait-photography': 'Portrait Photography',
+            'character-design': 'Character Design',
+            'product-photography': 'Product Photography',
+            'video-generation': 'Video Generation',
+            'animation-style': 'Animation Style'
         };
 
         this.showToast(`${templateNames[templateType]} template applied!`, 'success');
@@ -2771,7 +2778,7 @@ Format your response as JSON:
                 cameraAngle: 'eye-level',
                 perspective: 'medium',
                 mood: 'serene',
-                colorScheme: 'natural',
+                colorScheme: 'earth-tones',
                 lighting: 'golden-hour',
                 artStyle: 'photorealistic',
                 composition: 'rule-of-thirds',
@@ -2783,10 +2790,10 @@ Format your response as JSON:
                 startingPrompt: 'a professional portrait of a person',
                 cameraAngle: 'eye-level',
                 perspective: 'close-up',
-                mood: 'confident',
-                colorScheme: 'warm',
-                lighting: 'studio',
-                artStyle: 'photorealistic',
+                mood: 'calm',
+                colorScheme: 'warm-tones',
+                lighting: 'soft-lighting',
+                artStyle: 'portrait-photography',
                 composition: 'centered',
                 quality: 'high-quality'
             },
@@ -2794,11 +2801,11 @@ Format your response as JSON:
                 model: 'midjourney',
                 type: 'text-to-image',
                 startingPrompt: 'a detailed character design',
-                cameraAngle: 'full-body',
+                cameraAngle: 'medium-shot',
                 perspective: 'medium',
                 mood: 'heroic',
-                colorScheme: 'vibrant',
-                lighting: 'dramatic',
+                colorScheme: 'saturated',
+                lighting: 'dramatic-lighting',
                 artStyle: 'concept-art',
                 composition: 'rule-of-thirds',
                 quality: 'high-quality'
@@ -2809,9 +2816,9 @@ Format your response as JSON:
                 startingPrompt: 'a professional product photo',
                 cameraAngle: 'eye-level',
                 perspective: 'close-up',
-                mood: 'clean',
-                colorScheme: 'minimal',
-                lighting: 'soft',
+                mood: 'minimalist',
+                colorScheme: 'monochromatic',
+                lighting: 'soft-lighting',
                 artStyle: 'photorealistic',
                 composition: 'centered',
                 quality: 'high-quality'
@@ -2820,12 +2827,12 @@ Format your response as JSON:
                 model: 'runway',
                 type: 'text-to-video',
                 startingPrompt: 'a cinematic scene',
-                cameraAngle: 'wide',
+                cameraAngle: 'wide-shot',
                 perspective: 'medium',
-                mood: 'cinematic',
-                colorScheme: 'film-like',
-                lighting: 'golden-hour',
-                artStyle: 'cinematic',
+                mood: 'dramatic',
+                colorScheme: 'cool-tones',
+                lighting: 'cinematic-lighting',
+                artStyle: 'digital-art',
                 composition: 'rule-of-thirds',
                 quality: 'high-quality'
             },
@@ -2835,11 +2842,11 @@ Format your response as JSON:
                 startingPrompt: 'an animated character in a scene',
                 cameraAngle: 'eye-level',
                 perspective: 'medium',
-                mood: 'playful',
-                colorScheme: 'bright',
-                lighting: 'soft',
-                artStyle: 'animated',
-                composition: 'dynamic',
+                mood: 'joyful',
+                colorScheme: 'pastel',
+                lighting: 'soft-lighting',
+                artStyle: 'anime-style',
+                composition: 'diagonal',
                 quality: 'high-quality'
             }
         };
@@ -3329,7 +3336,11 @@ Format your response as JSON:
                 // Show available models
                 if (data.models && data.models.length > 0) {
                     const modelNames = data.models.map(m => m.name).join(', ');
-                    statusSpan.innerHTML += `<br><small class="text-muted">Available models: ${modelNames}</small>`;
+                    const small = document.createElement('small');
+                    small.className = 'text-muted';
+                    small.textContent = `Available models: ${modelNames}`;
+                    statusSpan.appendChild(document.createElement('br'));
+                    statusSpan.appendChild(small);
                 }
             } else {
                 statusSpan.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Connection failed</span>';

@@ -4,8 +4,8 @@ const urlsToCache = [
     './',
     './index.html',
     './app.js',
-    '../tailwind.css',
-    '../styles/app.css',
+    './tailwind.css',
+    './styles/app.css',
     './manifest.json',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css'
 ];

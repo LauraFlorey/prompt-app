@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptForge | Laura Florey</title>
+  <meta name="description" content="A local-first prompt engineering tool for generative AI practitioners. Covers 20+ models, a style reference system, local LLM integration, and a security posture unusual for a browser-based app." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --text:      #1a1a1a;
+      --muted:     #6b6b6b;
+      --accent:    #2a6049;
+      --rule:      #e0e0e0;
+      --bg:        #ffffff;
+      --tag-bg:    #f2f2f2;
+      --max:       720px;
+      --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ── Nav ── */
+    nav {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--rule);
+    }
+    nav .wordmark { font-weight: 600; font-size: 1rem; text-decoration: none; color: var(--text); }
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav a { text-decoration: none; color: var(--muted); font-size: 0.9375rem; }
+    nav a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--text);
+      color: white !important;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem !important;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Header ── */
+    .case-header {
+      padding: 4rem 0 3rem;
+      border-bottom: 1px solid var(--rule);
+    }
+    .tag-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--tag-bg);
+      color: var(--muted);
+      padding: 0.25rem 0.6rem;
+      border-radius: 3px;
+    }
+    .case-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+    .case-header .lede {
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .meta-row {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .meta-row span strong { color: var(--text); font-weight: 600; }
+    .live-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1.5px solid currentColor;
+      padding-bottom: 1px;
+    }
+    .live-link:hover { opacity: 0.75; }
+
+    /* ── Sections ── */
+    .section {
+      padding: 3.5rem 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      margin-bottom: 1rem;
+      line-height: 1.25;
+    }
+
+    h3 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p { margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── Feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    @media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 1.25rem 1.5rem;
+    }
+    .feature-card .icon {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .feature-card h4 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    /* ── Model category table ── */
+    .model-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .model-table th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      background: var(--tag-bg);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--rule);
+    }
+    .model-table td {
+      padding: 0.75rem 1rem;
+      vertical-align: top;
+      border-bottom: 1px solid var(--rule);
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .model-table td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
+    .model-table tr:last-child td { border-bottom: none; }
+
+    /* ── Callout ── */
+    .callout {
+      background: #f8fbf9;
+      border: 1px solid #c8e0d3;
+      border-radius: 6px;
+      padding: 1.5rem 1.75rem;
+      margin: 2rem 0;
+    }
+    .callout.neutral {
+      background: #f7f7f7;
+      border-color: var(--rule);
+    }
+    .callout p { font-size: 0.9375rem; margin-bottom: 0.75rem; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    /* ── Stack pills ── */
+    .stack-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .pill {
+      font-size: 0.8125rem;
+      padding: 0.25rem 0.75rem;
+      border: 1px solid var(--rule);
+      border-radius: 20px;
+      color: var(--muted);
+      background: var(--tag-bg);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--rule);
+      padding: 2.5rem 0;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+    footer .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a class="wordmark" href="https://lauraflorey.com/">Laura Florey.</a>
+    <ul>
+      <li><a href="https://lauraflorey.com/consulting">Services</a></li>
+      <li><a href="https://lauraflorey.com/projects">Work</a></li>
+      <li><a href="https://lauraflorey.com/about">About</a></li>
+      <li><a class="nav-cta" href="https://lauraflorey.com/contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Case Study Header -->
+  <header class="case-header">
+    <div class="container">
+      <div class="tag-row">
+        <span class="tag">Tool</span>
+        <span class="tag">Generative AI</span>
+        <span class="tag">Local-First</span>
+      </div>
+      <h1>PromptForge</h1>
+      <p class="lede">
+        A prompt engineering workbench for serious generative AI practitioners.
+        Local-first, no account required, no data leaves your device — and
+        detailed enough to handle the gap between a basic prompt and one that
+        actually does what you intended.
+      </p>
+      <div class="meta-row">
+        <span><strong>Built by</strong> Laura Florey</span>
+        <span><strong>Stack</strong> Vanilla JS · Bootstrap 5 · localStorage</span>
+        <span><strong>Type</strong> Static web app · runs offline</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Context -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">Context</p>
+        <h2>Built from practice, not theory.</h2>
+        <p>
+          I do exhibition-level generative AI art — Midjourney, juried shows, work that
+          lives somewhere beyond "I typed a description and hit enter." That practice involves
+          a lot of prompt engineering: style references, camera framing, lighting decisions,
+          composition choices, weight adjustments. The difference between a prompt that
+          produces something interesting and one that produces something worth showing is
+          usually in the details that most tools treat as optional.
+        </p>
+        <p>
+          Most prompt helper tools are built for beginners — they take a simple description
+          and dress it up with adjectives. PromptForge is built for the practitioner who
+          already knows what they want and needs help constructing it precisely, saving what
+          works, and building a library they can actually use across projects.
+        </p>
+        <p>
+          The other starting point: I wasn't willing to send my working prompts and style
+          references to a server to get help building them. Everything stays local.
+        </p>
+      </div>
+    </section>
+
+    <!-- Functionality -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">Functionality</p>
+        <h2>What it does.</h2>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <span class="icon">⚙️</span>
+            <h4>Model-aware prompt generation</h4>
+            <p>Select the target model first — the parameter set adjusts to what actually matters for that model. Midjourney handles style references differently than Flux.1 or Sora. The tool knows that and generates accordingly.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">🎨</span>
+            <h4>Style Reference (sref) system</h4>
+            <p>Save image URLs with descriptions, mood notes, and weight values. For Midjourney, the tool outputs proper <code>--sref</code> and <code>--sw</code> flags. For other models, sref data is preserved as structured plain-language notes rather than discarded or mis-formatted.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">📚</span>
+            <h4>Prompt library</h4>
+            <p>Save prompts with full metadata, search by model, type, or content, and load them with one click. Real-time search highlighting. Import/export to JSON, Markdown, CSV, or HTML so your library isn't locked to a single device.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">📄</span>
+            <h4>Documentation ingestion</h4>
+            <p>Upload model documentation files or fetch content directly from URLs — model release notes, prompt guides, tutorials. The app extracts enhancement keywords and technical parameters to inform generation. Supports .txt, .json, .md, .pdf, .doc, .docx.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">🤖</span>
+            <h4>Local LLM integration</h4>
+            <p>Connect Ollama, LM Studio, LocalAI, or any OpenAI-compatible local API. When connected, the LLM can analyze uploaded documentation for deeper parameter extraction — context and meaning rather than just keyword matching. All processing stays on your machine.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">🎛️</span>
+            <h4>Comprehensive parameter controls</h4>
+            <p>Camera angles, mood/emotion (25+ options), color schemes, lighting types, art styles, composition methods, quality settings. Progressive disclosure via accordions keeps the interface clean without hiding capability.</p>
+          </div>
+        </div>
+
+        <h3>Model coverage</h3>
+        <table class="model-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Models</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Image generation</td>
+              <td>Midjourney, DALL-E 3, Stable Diffusion, Flux.1, Ideogram 2.0, Leonardo AI, Adobe Firefly, Google Imagen 3, Nano Banana</td>
+            </tr>
+            <tr>
+              <td>Video generation</td>
+              <td>OpenAI Sora, Google Veo 2, Runway ML, Pika Labs, Luma Dream Machine, Kling AI, Hailuo (MiniMax), Haiper</td>
+            </tr>
+            <tr>
+              <td>Text & multimodal</td>
+              <td>GPT-4, Claude, Google Gemini, Meta Llama</td>
+            </tr>
+            <tr>
+              <td>Custom</td>
+              <td>Any model not listed — fields adapt to generic prompt structure</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Local-first -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">Architecture</p>
+        <h2>Genuinely local — not "we take privacy seriously."</h2>
+        <p>
+          PromptForge is a static HTML/JS application. There is no server. There is no account.
+          There is no signup flow. You open the file in a browser and it runs. Everything
+          you save — prompts, style references, uploaded documents, LLM settings — lives in
+          your browser's <code>localStorage</code>. Nothing is transmitted anywhere unless
+          you explicitly export it.
+        </p>
+
+        <div class="callout">
+          <p>
+            This is a deliberate architecture choice, not a resource constraint. For a prompt
+            engineering tool, the data being managed is often either proprietary (a working
+            creative process) or sensitive (internal documentation uploaded as a context source).
+            A tool that doesn't have a server can't leak that data, can't be breached, can't
+            change its privacy policy, and doesn't require trusting a vendor's security posture.
+          </p>
+          <p>
+            It also works offline after initial load. On a plane, in a studio, anywhere — if
+            the browser is open, the tool works.
+          </p>
+        </div>
+
+        <h3>The stack is sized to the problem</h3>
+        <p>
+          Vanilla JavaScript, Bootstrap 5, and browser APIs. No framework, no build pipeline
+          required to run it, no dependency tree to maintain. This isn't a failure to use
+          modern tooling — it's a recognition that a static tool with no server-side requirements
+          doesn't need a framework. The right amount of complexity for the problem.
+        </p>
+        <p>
+          The local LLM integration connects to <code>localhost</code> when configured —
+          Ollama, LM Studio, or any OpenAI-compatible endpoint. Even that optional AI layer
+          runs on your machine.
+        </p>
+
+        <div class="stack-pills">
+          <span class="pill">HTML5</span>
+          <span class="pill">Vanilla JavaScript</span>
+          <span class="pill">Bootstrap 5</span>
+          <span class="pill">localStorage API</span>
+          <span class="pill">Fetch API</span>
+          <span class="pill">DOMParser API</span>
+          <span class="pill">Ollama</span>
+          <span class="pill">LM Studio</span>
+          <span class="pill">LocalAI</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">Security</p>
+        <h2>Security hardening — even for a file you open in a browser.</h2>
+        <p>
+          "It's just a static file" is not a reason to skip security. PromptForge went through
+          a deliberate XSS audit and hardening pass, and the results were worth the effort.
+        </p>
+
+        <h3>XSS vulnerabilities found and fixed</h3>
+        <p>
+          The initial build used <code>innerHTML</code> to render user-controlled data in several
+          places — prompt names, URLs, descriptions in the library display and search results.
+          That's a stored XSS vector: a maliciously crafted prompt name could execute scripts
+          when the library loads. Every instance was replaced with DOM node creation and
+          <code>textContent</code>, which treats user input as text rather than markup.
+        </p>
+        <p>
+          Search result highlighting was also vulnerable — search queries were being
+          interpolated into HTML without escaping. Fixed with a dedicated <code>escapeHtml()</code>
+          helper that sanitizes before any string goes near the DOM.
+        </p>
+        <p>
+          External HTML content (from fetched URLs) was parsed via <code>innerHTML</code>,
+          which executes embedded scripts. Replaced with the <code>DOMParser</code> API,
+          which parses the structure without executing anything.
+        </p>
+
+        <h3>Deployment hardening</h3>
+        <p>
+          For web deployment, an <code>.htaccess</code> configuration provides production-ready
+          security headers: Content Security Policy restricting resource loading, X-Frame-Options
+          preventing clickjacking, X-Content-Type-Options preventing MIME sniffing, and
+          Referrer-Policy controlling referrer leakage. HTTPS enforcement is in the config,
+          commented and ready to activate when SSL is in place.
+        </p>
+
+        <div class="callout neutral">
+          <p>
+            The payload testing was practical: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+            as a prompt name, <code>&lt;img src=x onerror="alert('XSS')"&gt;</code> as an sref URL,
+            script tags in search queries. All blocked after hardening — escaped to visible text
+            rather than executed.
+          </p>
+        </div>
+
+        <p>
+          For a tool that ingests content from external URLs and stores it locally, getting
+          the XSS story right matters. A user who pastes in a documentation URL from a
+          compromised source shouldn't be handing that source script execution in their browser.
+        </p>
+      </div>
+    </section>
+
+    <!-- UX -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">UX Design</p>
+        <h2>Capable without being overwhelming.</h2>
+        <p>
+          A prompt generation tool with 25+ mood options, multiple lighting types, composition
+          controls, style references, and model-specific parameter sets has a real risk of
+          being unusable. The interface uses progressive disclosure to handle this: the primary
+          action (Generate Prompt) is prominent, and advanced parameter groups are in accordions
+          — Camera, Look, Style &amp; Composition, Style Reference — that stay out of the way
+          until needed.
+        </p>
+        <p>
+          On mobile, the Generate button is sticky so it's always reachable. The prompt library
+          panel is a sticky dock on desktop. These are small decisions, but they come from
+          actually using the tool rather than designing it from outside.
+        </p>
+        <p>
+          Dark mode is supported with automatic system preference detection — and that includes
+          making sure dark mode doesn't produce label glare or low-contrast text, which required
+          a dedicated polish pass beyond just inverting colors.
+        </p>
+      </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="section">
+      <div class="container">
+        <p class="section-label">Notes</p>
+        <h2>What this demonstrates.</h2>
+        <p>
+          PromptForge is a case study in practitioner-built tooling. The sref system, the
+          model-aware parameter handling, the documentation ingestion — these features exist
+          because I needed them, not because a product roadmap said they should. That
+          practitioner perspective produces different software than outside observation does.
+        </p>
+        <p>
+          The local-first architecture is also a positioning statement. There's a meaningful
+          segment of people doing serious creative or professional work with AI tools who are
+          not comfortable routing that work through a vendor's servers, and who would pay for
+          tools that respect that. PromptForge is an example of what that looks like in practice.
+        </p>
+        <p>
+          If you're in that space — creative professionals, researchers, practitioners of any
+          kind who want AI tooling that stays on their machine — or if you need tooling built
+          by someone who actually uses the technology at a serious level, I'd be glad to talk.
+        </p>
+        <a class="live-link" href="https://lauraflorey.com/contact">Get in touch →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <span>© 2026 Laura Florey. All rights reserved.</span>
+      <div class="footer-links">
+        <a href="https://lauraflorey.com/consulting">Services</a>
+        <a href="https://lauraflorey.com/projects">Work</a>
+        <a href="https://lauraflorey.com/about">About</a>
+        <a href="https://lauraflorey.com/contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
