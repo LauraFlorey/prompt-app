@@ -1,12 +1,14 @@
 // Service Worker for Prompt Forge PWA
 // Network-first for app shell so deployments show up without a hard refresh.
-const CACHE_NAME = 'prompt-forge-v4.0.0';
+const CACHE_NAME = 'prompt-forge-v4.1.0';
 const PRECACHE = [
     './',
     './index.html',
     './app.js',
     './tailwind.css',
     './styles/app.css',
+    './styles/fonts.css',
+    './styles/bootstrap-icons.css',
     './manifest.json',
     './sw.js'
 ];
@@ -75,16 +77,19 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
+    // Always get a fresh service worker file
     if (url.pathname.endsWith('/sw.js')) {
         event.respondWith(fetch(event.request));
         return;
     }
 
+    // App code/styles/html: network first so uploads appear on next visit
     if (url.origin === self.location.origin && isAppShellRequest(url)) {
         event.respondWith(networkFirst(event.request));
         return;
     }
 
+    // CDN fonts/icons: cache first is fine
     event.respondWith(cacheFirst(event.request).catch(() => caches.match(event.request)));
 });
 

@@ -3,77 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt Helper</title>
+    <title>Prompt Forge</title>
     <meta name="description" content="A comprehensive AI prompt generation tool for image, video, and text models">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#0B0E14">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="PromptGen">
+    <meta name="apple-mobile-web-app-title" content="Prompt Forge">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icon.svg">
     <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="styles/fonts.css" rel="stylesheet">
+    <link href="styles/bootstrap-icons.css" rel="stylesheet">
     <link href="tailwind.css" rel="stylesheet">
     <link href="styles/app.css" rel="stylesheet">
+    <!-- inline styles removed – see styles/app.css -->
 </head>
-<body style="background-color: #0B0E14; color: #E2E8F0; min-height: 100vh;">
-    <div class="w-full px-4">
-        <div class="main-container max-w-6xl mx-auto rounded-2xl border border-slate-700/50 bg-slate-900/50 backdrop-blur-md shadow-2xl overflow-hidden mb-6">
-            <!-- Header Section -->
-            <section class="header-section px-6 py-8 rounded-t-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 text-white">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h1 class="text-4xl font-bold mb-0">
-                            <i class="bi bi-magic"></i> Prompt Helper
-                        </h1>
-                        <p class="text-lg mb-0 opacity-95">Generate, manage, and optimize prompts for AI models</p>
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        <a href="tutorial.html" class="pf-btn pf-btn-outline-light pf-btn-sm shadow-sm" title="How to Use - Tutorial">
-                            <i class="bi bi-question-circle-fill"></i> <strong>Help</strong>
-                        </a>
-                        <div id="saveStatus" class="pf-badge pf-badge-muted">
-                            <i class="bi bi-circle-fill text-muted"></i> No changes
-                        </div>
+<body>
+    <div class="w-full">
+        <div class="main-container">
+            <!-- Topbar -->
+            <nav class="pf-topbar">
+                <div class="pf-wordmark">
+                    <span class="wm-prompt">Prompt </span><span class="wm-forge">Forge</span>
+                </div>
+
+                <div class="pf-topbar-center">
+                    <button class="pf-nav-pill active" data-pf-tab="studio">Studio</button>
+                    <button class="pf-nav-pill" data-pf-tab="library">Library</button>
+                    <button class="pf-nav-pill" data-pf-tab="config">Config</button>
+                </div>
+
+                <div class="pf-topbar-right">
+                    <span id="storageHealthDot" class="pf-health-dot green" title="Storage OK"></span>
+                    <div id="saveStatus" class="pf-save-chip idle">
+                        <span class="pf-save-dot"></span>
+                        <span class="pf-save-text">No changes</span>
                     </div>
                 </div>
-            </section>
+            </nav>
 
-            <!-- Main Content -->
-            <section class="form-section p-6 md:p-8">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- Left Column - Prompt Generation Form -->
-                    <div class="lg:col-span-8">
-                        <div class="pf-card mb-4">
-                            <div class="pf-card-head bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                <h4 class="mb-0"><i class="bi bi-gear-fill"></i> Prompt Configuration</h4>
-                            </div>
-                            <div class="pf-card-body">
-                                <form id="promptForm">
-                                    <!-- Form Progress Indicator -->
-                                    <div class="mb-3">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <small class="text-muted">Form Completion</small>
-                                            <small class="text-muted" id="progressText">0%</small>
-                                        </div>
-                                        <div class="pf-progress" style="height: 6px;">
-                                            <div class="pf-progress-bar" role="progressbar" id="formProgress" 
-                                                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="modelSelect" class="pf-label-text font-semibold">
-                                                <i class="bi bi-cpu"></i> Model Used
-                                            </label>
-                                            <select class="pf-select" id="modelSelect" required>
-                                                <option value="">Select Model</option>
-                                                                                        <optgroup label="Image Generation">
+            <!-- FS permission banner (hidden by default) -->
+            <div id="fsBanner" class="pf-app-banner warn" style="display:none;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Prompt Forge needs permission to access your data folder.</span>
+                <div class="pf-banner-actions">
+                    <button type="button" class="pf-chip active" id="fsGrantBtn">Grant access</button>
+                    <button type="button" class="pf-chip" id="fsFallbackBtn">Switch to browser storage</button>
+                    <button type="button" class="pf-chip" id="fsDismissBtn" style="opacity:0.6;">✕</button>
+                </div>
+            </div>
+
+            <!-- Export reminder banner (hidden by default) -->
+            <div id="exportBanner" class="pf-app-banner info" style="display:none;">
+                <i class="bi bi-cloud-download"></i>
+                <span>You haven't exported a backup in over 7 days.</span>
+                <div class="pf-banner-actions">
+                    <button type="button" class="pf-chip active" id="exportBannerNow">Export now</button>
+                    <button type="button" class="pf-chip" id="exportBannerLater">Remind me later</button>
+                    <button type="button" class="pf-chip" id="exportBannerNever" style="opacity:0.6;">Don't remind me</button>
+                </div>
+            </div>
+
+            <!-- Welcome banner (first run only) -->
+            <div id="welcomeBanner" class="pf-app-banner info" style="display:none;">
+                <i class="bi bi-stars"></i>
+                <span>Welcome to Prompt Forge. Your data stays on your device &mdash; nothing is sent to any server.</span>
+                <div class="pf-banner-actions">
+                    <button type="button" class="pf-chip active" id="welcomeChooseFolder">Choose a save folder</button>
+                    <button type="button" class="pf-chip" id="welcomeBrowserStorage">Use browser storage</button>
+                    <a href="download.html" target="_blank" rel="noopener" class="pf-chip" id="welcomeLearnMore">Learn more &#8599;</a>
+                </div>
+            </div>
+
+            <!-- Studio Panel -->
+            <form id="promptForm">
+            <div id="panel-studio" class="pf-studio-grid" data-pf-panel="studio">
+
+                <!-- ═══ LEFT COLUMN ═══ -->
+                <div class="pf-col-left">
+
+                    <!-- Card 1: Model & Type -->
+                    <div class="pf-timeline-step step-active-purple" data-step="1">
+                        <div class="pf-timeline-line"></div>
+                        <div class="pf-timeline-dot"></div>
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">1</span>
+                            <span class="pf-card-title text-purple">1. Model &amp; Type</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-params-grid">
+                                <div class="pf-field">
+                                    <label for="modelSelect">Model Used</label>
+                                    <select class="pf-select" id="modelSelect" required>
+                                        <option value="">Select Model</option>
+                                        <optgroup label="Image Generation">
                                             <option value="midjourney">Midjourney</option>
                                             <option value="gpt-image">GPT Image</option>
                                             <option value="dalle3">DALL-E 3</option>
@@ -92,687 +117,978 @@
                                             <option value="luma-dream">Luma Dream Machine</option>
                                             <option value="kling">Kling AI</option>
                                         </optgroup>
-                                                <optgroup label="Text & Multimodal">
-                                                    <option value="gpt4">GPT-4</option>
-                                                    <option value="claude">Claude</option>
-                                                    <option value="gemini">Google Gemini</option>
-                                                    <option value="llama">Meta Llama</option>
-                                                </optgroup>
-                                                <optgroup label="Other">
-                                                    <option value="custom">Custom Model</option>
-                                                </optgroup>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label for="promptType" class="pf-label-text font-semibold">
-                                                <i class="bi bi-type"></i> Type of Prompt
-                                            </label>
-                                            <select class="pf-select" id="promptType" required>
-                                                <option value="">Select Type</option>
-                                                <option value="text-to-image">Text to Image</option>
-                                                <option value="image-to-video">Image to Video</option>
-                                                <option value="text-to-video">Text to Video</option>
-                                                <option value="text-to-text">Text to Text</option>
-                                                <option value="image-to-image">Image to Image</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Prompt Templates -->
-                                    <div class="mb-3">
-                                        <label class="pf-label-text font-semibold">
-                                            <i class="bi bi-layout-text-window"></i> Quick Templates
-                                        </label>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm w-full" data-template="image-generation">
-                                                    🎨 Image Generation
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm w-full" data-template="portrait-photography">
-                                                    📸 Portrait Photography
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm w-full" data-template="character-design">
-                                                    🎭 Character Design
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm w-full" data-template="product-photography">
-                                                    📦 Product Photography
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-outline-danger pf-btn-sm w-full" data-template="video-generation">
-                                                    🎬 Video Generation
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button type="button" class="pf-btn pf-btn-secondary pf-btn-sm w-full" data-template="animation-style">
-                                                    🎞️ Animation Style
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">Click a template to auto-fill common settings</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="startingPrompt" class="pf-label-text font-semibold">
-                                            <i class="bi bi-chat-text"></i> Starting Prompt
-                                        </label>
-                                        <textarea class="pf-input-field" id="startingPrompt" rows="4" 
-                                                placeholder="Enter your base prompt here..." required></textarea>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="cameraAngle" class="pf-label-text font-semibold">
-                                                <i class="bi bi-camera"></i> Camera Angle
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="cameraAngle">
-                                                    <option value="">Select Camera Angle</option>
-                                                    <option value="eye-level">Eye Level</option>
-                                                    <option value="high-angle">High Angle</option>
-                                                    <option value="low-angle">Low Angle</option>
-                                                    <option value="bird-eye">Bird's Eye View</option>
-                                                    <option value="worm-eye">Worm's Eye View</option>
-                                                    <option value="dutch-angle">Dutch Angle</option>
-                                                    <option value="over-shoulder">Over the Shoulder</option>
-                                                    <option value="close-up">Close-up</option>
-                                                    <option value="medium-shot">Medium Shot</option>
-                                                    <option value="wide-shot">Wide Shot</option>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('cameraAngle')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label for="perspective" class="pf-label-text font-semibold">
-                                                <i class="bi bi-aspect-ratio"></i> Perspective/Scale
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="perspective">
-                                                    <option value="">Select Perspective</option>
-                                                    <option value="macro">Macro</option>
-                                                    <option value="close-up">Close-up</option>
-                                                    <option value="medium">Medium</option>
-                                                    <option value="wide">Wide</option>
-                                                    <option value="panoramic">Panoramic</option>
-                                                    <option value="first-person">First Person</option>
-                                                    <option value="third-person">Third Person</option>
-                                                    <option value="isometric">Isometric</option>
-                                                    <option value="orthographic">Orthographic</option>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('perspective')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="mood" class="pf-label-text font-semibold">
-                                                <i class="bi bi-emoji-smile"></i> Mood/Emotion
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="mood">
-                                                    <option value="">Select Mood</option>
-                                                    <optgroup label="Positive">
-                                                        <option value="happy">Happy</option>
-                                                        <option value="joyful">Joyful</option>
-                                                        <option value="peaceful">Peaceful</option>
-                                                        <option value="serene">Serene</option>
-                                                        <option value="uplifting">Uplifting</option>
-                                                        <option value="energetic">Energetic</option>
-                                                        <option value="vibrant">Vibrant</option>
-                                                        <option value="optimistic">Optimistic</option>
-                                                    </optgroup>
-                                                    <optgroup label="Dramatic">
-                                                        <option value="dramatic">Dramatic</option>
-                                                        <option value="intense">Intense</option>
-                                                        <option value="powerful">Powerful</option>
-                                                        <option value="epic">Epic</option>
-                                                        <option value="heroic">Heroic</option>
-                                                        <option value="majestic">Majestic</option>
-                                                    </optgroup>
-                                                    <optgroup label="Mysterious">
-                                                        <option value="mysterious">Mysterious</option>
-                                                        <option value="dark">Dark</option>
-                                                        <option value="moody">Moody</option>
-                                                        <option value="eerie">Eerie</option>
-                                                        <option value="haunting">Haunting</option>
-                                                        <option value="suspenseful">Suspenseful</option>
-                                                    </optgroup>
-                                                    <optgroup label="Calm">
-                                                        <option value="calm">Calm</option>
-                                                        <option value="tranquil">Tranquil</option>
-                                                        <option value="meditative">Meditative</option>
-                                                        <option value="zen">Zen</option>
-                                                        <option value="minimalist">Minimalist</option>
-                                                    </optgroup>
-                                                    <optgroup label="Romantic">
-                                                        <option value="romantic">Romantic</option>
-                                                        <option value="dreamy">Dreamy</option>
-                                                        <option value="whimsical">Whimsical</option>
-                                                        <option value="ethereal">Ethereal</option>
-                                                        <option value="magical">Magical</option>
-                                                    </optgroup>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('mood')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label for="colorScheme" class="pf-label-text font-semibold">
-                                                <i class="bi bi-palette"></i> Color Scheme
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="colorScheme">
-                                                    <option value="">Select Color Scheme</option>
-                                                    <optgroup label="Warm Colors">
-                                                        <option value="warm-tones">Warm Tones</option>
-                                                        <option value="red-orange">Red & Orange</option>
-                                                        <option value="golden-hour">Golden Hour</option>
-                                                        <option value="sunset-colors">Sunset Colors</option>
-                                                        <option value="earth-tones">Earth Tones</option>
-                                                    </optgroup>
-                                                    <optgroup label="Cool Colors">
-                                                        <option value="cool-tones">Cool Tones</option>
-                                                        <option value="blue-cyan">Blue & Cyan</option>
-                                                        <option value="ocean-blues">Ocean Blues</option>
-                                                        <option value="winter-colors">Winter Colors</option>
-                                                        <option value="mint-green">Mint Green</option>
-                                                    </optgroup>
-                                                    <optgroup label="Monochromatic">
-                                                        <option value="black-white">Black & White</option>
-                                                        <option value="sepia">Sepia</option>
-                                                        <option value="monochromatic">Monochromatic</option>
-                                                        <option value="grayscale">Grayscale</option>
-                                                    </optgroup>
-                                                    <optgroup label="Vibrant">
-                                                        <option value="neon-colors">Neon Colors</option>
-                                                        <option value="rainbow">Rainbow</option>
-                                                        <option value="saturated">Saturated Colors</option>
-                                                        <option value="pastel">Pastel Colors</option>
-                                                        <option value="cyberpunk">Cyberpunk Colors</option>
-                                                    </optgroup>
-                                                    <optgroup label="Natural">
-                                                        <option value="forest-green">Forest Green</option>
-                                                        <option value="desert-colors">Desert Colors</option>
-                                                        <option value="autumn-colors">Autumn Colors</option>
-                                                        <option value="spring-colors">Spring Colors</option>
-                                                    </optgroup>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('colorScheme')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="lighting" class="pf-label-text font-semibold">
-                                                <i class="bi bi-sun"></i> Lighting
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="lighting">
-                                                    <option value="">Select Lighting</option>
-                                                    <optgroup label="Natural Light">
-                                                        <option value="golden-hour">Golden Hour</option>
-                                                        <option value="blue-hour">Blue Hour</option>
-                                                        <option value="natural-light">Natural Light</option>
-                                                        <option value="sunlight">Bright Sunlight</option>
-                                                        <option value="overcast">Overcast</option>
-                                                        <option value="sunset">Sunset</option>
-                                                        <option value="sunrise">Sunrise</option>
-                                                        <option value="moonlight">Moonlight</option>
-                                                    </optgroup>
-                                                    <optgroup label="Studio Lighting">
-                                                        <option value="soft-lighting">Soft Lighting</option>
-                                                        <option value="hard-lighting">Hard Lighting</option>
-                                                        <option value="dramatic-lighting">Dramatic Lighting</option>
-                                                        <option value="rim-lighting">Rim Lighting</option>
-                                                        <option value="backlighting">Backlighting</option>
-                                                        <option value="key-lighting">Key Lighting</option>
-                                                    </optgroup>
-                                                    <optgroup label="Atmospheric">
-                                                        <option value="volumetric-lighting">Volumetric Lighting</option>
-                                                        <option value="god-rays">God Rays</option>
-                                                        <option value="atmospheric">Atmospheric Lighting</option>
-                                                        <option value="cinematic-lighting">Cinematic Lighting</option>
-                                                        <option value="moody-lighting">Moody Lighting</option>
-                                                    </optgroup>
-                                                    <optgroup label="Artificial">
-                                                        <option value="neon-lighting">Neon Lighting</option>
-                                                        <option value="led-lighting">LED Lighting</option>
-                                                        <option value="fluorescent">Fluorescent</option>
-                                                        <option value="candlelight">Candlelight</option>
-                                                        <option value="fire-light">Fire Light</option>
-                                                    </optgroup>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('lighting')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label for="artStyle" class="pf-label-text font-semibold">
-                                                <i class="bi bi-brush"></i> Art Style
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="artStyle">
-                                                    <option value="">Select Art Style</option>
-                                                    <optgroup label="Photography">
-                                                        <option value="photorealistic">Photorealistic</option>
-                                                        <option value="portrait-photography">Portrait Photography</option>
-                                                        <option value="landscape-photography">Landscape Photography</option>
-                                                        <option value="street-photography">Street Photography</option>
-                                                        <option value="macro-photography">Macro Photography</option>
-                                                    </optgroup>
-                                                    <optgroup label="Digital Art">
-                                                        <option value="digital-art">Digital Art</option>
-                                                        <option value="concept-art">Concept Art</option>
-                                                        <option value="matte-painting">Matte Painting</option>
-                                                        <option value="3d-render">3D Render</option>
-                                                        <option value="pixel-art">Pixel Art</option>
-                                                    </optgroup>
-                                                    <optgroup label="Traditional Art">
-                                                        <option value="oil-painting">Oil Painting</option>
-                                                        <option value="watercolor">Watercolor</option>
-                                                        <option value="acrylic-painting">Acrylic Painting</option>
-                                                        <option value="pencil-drawing">Pencil Drawing</option>
-                                                        <option value="charcoal">Charcoal</option>
-                                                        <option value="ink-drawing">Ink Drawing</option>
-                                                    </optgroup>
-                                                    <optgroup label="Artistic Movements">
-                                                        <option value="impressionist">Impressionist</option>
-                                                        <option value="surrealist">Surrealist</option>
-                                                        <option value="abstract">Abstract</option>
-                                                        <option value="minimalist">Minimalist</option>
-                                                        <option value="baroque">Baroque</option>
-                                                        <option value="art-nouveau">Art Nouveau</option>
-                                                    </optgroup>
-                                                    <optgroup label="Modern Styles">
-                                                        <option value="anime-style">Anime Style</option>
-                                                        <option value="cartoon">Cartoon</option>
-                                                        <option value="comic-book">Comic Book</option>
-                                                        <option value="cyberpunk">Cyberpunk</option>
-                                                        <option value="steampunk">Steampunk</option>
-                                                        <option value="vaporwave">Vaporwave</option>
-                                                    </optgroup>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('artStyle')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="composition" class="pf-label-text font-semibold">
-                                                <i class="bi bi-grid-3x3"></i> Composition
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="composition">
-                                                    <option value="">Select Composition</option>
-                                                    <option value="rule-of-thirds">Rule of Thirds</option>
-                                                    <option value="centered">Centered</option>
-                                                    <option value="symmetrical">Symmetrical</option>
-                                                    <option value="asymmetrical">Asymmetrical</option>
-                                                    <option value="leading-lines">Leading Lines</option>
-                                                    <option value="framing">Natural Framing</option>
-                                                    <option value="diagonal">Diagonal Composition</option>
-                                                    <option value="golden-ratio">Golden Ratio</option>
-                                                    <option value="triangular">Triangular</option>
-                                                    <option value="spiral">Spiral Composition</option>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('composition')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label for="quality" class="pf-label-text font-semibold">
-                                                <i class="bi bi-gem"></i> Quality/Detail
-                                            </label>
-                                            <div class="flex w-full min-w-0 rounded-lg overflow-hidden border border-slate-600 focus-within:ring-1 focus-within:ring-cyan-500/50">
-                                                <select class="pf-select grow min-w-0 rounded-none border-0 border-r border-slate-600" id="quality">
-                                                    <option value="">Select Quality Level</option>
-                                                    <option value="ultra-high-quality">Ultra High Quality</option>
-                                                    <option value="high-quality">High Quality</option>
-                                                    <option value="professional">Professional</option>
-                                                    <option value="detailed">Highly Detailed</option>
-                                                    <option value="ultra-detailed">Ultra Detailed</option>
-                                                    <option value="sharp-focus">Sharp Focus</option>
-                                                    <option value="8k-resolution">8K Resolution</option>
-                                                    <option value="4k-resolution">4K Resolution</option>
-                                                    <option value="masterpiece">Masterpiece</option>
-                                                    <option value="award-winning">Award Winning</option>
-                                                </select>
-                                                <button class="pf-btn pf-btn-secondary rounded-none shrink-0 border-0 border-l border-slate-600" type="button" onclick="app.addCustomOption('quality')" title="Add custom option">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="outputFormat" class="pf-label-text font-semibold">
-                                            <i class="bi bi-file-earmark-code"></i> Output Format
-                                        </label>
-                                        <select class="pf-select" id="outputFormat">
-                                            <option value="text">Plain Text</option>
-                                            <option value="json">JSON</option>
-                                            <option value="markdown">Markdown</option>
-                                            <option value="csv">CSV</option>
-                                            <option value="html">HTML</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Style Reference Section (compact picker) -->
-                                    <div class="pf-card mt-4 border border-cyan-500/40">
-                                        <div class="pf-card-head bg-gradient-to-r from-cyan-600 to-teal-600 text-white">
-                                            <h6 class="mb-0"><i class="bi bi-palette2"></i> Style Reference (sref)</h6>
-                                        </div>
-                                        <div class="pf-card-body">
-                                            <div class="mb-3">
-                                                <label for="srefPicker" class="pf-label-text font-semibold">Active Style Reference</label>
-                                                <select class="pf-select" id="srefPicker">
-                                                    <option value="">None</option>
-                                                </select>
-                                            </div>
-                                            <div id="srefPickerPreview" style="display: none;" class="mb-3 p-3 rounded-lg border border-slate-600 bg-slate-800/50">
-                                                <div class="flex justify-between items-start gap-3">
-                                                    <div class="grow min-w-0">
-                                                        <div id="srefPickerName" class="text-sm font-medium"></div>
-                                                        <div id="srefPickerType" class="text-xs text-muted"></div>
-                                                        <div id="srefPickerDesc" class="text-xs text-muted mt-1 truncate"></div>
-                                                    </div>
-                                                    <button type="button" class="pf-btn pf-btn-secondary pf-btn-sm shrink-0" id="srefPickerClear">Clear</button>
-                                                </div>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm" id="srefPickerNew">
-                                                    <i class="bi bi-plus-circle"></i> New Sref
-                                                </button>
-                                                <button type="button" class="pf-btn pf-btn-secondary pf-btn-sm" id="srefPickerManage">
-                                                    <i class="bi bi-collection"></i> Manage
-                                                </button>
-                                            </div>
-
-                                            <!-- Hidden fields that getFormData() reads -->
-                                            <input type="hidden" id="srefUrl" value="">
-                                            <input type="hidden" id="srefWeight" value="">
-                                            <input type="hidden" id="srefCode" value="">
-                                            <input type="hidden" id="srefCodeWeight" value="">
-                                            <input type="hidden" id="srefImageWeight" value="">
-                                            <textarea id="srefExplanation" style="display:none;"></textarea>
-                                            <div style="display:none;">
-                                                <input type="radio" name="srefType" id="srefTypeUrl" value="url" checked>
-                                                <input type="radio" name="srefType" id="srefTypeCode" value="code">
-                                                <input type="radio" name="srefType" id="srefTypeImage" value="image">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid gap-2 md:flex md:justify-end">
-                                        <button type="button" class="pf-btn pf-btn-secondary md:mr-2" id="clearForm">
-                                            <i class="bi bi-arrow-clockwise"></i> Clear
-                                        </button>
-                                        <button type="button" class="pf-btn pf-btn-success md:mr-2" id="savePrompt">
-                                            <i class="bi bi-bookmark-plus"></i> Save to Library
-                                        </button>
-                                        <button type="submit" class="pf-btn pf-btn-primary">
-                                            <i class="bi bi-magic"></i> Generate Prompt
-                                        </button>
-                                    </div>
-                                </form>
+                                        <optgroup label="Text &amp; Multimodal">
+                                            <option value="gpt4">GPT-4</option>
+                                            <option value="claude">Claude</option>
+                                            <option value="gemini">Google Gemini</option>
+                                            <option value="llama">Meta Llama</option>
+                                        </optgroup>
+                                        <optgroup label="Custom">
+                                            <option value="custom">Custom Model</option>
+                                        </optgroup>
+                                    </select>
+                                    <div id="modelTipPreview" style="display:none; margin-top:8px; font-size:14px; color:var(--pf-text-muted); line-height:1.4;"></div>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="promptType">Type of Prompt</label>
+                                    <select class="pf-select" id="promptType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="text-to-image">Text to Image</option>
+                                        <option value="image-to-video">Image to Video</option>
+                                        <option value="text-to-video">Text to Video</option>
+                                        <option value="text-to-text">Text to Text</option>
+                                        <option value="image-to-image">Image to Image</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <label class="pf-card-title" style="font-size: 14px; margin-bottom: 6px; display: block;">Quick Templates</label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    <button type="button" class="pf-chip active" data-template="image-generation">Image Generation</button>
+                                    <button type="button" class="pf-chip" data-template="portrait-photography">Portrait Photography</button>
+                                    <button type="button" class="pf-chip pf-chip-purple" data-template="character-design">Character Design</button>
+                                    <button type="button" class="pf-chip" data-template="product-photography">Product Photography</button>
+                                    <button type="button" class="pf-chip pf-chip-purple" data-template="video-generation">Video Generation</button>
+                                    <button type="button" class="pf-chip pf-chip-purple" data-template="animation-style">Animation Style</button>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Output Section -->
-                        <div class="pf-card">
-                            <div class="pf-card-head bg-gradient-to-r from-emerald-600 to-green-600 text-white">
-                                <h4 class="mb-0"><i class="bi bi-file-text"></i> Generated Output</h4>
+                    </div><!-- /pf-timeline-step 1 -->
+
+                    <!-- Card 2: Starting Prompt -->
+                    <div class="pf-timeline-step step-active-cyan" data-step="2">
+                        <div class="pf-timeline-line"></div>
+                        <div class="pf-timeline-dot"></div>
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">2</span>
+                            <span class="pf-card-title text-cyan">2. Templates &amp; Starting Prompt</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-field">
+                                <label for="startingPrompt">Base Prompt</label>
+                                <textarea class="pf-textarea" id="startingPrompt" rows="4"
+                                          placeholder="Enter your base prompt here..." required></textarea>
                             </div>
-                            <div class="pf-card-body">
-                                <div id="outputSection" class="output-section">
-                                    <p class="text-muted text-center mb-0">
-                                        <i class="bi bi-arrow-up"></i> Fill out the form above and click "Generate Prompt" to see your output here
+                            <div class="pf-field" style="margin-top: 10px;">
+                                <label for="outputFormat">Output Format</label>
+                                <select class="pf-select" id="outputFormat">
+                                    <option value="text">Plain Text</option>
+                                    <option value="json">JSON</option>
+                                    <option value="markdown">Markdown</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="html">HTML</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div><!-- /pf-timeline-step 2 -->
+
+                    <!-- Card 3: Detailed Parameters -->
+                    <div class="pf-timeline-step" data-step="3">
+                        <div class="pf-timeline-line"></div>
+                        <div class="pf-timeline-dot"></div>
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">3</span>
+                            <span class="pf-card-title">3. Detailed Parameters</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-params-grid">
+                                <div class="pf-field">
+                                    <label for="cameraAngle">Camera Angle</label>
+                                    <select class="pf-select pf-custom-dropdown" id="cameraAngle">
+                                        <option value="">Select Camera Angle</option>
+                                        <option value="eye-level">Eye Level</option>
+                                        <option value="high-angle">High Angle</option>
+                                        <option value="low-angle">Low Angle</option>
+                                        <option value="bird-eye">Bird's Eye View</option>
+                                        <option value="worm-eye">Worm's Eye View</option>
+                                        <option value="dutch-angle">Dutch Angle</option>
+                                        <option value="over-shoulder">Over the Shoulder</option>
+                                        <option value="close-up">Close-up</option>
+                                        <option value="medium-shot">Medium Shot</option>
+                                        <option value="wide-shot">Wide Shot</option>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="perspective">Perspective/Scale</label>
+                                    <select class="pf-select pf-custom-dropdown" id="perspective">
+                                        <option value="">Select Perspective</option>
+                                        <option value="macro">Macro</option>
+                                        <option value="close-up">Close-up</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="wide">Wide</option>
+                                        <option value="panoramic">Panoramic</option>
+                                        <option value="first-person">First Person</option>
+                                        <option value="third-person">Third Person</option>
+                                        <option value="isometric">Isometric</option>
+                                        <option value="orthographic">Orthographic</option>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="mood">Mood/Emotion</label>
+                                    <select class="pf-select pf-custom-dropdown" id="mood">
+                                        <option value="">Select Mood</option>
+                                        <optgroup label="Positive">
+                                            <option value="happy">Happy</option>
+                                            <option value="joyful">Joyful</option>
+                                            <option value="peaceful">Peaceful</option>
+                                            <option value="serene">Serene</option>
+                                            <option value="uplifting">Uplifting</option>
+                                            <option value="energetic">Energetic</option>
+                                            <option value="vibrant">Vibrant</option>
+                                            <option value="optimistic">Optimistic</option>
+                                        </optgroup>
+                                        <optgroup label="Dramatic">
+                                            <option value="dramatic">Dramatic</option>
+                                            <option value="intense">Intense</option>
+                                            <option value="powerful">Powerful</option>
+                                            <option value="epic">Epic</option>
+                                            <option value="heroic">Heroic</option>
+                                            <option value="majestic">Majestic</option>
+                                        </optgroup>
+                                        <optgroup label="Mysterious">
+                                            <option value="mysterious">Mysterious</option>
+                                            <option value="dark">Dark</option>
+                                            <option value="moody">Moody</option>
+                                            <option value="eerie">Eerie</option>
+                                            <option value="haunting">Haunting</option>
+                                            <option value="suspenseful">Suspenseful</option>
+                                        </optgroup>
+                                        <optgroup label="Calm">
+                                            <option value="calm">Calm</option>
+                                            <option value="tranquil">Tranquil</option>
+                                            <option value="meditative">Meditative</option>
+                                            <option value="zen">Zen</option>
+                                            <option value="minimalist">Minimalist</option>
+                                        </optgroup>
+                                        <optgroup label="Romantic">
+                                            <option value="romantic">Romantic</option>
+                                            <option value="dreamy">Dreamy</option>
+                                            <option value="whimsical">Whimsical</option>
+                                            <option value="ethereal">Ethereal</option>
+                                            <option value="magical">Magical</option>
+                                        </optgroup>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="colorScheme">Color Scheme</label>
+                                    <select class="pf-select pf-custom-dropdown" id="colorScheme">
+                                        <option value="">Select Color Scheme</option>
+                                        <optgroup label="Warm Colors">
+                                            <option value="warm-tones">Warm Tones</option>
+                                            <option value="red-orange">Red &amp; Orange</option>
+                                            <option value="golden-hour">Golden Hour</option>
+                                            <option value="sunset-colors">Sunset Colors</option>
+                                            <option value="earth-tones">Earth Tones</option>
+                                        </optgroup>
+                                        <optgroup label="Cool Colors">
+                                            <option value="cool-tones">Cool Tones</option>
+                                            <option value="blue-cyan">Blue &amp; Cyan</option>
+                                            <option value="ocean-blues">Ocean Blues</option>
+                                            <option value="winter-colors">Winter Colors</option>
+                                            <option value="mint-green">Mint Green</option>
+                                        </optgroup>
+                                        <optgroup label="Monochromatic">
+                                            <option value="black-white">Black &amp; White</option>
+                                            <option value="sepia">Sepia</option>
+                                            <option value="monochromatic">Monochromatic</option>
+                                            <option value="grayscale">Grayscale</option>
+                                        </optgroup>
+                                        <optgroup label="Vibrant">
+                                            <option value="neon-colors">Neon Colors</option>
+                                            <option value="rainbow">Rainbow</option>
+                                            <option value="saturated">Saturated Colors</option>
+                                            <option value="pastel">Pastel Colors</option>
+                                            <option value="cyberpunk">Cyberpunk Colors</option>
+                                        </optgroup>
+                                        <optgroup label="Natural">
+                                            <option value="forest-green">Forest Green</option>
+                                            <option value="desert-colors">Desert Colors</option>
+                                            <option value="autumn-colors">Autumn Colors</option>
+                                            <option value="spring-colors">Spring Colors</option>
+                                        </optgroup>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field full-width">
+                                    <label for="lighting">Lighting</label>
+                                    <select class="pf-select pf-custom-dropdown" id="lighting">
+                                        <option value="">Select Lighting</option>
+                                        <optgroup label="Natural Light">
+                                            <option value="golden-hour">Golden Hour</option>
+                                            <option value="blue-hour">Blue Hour</option>
+                                            <option value="natural-light">Natural Light</option>
+                                            <option value="sunlight">Bright Sunlight</option>
+                                            <option value="overcast">Overcast</option>
+                                            <option value="sunset">Sunset</option>
+                                            <option value="sunrise">Sunrise</option>
+                                            <option value="moonlight">Moonlight</option>
+                                        </optgroup>
+                                        <optgroup label="Studio Lighting">
+                                            <option value="soft-lighting">Soft Lighting</option>
+                                            <option value="hard-lighting">Hard Lighting</option>
+                                            <option value="dramatic-lighting">Dramatic Lighting</option>
+                                            <option value="rim-lighting">Rim Lighting</option>
+                                            <option value="backlighting">Backlighting</option>
+                                            <option value="key-lighting">Key Lighting</option>
+                                        </optgroup>
+                                        <optgroup label="Atmospheric">
+                                            <option value="volumetric-lighting">Volumetric Lighting</option>
+                                            <option value="god-rays">God Rays</option>
+                                            <option value="atmospheric">Atmospheric Lighting</option>
+                                            <option value="cinematic-lighting">Cinematic Lighting</option>
+                                            <option value="moody-lighting">Moody Lighting</option>
+                                        </optgroup>
+                                        <optgroup label="Artificial">
+                                            <option value="neon-lighting">Neon Lighting</option>
+                                            <option value="led-lighting">LED Lighting</option>
+                                            <option value="fluorescent">Fluorescent</option>
+                                            <option value="candlelight">Candlelight</option>
+                                            <option value="fire-light">Fire Light</option>
+                                        </optgroup>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="artStyle">Art Style</label>
+                                    <select class="pf-select pf-custom-dropdown" id="artStyle">
+                                        <option value="">Select Art Style</option>
+                                        <optgroup label="Photography">
+                                            <option value="photorealistic">Photorealistic</option>
+                                            <option value="portrait-photography">Portrait Photography</option>
+                                            <option value="landscape-photography">Landscape Photography</option>
+                                            <option value="street-photography">Street Photography</option>
+                                            <option value="macro-photography">Macro Photography</option>
+                                        </optgroup>
+                                        <optgroup label="Digital Art">
+                                            <option value="digital-art">Digital Art</option>
+                                            <option value="concept-art">Concept Art</option>
+                                            <option value="matte-painting">Matte Painting</option>
+                                            <option value="3d-render">3D Render</option>
+                                            <option value="pixel-art">Pixel Art</option>
+                                        </optgroup>
+                                        <optgroup label="Traditional Art">
+                                            <option value="oil-painting">Oil Painting</option>
+                                            <option value="watercolor">Watercolor</option>
+                                            <option value="acrylic-painting">Acrylic Painting</option>
+                                            <option value="pencil-drawing">Pencil Drawing</option>
+                                            <option value="charcoal">Charcoal</option>
+                                            <option value="ink-drawing">Ink Drawing</option>
+                                        </optgroup>
+                                        <optgroup label="Artistic Movements">
+                                            <option value="impressionist">Impressionist</option>
+                                            <option value="surrealist">Surrealist</option>
+                                            <option value="abstract">Abstract</option>
+                                            <option value="minimalist">Minimalist</option>
+                                            <option value="baroque">Baroque</option>
+                                            <option value="art-nouveau">Art Nouveau</option>
+                                        </optgroup>
+                                        <optgroup label="Modern Styles">
+                                            <option value="anime-style">Anime Style</option>
+                                            <option value="cartoon">Cartoon</option>
+                                            <option value="comic-book">Comic Book</option>
+                                            <option value="cyberpunk">Cyberpunk</option>
+                                            <option value="steampunk">Steampunk</option>
+                                            <option value="vaporwave">Vaporwave</option>
+                                        </optgroup>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field">
+                                    <label for="composition">Composition</label>
+                                    <select class="pf-select pf-custom-dropdown" id="composition">
+                                        <option value="">Select Composition</option>
+                                        <option value="rule-of-thirds">Rule of Thirds</option>
+                                        <option value="centered">Centered</option>
+                                        <option value="symmetrical">Symmetrical</option>
+                                        <option value="asymmetrical">Asymmetrical</option>
+                                        <option value="leading-lines">Leading Lines</option>
+                                        <option value="framing">Natural Framing</option>
+                                        <option value="diagonal">Diagonal Composition</option>
+                                        <option value="golden-ratio">Golden Ratio</option>
+                                        <option value="triangular">Triangular</option>
+                                        <option value="spiral">Spiral Composition</option>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                                <div class="pf-field full-width">
+                                    <label for="quality">Quality/Detail</label>
+                                    <select class="pf-select pf-custom-dropdown" id="quality">
+                                        <option value="">Select Quality Level</option>
+                                        <option value="ultra-high-quality">Ultra High Quality</option>
+                                        <option value="high-quality">High Quality</option>
+                                        <option value="professional">Professional</option>
+                                        <option value="detailed">Highly Detailed</option>
+                                        <option value="ultra-detailed">Ultra Detailed</option>
+                                        <option value="sharp-focus">Sharp Focus</option>
+                                        <option value="8k-resolution">8K Resolution</option>
+                                        <option value="4k-resolution">4K Resolution</option>
+                                        <option value="masterpiece">Masterpiece</option>
+                                        <option value="award-winning">Award Winning</option>
+                                        <option value="__add_new__">+ Add New Style</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div><!-- /pf-timeline-step 3 -->
+
+                </div><!-- /pf-col-left -->
+
+                <!-- ═══ RIGHT COLUMN ═══ -->
+                <div class="pf-col-right">
+
+                    <!-- Card 4: Style Reference (compact picker) -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">4</span>
+                            <span class="pf-card-title text-cyan">4. Style Reference</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-field">
+                                <label for="srefPicker">Active Style Reference</label>
+                                <select class="pf-select" id="srefPicker">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                            <div id="srefPickerPreview" style="display: none; margin-top: 10px; padding: 10px; border: 1px solid var(--pf-border); border-radius: 8px; background: var(--pf-input-bg);">
+                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div id="srefPickerName" style="font-size: 14px; font-weight: 500; color: var(--pf-text-primary); margin-bottom: 2px;"></div>
+                                        <div id="srefPickerType" style="font-size: 14px; color: var(--pf-text-muted);"></div>
+                                        <div id="srefPickerDesc" style="font-size: 14px; color: var(--pf-text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+                                    </div>
+                                    <button type="button" class="pf-chip" id="srefPickerClear" style="font-size: 14px; padding: 4px 10px; flex-shrink: 0;">Clear</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                                <button type="button" class="pf-chip active" id="srefPickerNew">
+                                    <i class="bi bi-plus-circle"></i> New Sref
+                                </button>
+                                <button type="button" class="pf-chip" id="srefPickerManage">
+                                    <i class="bi bi-collection"></i> Manage
+                                </button>
+                            </div>
+
+                            <!-- Hidden fields that getFormData() reads -->
+                            <input type="hidden" id="srefUrl" value="">
+                            <input type="hidden" id="srefWeight" value="">
+                            <input type="hidden" id="srefCode" value="">
+                            <input type="hidden" id="srefCodeWeight" value="">
+                            <input type="hidden" id="srefImageWeight" value="">
+                            <textarea id="srefExplanation" style="display:none;"></textarea>
+                            <div style="display:none;">
+                                <input type="radio" name="srefType" id="srefTypeUrl" value="url" checked>
+                                <input type="radio" name="srefType" id="srefTypeCode" value="code">
+                                <input type="radio" name="srefType" id="srefTypeImage" value="image">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Generated Output -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge success">5</span>
+                            <span class="pf-card-title">Generated Output</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div id="outputSection" class="output-section">
+                                <p style="color: var(--pf-text-muted); text-align: center; margin: 0; font-size: 14px;">
+                                    Fill out the form and click "Generate Prompt" to see your output here
+                                </p>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <div class="flex gap-1">
+                                    <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-purple" id="copyOutput" disabled>
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                    <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-purple" id="downloadOutput" disabled>
+                                        <i class="bi bi-download"></i> Download
+                                    </button>
+                                    <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-cyan" id="saveToLibrary" disabled>
+                                        <i class="bi bi-bookmark-plus"></i> Save
+                                    </button>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-purple" id="exportAllPrompts">
+                                        <i class="bi bi-download"></i> Export All
+                                    </button>
+                                    <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-purple" id="batchOperations">
+                                        <i class="bi bi-gear"></i> Batch Ops
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                                <button type="button" class="pf-chip" id="clearForm">Clear</button>
+                                <button type="button" class="pf-chip active" id="savePrompt">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 12px; padding: 0 4px;">
+                        <button type="button" class="pf-save-library-btn" id="saveToLibraryBtn" style="flex:1;">
+                            Save to Library
+                        </button>
+                        <button type="submit" class="pf-generate-btn" style="flex:1;">
+                            Generate Prompt
+                        </button>
+                    </div>
+
+                    <!-- Card 6: History -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge neutral">H</span>
+                            <span class="pf-card-title">History</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div id="promptHistory">
+                                <p style="color: var(--pf-text-muted); text-align: center; margin: 0; font-size: 14px;">
+                                    No history yet
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /pf-col-right -->
+
+            </div><!-- /pf-studio-grid -->
+            </form>
+
+            <!-- Library Panel (hidden by default, shown via tab) -->
+            <div id="panel-library" data-pf-panel="library" style="display: none;">
+                <div class="pf-library-panel">
+
+                    <!-- Top Row: Search + Type Filter -->
+                    <div class="pf-library-top-row">
+                        <div class="pf-field" style="flex: 1;">
+                            <label for="unifiedSearchInput">Search Library</label>
+                            <input type="text" class="pf-input" id="unifiedSearchInput"
+                                   placeholder="Search all content...">
+                        </div>
+                        <div class="pf-field pf-field-filter">
+                            <label for="libraryTypeFilter">Type</label>
+                            <select class="pf-select" id="libraryTypeFilter">
+                                <option value="all">All Types</option>
+                                <option value="prompt">Prompts</option>
+                                <option value="sref">Style Refs</option>
+                                <option value="document">Documents</option>
+                                <option value="note">Notes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filter checkboxes (hidden, kept for JS compatibility) -->
+                    <div style="display: none;">
+                        <input type="checkbox" id="searchPrompts" checked>
+                        <input type="checkbox" id="searchDocuments" checked>
+                        <input type="checkbox" id="searchSref" checked>
+                        <input type="checkbox" id="searchNotes" checked>
+                    </div>
+
+                    <!-- Library Counts -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; color: var(--pf-text-muted);">
+                        <span>Prompts: <span id="promptCount">0</span></span>
+                        <span>Documents: <span id="documentCount">0</span></span>
+                        <span>Style Refs: <span id="srefCount">0</span></span>
+                        <span>Notes: <span id="noteCount">0</span></span>
+                    </div>
+
+                    <!-- Prompt Thumbnail Grid -->
+                    <div id="libraryGrid" class="pf-library-grid">
+                        <div class="pf-library-empty" style="grid-column: 1 / -1;">
+                            No saved prompts yet. Generate and save a prompt to see it here.
+                        </div>
+                    </div>
+
+                    <!-- Add to Library Section -->
+                    <div class="pf-card" style="margin-bottom: 16px;">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge neutral">+</span>
+                            <span class="pf-card-title">Add to Library</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-field" style="margin-bottom: 10px;">
+                                <label for="addItemType">Choose type</label>
+                                <select class="pf-select" id="addItemType">
+                                    <option value="">Select type...</option>
+                                    <option value="document">Document</option>
+                                    <option value="website">Website</option>
+                                    <option value="text">Text Note</option>
+                                    <option value="sref">Style Reference</option>
+                                    <option value="prompt">Quick Prompt</option>
+                                </select>
+                            </div>
+                            <div id="addItemContent">
+                                <p style="color: var(--pf-text-muted); text-align: center; font-size: 14px;">Select a type above to add content</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sref Library Section -->
+                    <div class="pf-card" style="margin-bottom: 16px;">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge neutral">S</span>
+                            <span class="pf-card-title">Style References</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <!-- Create / Edit Form -->
+                            <div id="srefFormPanel">
+                                <div class="pf-alert pf-alert-info" style="padding: 0.5rem 1rem; font-size: 14px; margin-bottom: 0.75rem;">
+                                    <i class="bi bi-info-circle"></i> Midjourney supports <code>--sref</code> / <code>--sw</code>. Other models will keep this as a plain-language note.
+                                </div>
+                                <div style="margin-bottom: 0.75rem;">
+                                    <label class="pf-card-title" style="font-size: 14px; margin-bottom: 6px; display: block;">Reference Type</label>
+                                    <div class="pf-radio-pills" style="width: 100%;">
+                                        <input type="radio" name="srefFormType" id="srefFormTypeUrl" value="url" checked>
+                                        <label for="srefFormTypeUrl">
+                                            <i class="bi bi-link-45deg"></i> URL
+                                        </label>
+                                        <input type="radio" name="srefFormType" id="srefFormTypeCode" value="code">
+                                        <label for="srefFormTypeCode">
+                                            <i class="bi bi-hash"></i> Code
+                                        </label>
+                                        <input type="radio" name="srefFormType" id="srefFormTypeImage" value="image">
+                                        <label for="srefFormTypeImage">
+                                            <i class="bi bi-image"></i> Upload
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- URL Input (default) -->
+                                <div id="srefFormUrlSection" class="sref-form-section">
+                                    <div class="pf-params-grid" style="margin-bottom: 10px;">
+                                        <div class="pf-field">
+                                            <label for="srefFormUrl">Reference URL</label>
+                                            <input type="text" class="pf-input" id="srefFormUrl"
+                                                   placeholder="https://example.com/style-image.jpg">
+                                        </div>
+                                        <div class="pf-field">
+                                            <label for="srefFormWeight">Weight</label>
+                                            <input type="number" class="pf-input" id="srefFormWeight"
+                                                   min="0" max="1000" step="50" placeholder="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Code Input -->
+                                <div id="srefFormCodeSection" class="sref-form-section" style="display: none;">
+                                    <div class="pf-params-grid" style="margin-bottom: 10px;">
+                                        <div class="pf-field">
+                                            <label for="srefFormCode">Sref Code</label>
+                                            <input type="text" class="pf-input" id="srefFormCode"
+                                                   placeholder="123456789 or 2342323dff">
+                                            <small style="color: var(--pf-text-muted); font-size: 14px;">Enter Midjourney style code (numbers or alphanumeric)</small>
+                                        </div>
+                                        <div class="pf-field">
+                                            <label for="srefFormCodeWeight">Weight</label>
+                                            <input type="number" class="pf-input" id="srefFormCodeWeight"
+                                                   min="0" max="1000" step="50" placeholder="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Image Upload -->
+                                <div id="srefFormImageSection" class="sref-form-section" style="display: none;">
+                                    <div class="pf-field" style="margin-bottom: 10px;">
+                                        <label for="srefFormImageUpload">Upload Reference Image</label>
+                                        <input type="file" class="pf-input" id="srefFormImageUpload" accept="image/*">
+                                        <small style="color: var(--pf-text-muted); font-size: 14px;">Upload an image to use as style reference (will be converted to data URL)</small>
+                                    </div>
+                                    <div id="srefFormImagePreview" style="display: none; margin-bottom: 0.75rem;">
+                                        <img id="srefFormPreviewImg" src="" alt="Preview" class="rounded border p-1" style="max-height: 150px;">
+                                        <button type="button" class="pf-btn pf-btn-sm pf-btn-outline-danger" style="margin-left: 0.5rem;" onclick="app.clearSrefFormImage()">
+                                            <i class="bi bi-x"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="pf-field">
+                                        <label for="srefFormImageWeight">Weight</label>
+                                        <input type="number" class="pf-input" id="srefFormImageWeight"
+                                               min="0" max="1000" step="50" placeholder="100">
+                                    </div>
+                                </div>
+
+                                <div class="pf-field" style="margin-top: 10px;">
+                                    <label for="srefFormName">Name</label>
+                                    <input type="text" class="pf-input" id="srefFormName" placeholder="My Style Ref">
+                                </div>
+                                <div class="pf-field" style="margin-top: 10px;">
+                                    <label for="srefFormExplanation">Style Description</label>
+                                    <textarea class="pf-textarea" id="srefFormExplanation" rows="2"
+                                              placeholder="Describe the style, mood, or artistic approach this reference provides..."></textarea>
+                                </div>
+                                <div style="display: flex; gap: 6px; margin-top: 10px;">
+                                    <button type="button" class="pf-chip active" id="srefFormSave">
+                                        <i class="bi bi-save"></i> Save to Library
+                                    </button>
+                                    <button type="button" class="pf-chip" id="srefFormClear">Clear Form</button>
+                                </div>
+                            </div>
+
+                            <!-- Saved Sref Library List -->
+                            <div style="margin-top: 16px; border-top: 1px solid var(--pf-border); padding-top: 12px;">
+                                <label class="pf-card-title" style="font-size: 14px; margin-bottom: 8px; display: block;">Saved References</label>
+                                <div id="srefLibraryList">
+                                    <p style="color: var(--pf-text-muted); text-align: center; font-size: 14px;">
+                                        No saved style references yet
                                     </p>
                                 </div>
-                                <div class="flex justify-between items-center mt-3">
-                                    <div class="flex gap-1 flex-wrap" role="group">
-                                        <button type="button" class="pf-btn pf-btn-outline-purple" id="copyOutput" disabled>
-                                            <i class="bi bi-clipboard"></i> Copy
-                                        </button>
-                                        <button type="button" class="pf-btn pf-btn-outline-purple" id="downloadOutput" disabled>
-                                            <i class="bi bi-download"></i> Download
-                                        </button>
-                                        <button type="button" class="pf-btn pf-btn-outline-cyan" id="saveToLibrary" disabled>
-                                            <i class="bi bi-bookmark-plus"></i> Save
-                                        </button>
-                                    </div>
-                                    <div class="flex gap-1 flex-wrap" role="group">
-                                        <button type="button" class="pf-btn pf-btn-outline-purple pf-btn-sm" id="exportAllPrompts">
-                                            <i class="bi bi-download"></i> Export All
-                                        </button>
-                                        <button type="button" class="pf-btn pf-btn-secondary pf-btn-sm" id="batchOperations">
-                                            <i class="bi bi-gear"></i> Batch Ops
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column - Unified Library -->
-                    <div class="lg:col-span-4">
-                        <!-- Library Management -->
-                        <div class="pf-card mb-4">
-                            <div class="pf-card-head bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center gap-2 flex-wrap">
-                                <h5 class="mb-0"><i class="bi bi-collection"></i> Library</h5>
-                                <div class="flex gap-1 flex-wrap">
-                                    <button type="button" class="pf-btn pf-btn-outline-light pf-btn-sm" id="saveSettingsBtn">
-                                        <i class="bi bi-gear"></i> Save
-                                    </button>
-                                    <button type="button" class="pf-btn pf-btn-outline-light pf-btn-sm" id="llmSettingsBtn">
-                                        <i class="bi bi-cpu"></i> LLM
-                                    </button>
-                                    <button type="button" class="pf-btn pf-btn-outline-light pf-btn-sm" onclick="app.manageCustomOptions()" title="Manage Custom Dropdown Options">
-                                        <i class="bi bi-sliders"></i> Options
-                                    </button>
-                                    <button type="button" class="pf-btn pf-btn-outline-light pf-btn-sm" id="clearAllLibrary">
-                                        <i class="bi bi-trash"></i> Clear All
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="pf-card-body">
-                                <!-- Add New Item -->
-                                <div class="mb-4">
-                                    <label for="addItemType" class="pf-label-text font-semibold">
-                                        <i class="bi bi-plus-circle"></i> Add to Library
-                                    </label>
-                                    <select class="pf-select mb-3" id="addItemType">
-                                        <option value="">Select type...</option>
-                                        <option value="document">📄 Document</option>
-                                        <option value="website">🌐 Website</option>
-                                        <option value="text">📝 Text Note</option>
-                                        <option value="sref">🎨 Style Reference</option>
-                                        <option value="prompt">⚡ Quick Prompt</option>
-                                    </select>
-                                    
-                                    <!-- Dynamic content area based on selection -->
-                                    <div id="addItemContent">
-                                        <p class="text-muted text-center">Select a type above to add content</p>
-                                    </div>
-                                </div>
+                    <!-- Unified Search Results (hidden container, used by performUnifiedSearch) -->
+                    <div style="display: none;">
+                        <div id="unifiedSearchResults"></div>
+                    </div>
 
-                                <!-- Sref Library Section -->
-                                <div class="pf-card mb-4 border border-cyan-500/40">
-                                    <div class="pf-card-head bg-gradient-to-r from-cyan-600 to-teal-600 text-white">
-                                        <h6 class="mb-0"><i class="bi bi-palette2"></i> Style References</h6>
-                                    </div>
-                                    <div class="pf-card-body">
-                                        <div id="srefFormPanel">
-                                            <div class="pf-alert pf-alert-info mb-3 text-sm p-2">
-                                                <i class="bi bi-info-circle"></i> Midjourney supports <code>--sref</code> / <code>--sw</code>. Other models will keep this as a plain-language note.
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="pf-label-text font-semibold text-xs mb-1 block">Reference Type</label>
-                                                <div class="pf-radio-pills w-full" role="group">
-                                                    <input type="radio" class="hidden" name="srefFormType" id="srefFormTypeUrl" value="url" checked>
-                                                    <label for="srefFormTypeUrl">
-                                                        <i class="bi bi-link-45deg"></i> URL
-                                                    </label>
-                                                    <input type="radio" class="hidden" name="srefFormType" id="srefFormTypeCode" value="code">
-                                                    <label for="srefFormTypeCode">
-                                                        <i class="bi bi-hash"></i> Code
-                                                    </label>
-                                                    <input type="radio" class="hidden" name="srefFormType" id="srefFormTypeImage" value="image">
-                                                    <label for="srefFormTypeImage">
-                                                        <i class="bi bi-image"></i> Upload
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <!-- URL Input (default) -->
-                                            <div id="srefFormUrlSection" class="sref-form-section">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                                                    <div>
-                                                        <label for="srefFormUrl" class="pf-label-text font-semibold">Reference URL</label>
-                                                        <input type="text" class="pf-input-field" id="srefFormUrl"
-                                                               placeholder="https://example.com/style-image.jpg">
-                                                    </div>
-                                                    <div>
-                                                        <label for="srefFormWeight" class="pf-label-text font-semibold">Weight</label>
-                                                        <input type="number" class="pf-input-field" id="srefFormWeight"
-                                                               min="0" max="1000" step="50" placeholder="100">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Code Input -->
-                                            <div id="srefFormCodeSection" class="sref-form-section" style="display: none;">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                                                    <div>
-                                                        <label for="srefFormCode" class="pf-label-text font-semibold">Sref Code</label>
-                                                        <input type="text" class="pf-input-field" id="srefFormCode"
-                                                               placeholder="123456789 or 2342323dff">
-                                                        <small class="text-muted text-xs">Enter Midjourney style code (numbers or alphanumeric)</small>
-                                                    </div>
-                                                    <div>
-                                                        <label for="srefFormCodeWeight" class="pf-label-text font-semibold">Weight</label>
-                                                        <input type="number" class="pf-input-field" id="srefFormCodeWeight"
-                                                               min="0" max="1000" step="50" placeholder="100">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Image Upload -->
-                                            <div id="srefFormImageSection" class="sref-form-section" style="display: none;">
-                                                <div class="mb-3">
-                                                    <label for="srefFormImageUpload" class="pf-label-text font-semibold">Upload Reference Image</label>
-                                                    <input type="file" class="pf-input-field" id="srefFormImageUpload" accept="image/*">
-                                                    <small class="text-muted text-xs">Upload an image to use as style reference (will be converted to data URL)</small>
-                                                </div>
-                                                <div id="srefFormImagePreview" class="mb-3" style="display: none;">
-                                                    <img id="srefFormPreviewImg" src="" alt="Preview" class="rounded border border-slate-600 p-1" style="max-height: 150px;">
-                                                    <button type="button" class="pf-btn pf-btn-outline-danger pf-btn-sm ml-2" onclick="app.clearSrefFormImage()">
-                                                        <i class="bi bi-x"></i> Remove
-                                                    </button>
-                                                </div>
-                                                <div>
-                                                    <label for="srefFormImageWeight" class="pf-label-text font-semibold">Weight</label>
-                                                    <input type="number" class="pf-input-field" id="srefFormImageWeight"
-                                                           min="0" max="1000" step="50" placeholder="100">
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3 mt-3">
-                                                <label for="srefFormName" class="pf-label-text font-semibold">Name</label>
-                                                <input type="text" class="pf-input-field" id="srefFormName" placeholder="My Style Ref">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="srefFormExplanation" class="pf-label-text font-semibold">Style Description</label>
-                                                <textarea class="pf-input-field" id="srefFormExplanation" rows="2"
-                                                          placeholder="Describe the style, mood, or artistic approach this reference provides..."></textarea>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <button type="button" class="pf-btn pf-btn-outline-cyan pf-btn-sm" id="srefFormSave">
-                                                    <i class="bi bi-save"></i> Save to Library
-                                                </button>
-                                                <button type="button" class="pf-btn pf-btn-secondary pf-btn-sm" id="srefFormClear">Clear Form</button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Saved Sref Library List -->
-                                        <div class="mt-4 pt-3 border-t border-slate-600">
-                                            <label class="pf-label-text font-semibold text-xs mb-2 block">Saved References</label>
-                                            <div id="srefLibraryList">
-                                                <p class="text-muted text-center text-sm">No saved style references yet</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Unified Search -->
-                                <div class="mb-3">
-                                    <label for="unifiedSearchInput" class="pf-label-text font-semibold">
-                                        <i class="bi bi-search"></i> Search Library
-                                    </label>
-                                    <input type="text" class="pf-input-field" id="unifiedSearchInput" 
-                                           placeholder="Search all content...">
-                                    <div class="mt-2">
-                                        <div class="pf-form-check inline-flex items-center mr-3 mb-1">
-                                            <input class="pf-form-check-input" type="checkbox" id="searchPrompts" checked>
-                                            <label class="pf-form-check-label" for="searchPrompts">
-                                                Prompts <span class="pf-badge pf-badge-muted" id="promptCount">0</span>
-                                            </label>
-                                        </div>
-                                        <div class="pf-form-check inline-flex items-center mr-3 mb-1">
-                                            <input class="pf-form-check-input" type="checkbox" id="searchDocuments" checked>
-                                            <label class="pf-form-check-label" for="searchDocuments">
-                                                Documents <span class="pf-badge pf-badge-muted" id="documentCount">0</span>
-                                            </label>
-                                        </div>
-                                        <div class="pf-form-check inline-flex items-center mr-3 mb-1">
-                                            <input class="pf-form-check-input" type="checkbox" id="searchSref" checked>
-                                            <label class="pf-form-check-label" for="searchSref">
-                                                Style Refs <span class="pf-badge pf-badge-muted" id="srefCount">0</span>
-                                            </label>
-                                        </div>
-                                        <div class="pf-form-check inline-flex items-center mr-3 mb-1">
-                                            <input class="pf-form-check-input" type="checkbox" id="searchNotes" checked>
-                                            <label class="pf-form-check-label" for="searchNotes">
-                                                Notes <span class="pf-badge pf-badge-muted" id="noteCount">0</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Search Results -->
-                                <div style="max-height: 500px; overflow-y: auto;">
-                                    <div id="unifiedSearchResults">
-                                        <p class="text-muted text-center">Use search above to find content</p>
-                                    </div>
-                                </div>
+                    <!-- Settings Row -->
+                    <div class="pf-card" style="margin-bottom: 16px;">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge neutral"><i class="bi bi-gear"></i></span>
+                            <span class="pf-card-title">Settings</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                <button type="button" class="pf-chip" id="saveSettingsBtn">
+                                    <i class="bi bi-gear"></i> Save Settings
+                                </button>
+                                <button type="button" class="pf-chip" id="llmSettingsBtn">
+                                    <i class="bi bi-cpu"></i> LLM Settings
+                                </button>
+                                <button type="button" class="pf-chip" onclick="app.manageCustomOptions()" title="Manage Custom Dropdown Options">
+                                    <i class="bi bi-sliders"></i> Custom Options
+                                </button>
+                                <button type="button" class="pf-chip" id="clearAllLibrary">
+                                    <i class="bi bi-trash"></i> Clear All
+                                </button>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Privacy Link -->
+                    <div style="padding-top: 12px; border-top: 1px solid var(--pf-border); text-align: center;">
+                        <a href="privacy.html" target="_blank" style="color: var(--pf-text-muted); font-size: 14px; text-decoration: none;">
+                            <i class="bi bi-shield-check"></i> Security and Privacy Information
+                        </a>
+                    </div>
+
                 </div>
-            </section>
+            </div>
+
+            <!-- Config Panel (hidden by default, shown via tab) -->
+            <div id="panel-config" data-pf-panel="config" style="display: none;">
+                <div class="pf-config-panel">
+
+                    <!-- Section 1: Data Storage -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">1</span>
+                            <span class="pf-card-title">Data Storage</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-radio-pills" id="storagePills">
+                                <input type="radio" name="storageMode" id="storageModeLocal" value="localstorage" checked>
+                                <label for="storageModeLocal">Browser localStorage</label>
+                                <input type="radio" name="storageMode" id="storageModeFS" value="filesystem">
+                                <label for="storageModeFS">File System</label>
+                                <input type="radio" name="storageMode" id="storageModeElectron" value="electron">
+                                <label for="storageModeElectron">Electron app data</label>
+                            </div>
+
+                            <div id="storageModeDesc" class="pf-config-desc"></div>
+
+                            <div id="storageWarning" class="pf-storage-warning" style="display:none;"></div>
+
+                            <div id="storageFolderArea" style="display:none;">
+                                <button type="button" class="pf-chip" id="chooseFolderBtn" style="margin-top:10px;">
+                                    <i class="bi bi-folder2-open"></i> Choose Folder
+                                </button>
+                                <div id="storageFolderDisplay" class="pf-folder-display" style="display:none;">
+                                    <i class="bi bi-folder-check"></i>
+                                    <span id="storageFolderName"></span>
+                                    <button type="button" class="pf-chip" id="changeFolderBtn" style="font-size:14px; padding:4px 10px; margin-left:4px;">Change</button>
+                                </div>
+                            </div>
+
+                            <div id="storageElectronArea" style="display:none;">
+                                <div id="electronPathDisplay" class="pf-electron-path" style="display:none;">
+                                    <i class="bi bi-hdd"></i>
+                                    <span id="electronPathValue"></span>
+                                </div>
+                                <button type="button" class="pf-chip" id="electronChangeFolderBtn" style="margin-top:8px;">
+                                    <i class="bi bi-folder2-open"></i> Change location
+                                </button>
+                            </div>
+
+                            <!-- Live status card -->
+                            <div class="pf-storage-status" id="storageStatusCard">
+                                <div class="pf-storage-status-grid">
+                                    <div class="pf-storage-stat">
+                                        <span class="pf-storage-stat-label">Mode</span>
+                                        <span class="pf-storage-stat-value"><span class="pf-storage-mode-badge" id="statusModeBadge">—</span></span>
+                                    </div>
+                                    <div class="pf-storage-stat">
+                                        <span class="pf-storage-stat-label">Location</span>
+                                        <span class="pf-storage-stat-value" id="statusLocation">—</span>
+                                    </div>
+                                    <div class="pf-storage-stat">
+                                        <span class="pf-storage-stat-label">Last saved</span>
+                                        <span class="pf-storage-stat-value" id="statusLastSaved">—</span>
+                                    </div>
+                                    <div class="pf-storage-stat">
+                                        <span class="pf-storage-stat-label">Data size</span>
+                                        <span class="pf-storage-stat-value" id="statusDataSize">—</span>
+                                    </div>
+                                </div>
+                                <div class="pf-storage-actions">
+                                    <button type="button" class="pf-chip active" id="saveNowBtn">
+                                        <i class="bi bi-save"></i> Save now
+                                    </button>
+                                    <button type="button" class="pf-chip" id="migrateBtn" style="display:none;">
+                                        <i class="bi bi-arrow-repeat"></i> Migrate from browser storage
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Migration confirmation card -->
+                            <div id="migrateConfirmCard" class="pf-migrate-card" style="display:none;">
+                                <p id="migrateConfirmText"></p>
+                                <div class="pf-migrate-actions">
+                                    <button type="button" class="pf-chip active" id="migrateConfirmBtn">
+                                        <i class="bi bi-check-circle"></i> Copy data
+                                    </button>
+                                    <button type="button" class="pf-chip" id="migrateCancelBtn">Cancel</button>
+                                </div>
+                            </div>
+
+                            <!-- Migration success state -->
+                            <div id="migrateSuccessCard" class="pf-migrate-success" style="display:none;">
+                                <i class="bi bi-check-circle-fill"></i> Data migrated successfully.
+                                <button type="button" class="pf-chip" id="migrateClearLSBtn" style="margin-left:8px; font-size:14px;">
+                                    Clear browser storage
+                                </button>
+                            </div>
+
+                            <div class="pf-config-note">
+                                File System mode requires Chrome or Edge 86+. Electron mode available in the desktop app.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Model Registry -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">2</span>
+                            <span class="pf-card-title">Model Registry</span>
+                        </div>
+                        <div class="pf-card-body">
+
+                            <!-- Check for updates -->
+                            <div class="pf-check-updates-bar">
+                                <button type="button" class="pf-chip" id="checkUpdatesBtn">
+                                    <i class="bi bi-arrow-clockwise"></i> Check for updates
+                                </button>
+                                <span class="pf-check-last" id="checkUpdatesLast"></span>
+                            </div>
+                            <div class="pf-update-summary" id="updateSummary"></div>
+
+                            <!-- Model table -->
+                            <table class="pf-model-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Version</th>
+                                        <th>Latest Mention</th>
+                                        <th>Changelog</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modelRegistryBody"></tbody>
+                            </table>
+
+                            <!-- Import from URL -->
+                            <div class="pf-url-import-bar">
+                                <input class="pf-input" id="importUrlInput" placeholder="Paste a model page URL to auto-fill" type="url">
+                                <button type="button" class="pf-chip active" id="importUrlBtn">
+                                    <i class="bi bi-link-45deg"></i> Import from URL
+                                </button>
+                            </div>
+                            <div class="pf-url-preview" id="importUrlPreview">
+                                <div class="pf-url-preview-title">Extracted model info</div>
+                                <div class="pf-url-preview-grid">
+                                    <div class="pf-field"><label>Name</label>
+                                        <input class="pf-input" id="importName"></div>
+                                    <div class="pf-field"><label>Category</label>
+                                        <select class="pf-select" id="importCategory">
+                                            <option value="image">Image</option>
+                                            <option value="video">Video</option>
+                                            <option value="text">Text</option>
+                                            <option value="custom">Custom</option>
+                                        </select></div>
+                                    <div class="pf-field"><label>Version</label>
+                                        <input class="pf-input" id="importVersion"></div>
+                                    <div class="pf-field"><label>Released</label>
+                                        <input class="pf-input" id="importReleaseDate" placeholder="e.g. 2025-03"></div>
+                                    <div class="pf-field"><label>Changelog URL</label>
+                                        <input class="pf-input" id="importChangelog"></div>
+                                    <div class="pf-field"><label>Check URL</label>
+                                        <input class="pf-input" id="importCheckUrl"></div>
+                                    <div class="pf-field" style="grid-column:1/-1"><label>Prompt tips</label>
+                                        <textarea class="pf-textarea" id="importNotes" rows="2" placeholder="How to prompt this model well…"></textarea></div>
+                                </div>
+                                <div class="pf-url-preview-confidence" id="importConfidenceArea">
+                                    Confidence: <span class="pf-confidence-badge" id="importConfidenceBadge"></span>
+                                    <span id="importConfidenceHint" style="margin-left:4px;"></span>
+                                </div>
+                                <div class="pf-url-preview-actions">
+                                    <button type="button" class="pf-chip active" id="importAddBtn">
+                                        <i class="bi bi-check-circle"></i> Add to registry
+                                    </button>
+                                    <button type="button" class="pf-chip" id="importCancelBtn">Cancel</button>
+                                </div>
+                            </div>
+
+                            <!-- Add model toggle + form -->
+                            <div style="margin-top: 12px;">
+                                <button type="button" class="pf-chip" id="addModelBtn">
+                                    <i class="bi bi-plus-circle"></i> Add model
+                                </button>
+                            </div>
+                            <div class="pf-add-model-form" id="addModelForm">
+                                <div class="pf-add-model-grid">
+                                    <div class="pf-field">
+                                        <label>Name *</label>
+                                        <input class="pf-input" id="newModelName" placeholder="Model name">
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Category *</label>
+                                        <select class="pf-select" id="newModelCategory">
+                                            <option value="image">Image</option>
+                                            <option value="video">Video</option>
+                                            <option value="text">Text</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Version *</label>
+                                        <input class="pf-input" id="newModelVersion" placeholder="e.g. 1.0">
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Release date</label>
+                                        <input class="pf-input" id="newModelReleaseDate" placeholder="e.g. 2025-03">
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Changelog URL</label>
+                                        <input class="pf-input" id="newModelChangelog" placeholder="https://...">
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Check URL</label>
+                                        <input class="pf-input" id="newModelCheckUrl" placeholder="https://...">
+                                    </div>
+                                    <div class="pf-field">
+                                        <label>Prompt tips</label>
+                                        <textarea class="pf-textarea" id="newModelNotes" rows="2" placeholder="How to prompt this model well…"></textarea>
+                                    </div>
+                                </div>
+                                <div class="pf-add-model-hint">This model's prompts will appear in the Model Used dropdown.</div>
+                                <div style="margin-top:10px; display:flex; gap:8px;">
+                                    <button type="button" class="pf-chip active" id="saveNewModelBtn">
+                                        <i class="bi bi-check-circle"></i> Add model
+                                    </button>
+                                    <button type="button" class="pf-chip" id="cancelNewModelBtn">Cancel</button>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                                <button type="button" class="pf-chip" id="refreshBuiltInTipsBtn" title="Reload current built-in prompt tips and versions">
+                                    <i class="bi bi-arrow-repeat"></i> Refresh built-in tips
+                                </button>
+                            </div>
+                            <div class="pf-config-note" style="margin-top:10px;">
+                                <strong>Keep models current:</strong> Use Check for Updates, edit a row to bump the version, or paste docs in Library with “Applies to model” selected. Prompt tips on each model are used when generating.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Appearance -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">3</span>
+                            <span class="pf-card-title">Appearance</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <div class="pf-field">
+                                <label style="margin-bottom: 6px; display: block;">Accent Color</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 28px; height: 28px; border-radius: 6px; background: var(--pf-accent); border: 1px solid var(--pf-border); opacity: 0.4;"></div>
+                                    <span class="pf-coming-soon">Coming soon</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Export & Backup -->
+                    <div class="pf-card">
+                        <div class="pf-card-head">
+                            <span class="pf-num-badge">4</span>
+                            <span class="pf-card-title">Export &amp; Backup</span>
+                        </div>
+                        <div class="pf-card-body">
+                            <label style="font-size: 14px; color: var(--pf-text-muted); margin-bottom: 8px; display: block;">Export library as</label>
+                            <div class="pf-export-grid">
+                                <button type="button" class="pf-export-btn" data-config-export="json">
+                                    <i class="bi bi-filetype-json"></i> JSON
+                                </button>
+                                <button type="button" class="pf-export-btn" data-config-export="markdown">
+                                    <i class="bi bi-filetype-md"></i> Markdown
+                                </button>
+                                <button type="button" class="pf-export-btn" data-config-export="csv">
+                                    <i class="bi bi-filetype-csv"></i> CSV
+                                </button>
+                                <button type="button" class="pf-export-btn" data-config-export="txt">
+                                    <i class="bi bi-filetype-txt"></i> Plain Text
+                                </button>
+                            </div>
+
+                            <div style="margin-top: 16px;">
+                                <label style="font-size: 14px; color: var(--pf-text-muted); margin-bottom: 8px; display: block;">Auto-backup</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--pf-text-secondary); cursor: pointer;">
+                                        <input type="checkbox" id="configAutoBackup"> Enable auto-backup on close
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="pf-backup-info">
+                                <span id="configLastBackup">Last backup: never</span>
+                                <button type="button" class="pf-chip" id="configManualBackup">
+                                    <i class="bi bi-save"></i> Backup Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script src="storage-manager.js"></script>
+    <script src="model-registry.js"></script>
+    <script src="version-checker.js"></script>
     <script src="app.js"></script>
     
     <!-- PWA Registration -->
@@ -811,20 +1127,750 @@
         }
 
 
+        // Topbar nav pill tabs
+        document.querySelectorAll('.pf-nav-pill[data-pf-tab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pf-nav-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-pf-tab');
+                document.querySelectorAll('[data-pf-panel]').forEach(panel => {
+                    panel.style.display = panel.getAttribute('data-pf-panel') === tab ? '' : 'none';
+                });
+                if (tab === 'library') {
+                    renderLibraryGrid();
+                    renderSrefLibraryList();
+                    if (window.app) window.app.updateLibraryCounts();
+                }
+            });
+        });
+
+        // Library type filter
+        const libraryTypeFilter = document.getElementById('libraryTypeFilter');
+        if (libraryTypeFilter) {
+            libraryTypeFilter.addEventListener('change', () => renderLibraryGrid());
+        }
+
+        function getTypeSwatchClass(type) {
+            const map = {
+                'text-to-image': 'type-text-to-image',
+                'image-to-video': 'type-image-to-video',
+                'text-to-video': 'type-text-to-video',
+                'text-to-text': 'type-text-to-text',
+                'image-to-image': 'type-image-to-image'
+            };
+            return map[type] || 'type-default';
+        }
+
+        function renderLibraryGrid() {
+            const grid = document.getElementById('libraryGrid');
+            if (!grid || !window.app) return;
+
+            const query = (document.getElementById('unifiedSearchInput')?.value || '').toLowerCase();
+            const typeFilter = document.getElementById('libraryTypeFilter')?.value || 'all';
+
+            let prompts = window.app.promptLibrary || [];
+
+            if (query) {
+                prompts = prompts.filter(p =>
+                    (p.name || '').toLowerCase().includes(query) ||
+                    (p.startingPrompt || '').toLowerCase().includes(query) ||
+                    (p.model || '').toLowerCase().includes(query)
+                );
+            }
+            if (typeFilter === 'prompt') {
+                // show all prompts (already filtered)
+            } else if (typeFilter !== 'all') {
+                prompts = [];
+            }
+
+            grid.replaceChildren();
+
+            if (prompts.length === 0 && typeFilter !== 'all' && typeFilter !== 'prompt') {
+                const empty = document.createElement('div');
+                empty.className = 'pf-library-empty';
+                empty.style.gridColumn = '1 / -1';
+                empty.textContent = 'No items match this filter.';
+                grid.appendChild(empty);
+                return;
+            }
+
+            if (prompts.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'pf-library-empty';
+                empty.style.gridColumn = '1 / -1';
+                empty.textContent = query ? 'No prompts match your search.' : 'No saved prompts yet. Generate and save a prompt to see it here.';
+                grid.appendChild(empty);
+                return;
+            }
+
+            prompts.forEach(prompt => {
+                const card = document.createElement('div');
+                card.className = 'pf-library-thumb';
+                card.onclick = () => {
+                    window.app.loadPrompt(prompt.id);
+                    document.querySelector('.pf-nav-pill[data-pf-tab="studio"]')?.click();
+                };
+
+                const swatch = document.createElement('div');
+                swatch.className = 'pf-library-thumb-swatch ' + getTypeSwatchClass(prompt.type);
+
+                const body = document.createElement('div');
+                body.className = 'pf-library-thumb-body';
+
+                const label = document.createElement('div');
+                label.className = 'pf-library-thumb-label';
+                label.textContent = (prompt.model || 'Unknown') + ' · ' + (prompt.type || 'prompt');
+
+                const text = document.createElement('div');
+                text.className = 'pf-library-thumb-text';
+                text.textContent = prompt.startingPrompt || prompt.name || 'No content';
+
+                body.append(label, text);
+
+                const actions = document.createElement('div');
+                actions.className = 'pf-library-thumb-actions';
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'pf-chip';
+                delBtn.textContent = 'Delete';
+                delBtn.style.fontSize = '10px';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.app.deletePrompt(prompt.id);
+                    renderLibraryGrid();
+                };
+                actions.appendChild(delBtn);
+
+                card.append(swatch, body, actions);
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSrefLibraryList() {
+            const container = document.getElementById('srefLibraryList');
+            if (!container || !window.app) return;
+
+            const srefs = window.app.srefLibrary || [];
+            container.replaceChildren();
+
+            if (srefs.length === 0) {
+                const p = document.createElement('p');
+                p.style.cssText = 'color: var(--pf-text-muted); text-align: center; font-size: 14px;';
+                p.textContent = 'No saved style references yet';
+                container.appendChild(p);
+                return;
+            }
+
+            srefs.forEach(sref => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--pf-border); font-size: 14px;';
+
+                const info = document.createElement('div');
+                info.style.cssText = 'flex: 1; overflow: hidden;';
+
+                const name = document.createElement('div');
+                name.style.cssText = 'color: var(--pf-text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                name.textContent = sref.name || 'Untitled';
+
+                const desc = document.createElement('div');
+                desc.style.cssText = 'color: var(--pf-text-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                desc.textContent = sref.explanation || 'No description';
+
+                info.append(name, desc);
+
+                const btnGroup = document.createElement('div');
+                btnGroup.style.cssText = 'display: flex; gap: 4px; flex-shrink: 0;';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'pf-chip';
+                loadBtn.textContent = 'Load';
+                loadBtn.style.fontSize = '10px';
+                loadBtn.onclick = () => {
+                    window.app.loadSref(sref.id);
+                    document.querySelector('.pf-nav-pill[data-pf-tab="studio"]')?.click();
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'pf-chip';
+                delBtn.textContent = 'Delete';
+                delBtn.style.fontSize = '10px';
+                delBtn.onclick = () => {
+                    window.app.deleteSref(sref.id);
+                    renderSrefLibraryList();
+                };
+
+                btnGroup.append(loadBtn, delBtn);
+                row.append(info, btnGroup);
+                container.appendChild(row);
+            });
+        }
+
+        // Library search input handler
+        const libSearchInput = document.getElementById('unifiedSearchInput');
+        if (libSearchInput) {
+            libSearchInput.addEventListener('input', () => {
+                const panel = document.getElementById('panel-library');
+                if (panel && panel.style.display !== 'none') {
+                    renderLibraryGrid();
+                }
+            });
+        }
+
+        // ── Config Panel wiring ──────────────────────
+
+        // ── Data Storage: live status ────────────────
+        const storageModeDescs = {
+            localstorage: 'Data is stored in your browser\'s localStorage. Private to this browser and cleared if you clear site data. ~5 MB limit.',
+            filesystem: 'Data is saved as a JSON file in a folder you choose. Portable, easy to back up, and not tied to a single browser.',
+            electron: 'Data is stored in the Electron app\'s user-data directory. Fast and reliable, available only in the desktop app.'
+        };
+        const storageModeLabels = { localstorage: 'localStorage', filesystem: 'File System', electron: 'Electron' };
+
+        const $desc     = document.getElementById('storageModeDesc');
+        const $warning  = document.getElementById('storageWarning');
+        const $folderArea   = document.getElementById('storageFolderArea');
+        const $folderDisp   = document.getElementById('storageFolderDisplay');
+        const $folderName   = document.getElementById('storageFolderName');
+        const $electronArea = document.getElementById('storageElectronArea');
+        const $electronPath = document.getElementById('electronPathDisplay');
+        const $electronVal  = document.getElementById('electronPathValue');
+        const $modeBadge    = document.getElementById('statusModeBadge');
+        const $location     = document.getElementById('statusLocation');
+        const $lastSaved    = document.getElementById('statusLastSaved');
+        const $dataSize     = document.getElementById('statusDataSize');
+        const $migrateBtn   = document.getElementById('migrateBtn');
+        const $migrateCard  = document.getElementById('migrateConfirmCard');
+        const $migrateText  = document.getElementById('migrateConfirmText');
+        const $migrateOk    = document.getElementById('migrateConfirmBtn');
+        const $migrateNo    = document.getElementById('migrateCancelBtn');
+        const $migrateDone  = document.getElementById('migrateSuccessCard');
+        const $migrateClear = document.getElementById('migrateClearLSBtn');
+
+        function formatBytes(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(2) + ' MB';
+        }
+
+        function formatTime(iso) {
+            if (!iso) return 'never';
+            try {
+                return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch { return iso; }
+        }
+
+        function refreshStorageStatus() {
+            const info = StorageManager.getStorageInfo();
+            const mode = info.mode;
+
+            if ($modeBadge) {
+                $modeBadge.textContent = storageModeLabels[mode] || mode;
+                $modeBadge.setAttribute('data-mode', mode);
+            }
+
+            let loc = 'Browser';
+            if (mode === 'filesystem' && info.folderName) loc = info.folderName;
+            else if (mode === 'electron') loc = 'App data';
+            if ($location) $location.textContent = loc;
+
+            if ($lastSaved) $lastSaved.textContent = formatTime(info.lastSaved);
+            if ($dataSize) $dataSize.textContent = info.estimatedSize > 0 ? formatBytes(info.estimatedSize) : '—';
+
+            const canMigrate = mode !== 'localstorage' && StorageManager.hasLocalStorageData();
+            if ($migrateBtn) $migrateBtn.style.display = canMigrate ? '' : 'none';
+        }
+
+        function updateStorageUI(selectedMode) {
+            const currentMode = StorageManager.getMode();
+
+            if ($desc) $desc.textContent = storageModeDescs[selectedMode] || '';
+
+            if ($warning) {
+                if (selectedMode === 'localstorage') {
+                    $warning.textContent = 'Data may be lost if browser storage is cleared. Use Export regularly.';
+                    $warning.style.display = '';
+                } else {
+                    $warning.style.display = 'none';
+                }
+            }
+
+            if ($folderArea) $folderArea.style.display = selectedMode === 'filesystem' ? '' : 'none';
+            if ($electronArea) $electronArea.style.display = selectedMode === 'electron' ? '' : 'none';
+
+            if (selectedMode === 'filesystem' && currentMode === 'filesystem') {
+                const info = StorageManager.getStorageInfo();
+                if (info.folderName && $folderDisp && $folderName) {
+                    $folderDisp.style.display = '';
+                    $folderName.textContent = info.folderName;
+                }
+            } else if ($folderDisp) {
+                $folderDisp.style.display = 'none';
+            }
+
+            if (selectedMode === 'electron') {
+                if (window.electronAPI && window.electronAPI.isElectron) {
+                    window.electronAPI.getDataPath().then(p => {
+                        if ($electronPath && $electronVal) {
+                            $electronPath.style.display = '';
+                            $electronVal.textContent = p;
+                        }
+                    });
+                }
+            }
+
+            refreshStorageStatus();
+        }
+
+        // Disable Electron pill if not in Electron
+        if (!window.electronAPI || !window.electronAPI.isElectron) {
+            const elRadio = document.getElementById('storageModeElectron');
+            const elLabel = elRadio ? elRadio.nextElementSibling : null;
+            if (elRadio) elRadio.disabled = true;
+            if (elLabel) { elLabel.style.opacity = '0.35'; elLabel.style.cursor = 'not-allowed'; elLabel.title = 'Only available in the desktop app'; }
+        }
+
+        // Disable FS pill if API not supported
+        if (typeof window.showDirectoryPicker !== 'function') {
+            const fsRadio = document.getElementById('storageModeFS');
+            const fsLabel = fsRadio ? fsRadio.nextElementSibling : null;
+            if (fsRadio) fsRadio.disabled = true;
+            if (fsLabel) { fsLabel.style.opacity = '0.35'; fsLabel.style.cursor = 'not-allowed'; fsLabel.title = 'Requires Chrome or Edge 86+'; }
+        }
+
+        document.querySelectorAll('input[name="storageMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => updateStorageUI(e.target.value));
+        });
+
+        // Set initial state from StorageManager
+        if (window.StorageManager) {
+            const mode = StorageManager.getMode();
+            const modeMap = { localstorage: 'storageModeLocal', filesystem: 'storageModeFS', electron: 'storageModeElectron' };
+            const radio = document.getElementById(modeMap[mode]);
+            if (radio) { radio.checked = true; }
+            updateStorageUI(mode);
+        }
+
+        // Choose folder button (filesystem mode)
+        const chooseFolderBtn = document.getElementById('chooseFolderBtn');
+        const changeFolderBtn = document.getElementById('changeFolderBtn');
+
+        async function handleChooseFolder() {
+            const ok = await StorageManager.chooseFolder();
+            if (ok) {
+                const info = StorageManager.getStorageInfo();
+                if ($folderDisp && $folderName) {
+                    $folderDisp.style.display = '';
+                    $folderName.textContent = info.folderName || 'Selected';
+                }
+                refreshStorageStatus();
+                if (window.app) window.app.showToast('Folder selected: ' + (info.folderName || ''), 'success');
+            }
+        }
+
+        if (chooseFolderBtn) chooseFolderBtn.addEventListener('click', handleChooseFolder);
+        if (changeFolderBtn) changeFolderBtn.addEventListener('click', handleChooseFolder);
+
+        // Electron change location
+        const electronChangeBtn = document.getElementById('electronChangeFolderBtn');
+        if (electronChangeBtn) {
+            electronChangeBtn.addEventListener('click', async () => {
+                if (!window.electronAPI) return;
+                const res = await window.electronAPI.chooseFolder();
+                if (res && res.success) {
+                    if ($electronPath && $electronVal) {
+                        $electronPath.style.display = '';
+                        $electronVal.textContent = res.path;
+                    }
+                    refreshStorageStatus();
+                    if (window.app) window.app.showToast('Data location changed', 'success');
+                }
+            });
+        }
+
+        // Save now button
+        const saveNowBtn = document.getElementById('saveNowBtn');
+        if (saveNowBtn) {
+            saveNowBtn.addEventListener('click', async () => {
+                if (!window.app) return;
+                try {
+                    await StorageManager.saveAll(window.app.getCurrentAppState());
+                    window.app.markAsSaved();
+                    refreshStorageStatus();
+                    window.app.showToast('Saved!', 'success');
+                } catch (e) {
+                    console.error('Save failed:', e);
+                    window.app.showToast('Save failed: ' + e.message, 'danger');
+                }
+            });
+        }
+
+        // Migration flow
+        if ($migrateBtn) {
+            $migrateBtn.addEventListener('click', () => {
+                const summary = StorageManager.getLocalStorageSummary();
+                if ($migrateText) {
+                    const mode = StorageManager.getMode();
+                    const dest = mode === 'filesystem' ? 'your chosen folder' : 'app data';
+                    $migrateText.textContent =
+                        `Found ${summary.promptCount} saved prompt${summary.promptCount !== 1 ? 's' : ''}, ` +
+                        `${summary.srefCount} style reference${summary.srefCount !== 1 ? 's' : ''} in browser storage. ` +
+                        `Copy to ${dest}? Browser storage will not be deleted automatically \u2014 you can clear it manually after confirming.`;
+                }
+                if ($migrateCard) $migrateCard.style.display = '';
+            });
+        }
+
+        if ($migrateNo) {
+            $migrateNo.addEventListener('click', () => {
+                if ($migrateCard) $migrateCard.style.display = 'none';
+            });
+        }
+
+        if ($migrateOk) {
+            $migrateOk.addEventListener('click', async () => {
+                $migrateOk.disabled = true;
+                $migrateOk.innerHTML = '<i class="bi bi-hourglass-split"></i> Migrating\u2026';
+                try {
+                    const res = await StorageManager.migrateFromLocalStorage();
+                    if (res.success) {
+                        if ($migrateCard) $migrateCard.style.display = 'none';
+                        if ($migrateBtn) $migrateBtn.style.display = 'none';
+                        if ($migrateDone) $migrateDone.style.display = '';
+                        refreshStorageStatus();
+                        if (window.app) window.app.showToast('Data migrated successfully!', 'success');
+                    } else {
+                        if (window.app) window.app.showToast('Migration failed: ' + (res.error || 'Unknown error'), 'danger');
+                    }
+                } catch (e) {
+                    console.error('Migration error:', e);
+                    if (window.app) window.app.showToast('Migration error: ' + e.message, 'danger');
+                }
+                $migrateOk.disabled = false;
+                $migrateOk.innerHTML = '<i class="bi bi-check-circle"></i> Copy data';
+            });
+        }
+
+        if ($migrateClear) {
+            $migrateClear.addEventListener('click', () => {
+                StorageManager.clearLocalStorageData();
+                $migrateClear.textContent = 'Cleared!';
+                $migrateClear.disabled = true;
+                if (window.app) window.app.showToast('Browser storage cleared', 'success');
+            });
+        }
+
+
+        // Export buttons
+        document.querySelectorAll('[data-config-export]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const format = btn.getAttribute('data-config-export');
+                if (window.app && typeof window.app.exportAllData === 'function') {
+                    window.app.exportAllData(format, true, 'prompt_library_export');
+                }
+            });
+        });
+
+        // Auto-backup toggle
+        const configAutoBackup = document.getElementById('configAutoBackup');
+        if (configAutoBackup) {
+            configAutoBackup.addEventListener('change', () => {
+                if (window.app && window.app.saveSettings) {
+                    window.app.saveSettings.backupOnClose = configAutoBackup.checked;
+                    localStorage.setItem('saveSettings', JSON.stringify(window.app.saveSettings));
+                }
+            });
+        }
+
+        // Manual backup button
+        const configManualBackup = document.getElementById('configManualBackup');
+        if (configManualBackup) {
+            configManualBackup.addEventListener('click', () => {
+                if (window.app && typeof window.app.performBackupSave === 'function') {
+                    window.app.performBackupSave();
+                    updateLastBackupDisplay();
+                    if (typeof window.app.showToast === 'function') window.app.showToast('Backup created!', 'success');
+                }
+            });
+        }
+
+        // Check for updates button
+        const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
+        if (checkUpdatesBtn) {
+            checkUpdatesBtn.addEventListener('click', async () => {
+                const icon = checkUpdatesBtn.querySelector('i');
+                checkUpdatesBtn.disabled = true;
+                if (icon) icon.className = 'bi bi-arrow-repeat';
+                checkUpdatesBtn.childNodes[checkUpdatesBtn.childNodes.length - 1].textContent = ' Checking\u2026';
+                try {
+                    await VersionChecker.checkAll();
+                } catch (e) {
+                    console.error('Version check failed:', e);
+                } finally {
+                    checkUpdatesBtn.disabled = false;
+                    if (icon) icon.className = 'bi bi-arrow-clockwise';
+                    checkUpdatesBtn.childNodes[checkUpdatesBtn.childNodes.length - 1].textContent = ' Check for updates';
+                    if (window.app) {
+                        window.app.renderConfigModelTable();
+                        window.app._updatePendingBadge();
+                    }
+                }
+            });
+        }
+
+        const refreshBuiltInTipsBtn = document.getElementById('refreshBuiltInTipsBtn');
+        if (refreshBuiltInTipsBtn) {
+            refreshBuiltInTipsBtn.addEventListener('click', async () => {
+                try {
+                    await ModelRegistry.refreshBuiltInTips();
+                    if (window.app) {
+                        window.app.rebuildModelDropdown();
+                        window.app.renderConfigModelTable();
+                        window.app.updateModelTipPreview();
+                        window.app.showToast('Built-in model tips and catalogue refreshed', 'success');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    if (window.app) window.app.showToast('Could not refresh tips', 'error');
+                }
+            });
+        }
+
+        window.addEventListener('pf:versionCheckComplete', (e) => {
+            if (window.app) {
+                window.app.renderConfigModelTable();
+                window.app._updatePendingBadge();
+            }
+            const detail = e.detail || {};
+            const summary = document.getElementById('updateSummary');
+            if (summary && detail.rateLimitHit && detail.skippedCount > 0) {
+                const existing = summary.textContent || '';
+                const note = `Rate limited by fetch proxy \u2014 ${detail.skippedCount} model${detail.skippedCount !== 1 ? 's' : ''} not checked. Try again shortly.`;
+                summary.textContent = existing ? existing + ' ' + note : note;
+                summary.style.display = '';
+            }
+        });
+
+        // Add Model form wiring
+        const addModelBtn = document.getElementById('addModelBtn');
+        const addModelForm = document.getElementById('addModelForm');
+        const saveNewModelBtn = document.getElementById('saveNewModelBtn');
+        const cancelNewModelBtn = document.getElementById('cancelNewModelBtn');
+
+        if (addModelBtn && addModelForm) {
+            addModelBtn.addEventListener('click', () => {
+                addModelForm.style.display = addModelForm.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        if (cancelNewModelBtn && addModelForm) {
+            cancelNewModelBtn.addEventListener('click', () => {
+                addModelForm.style.display = 'none';
+            });
+        }
+        if (saveNewModelBtn) {
+            saveNewModelBtn.addEventListener('click', async () => {
+                const name = document.getElementById('newModelName').value.trim();
+                const category = document.getElementById('newModelCategory').value;
+                const version = document.getElementById('newModelVersion').value.trim();
+                const releaseDate = document.getElementById('newModelReleaseDate').value.trim();
+                const changelogUrl = document.getElementById('newModelChangelog').value.trim();
+                const checkUrl = document.getElementById('newModelCheckUrl').value.trim();
+                const notes = document.getElementById('newModelNotes').value.trim();
+                if (!name || !version) {
+                    if (window.app) window.app.showToast('Name and version are required', 'warning');
+                    return;
+                }
+                const res = await ModelRegistry.add({
+                    name, category, version, releaseDate,
+                    changelogUrl, checkUrl: checkUrl || changelogUrl, notes
+                });
+                if (res.success) {
+                    document.getElementById('newModelName').value = '';
+                    document.getElementById('newModelVersion').value = '';
+                    document.getElementById('newModelReleaseDate').value = '';
+                    document.getElementById('newModelChangelog').value = '';
+                    document.getElementById('newModelCheckUrl').value = '';
+                    document.getElementById('newModelNotes').value = '';
+                    if (addModelForm) addModelForm.style.display = 'none';
+                    if (window.app) {
+                        window.app.rebuildModelDropdown();
+                        window.app.renderConfigModelTable();
+                        window.app.showToast('Model added!', 'success');
+                    }
+                } else {
+                    if (window.app) window.app.showToast(res.error || 'Failed to add model', 'danger');
+                }
+            });
+        }
+
+        // URL Import wiring
+        const importUrlInput = document.getElementById('importUrlInput');
+        const importUrlBtn = document.getElementById('importUrlBtn');
+        const importUrlPreview = document.getElementById('importUrlPreview');
+        const importCancelBtn = document.getElementById('importCancelBtn');
+        const importAddBtn = document.getElementById('importAddBtn');
+
+        function resetImportPreview() {
+            if (importUrlPreview) importUrlPreview.style.display = 'none';
+            ['importName','importVersion','importReleaseDate','importChangelog','importCheckUrl','importNotes'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const catSel = document.getElementById('importCategory');
+            if (catSel) catSel.value = 'custom';
+        }
+
+        function populateImportPreview(data) {
+            document.getElementById('importName').value = data.name || '';
+            document.getElementById('importCategory').value = data.category || 'custom';
+            document.getElementById('importVersion').value = data.version || '';
+            document.getElementById('importReleaseDate').value = data.releaseDate || '';
+            document.getElementById('importChangelog').value = data.changelogUrl || '';
+            document.getElementById('importCheckUrl').value = data.checkUrl || '';
+            document.getElementById('importNotes').value = data.description || '';
+
+            const badge = document.getElementById('importConfidenceBadge');
+            const hint = document.getElementById('importConfidenceHint');
+            if (badge) {
+                badge.textContent = data.confidence.charAt(0).toUpperCase() + data.confidence.slice(1);
+                badge.className = 'pf-confidence-badge ' + data.confidence;
+            }
+            if (hint) {
+                hint.textContent = data.confidence === 'low'
+                    ? '(Less was auto-detected \u2014 please review carefully)'
+                    : data.confidence === 'medium'
+                        ? '(Name + version found \u2014 check the rest)'
+                        : '(Name, version & date all detected)';
+            }
+            if (importUrlPreview) importUrlPreview.style.display = '';
+        }
+
+        if (importUrlBtn) {
+            importUrlBtn.addEventListener('click', async () => {
+                const url = (importUrlInput?.value || '').trim();
+                if (!url) {
+                    if (window.app) window.app.showToast('Paste a URL first', 'warning');
+                    return;
+                }
+                const icon = importUrlBtn.querySelector('i');
+                importUrlBtn.disabled = true;
+                if (icon) icon.className = 'bi bi-arrow-repeat';
+                const origText = importUrlBtn.childNodes[importUrlBtn.childNodes.length - 1];
+                origText.textContent = ' Fetching\u2026';
+
+                try {
+                    const data = await VersionChecker.importFromUrl(url);
+                    if (data._fetchError) {
+                        if (window.app) window.app.showToast("Couldn\u2019t reach that URL. Fill in the details manually.", 'warning');
+                        resetImportPreview();
+                        if (addModelForm) {
+                            addModelForm.style.display = 'block';
+                            const clField = document.getElementById('newModelChangelog');
+                            if (clField) clField.value = url;
+                            const cuField = document.getElementById('newModelCheckUrl');
+                            if (cuField) cuField.value = url;
+                        }
+                    } else {
+                        populateImportPreview(data);
+                    }
+                } catch (e) {
+                    console.error('URL import error:', e);
+                    if (window.app) window.app.showToast('Import failed \u2014 try again or add manually', 'danger');
+                } finally {
+                    importUrlBtn.disabled = false;
+                    if (icon) icon.className = 'bi bi-link-45deg';
+                    origText.textContent = ' Import from URL';
+                }
+            });
+        }
+
+        if (importCancelBtn) {
+            importCancelBtn.addEventListener('click', () => {
+                resetImportPreview();
+                if (importUrlInput) importUrlInput.value = '';
+            });
+        }
+
+        if (importAddBtn) {
+            importAddBtn.addEventListener('click', async () => {
+                const name = (document.getElementById('importName')?.value || '').trim();
+                const category = document.getElementById('importCategory')?.value || 'custom';
+                const version = (document.getElementById('importVersion')?.value || '').trim();
+                const releaseDate = (document.getElementById('importReleaseDate')?.value || '').trim();
+                const changelogUrl = (document.getElementById('importChangelog')?.value || '').trim();
+                const checkUrl = (document.getElementById('importCheckUrl')?.value || '').trim();
+                const notes = (document.getElementById('importNotes')?.value || '').trim();
+
+                if (!name || !version) {
+                    if (window.app) window.app.showToast('Name and version are required', 'warning');
+                    return;
+                }
+
+                const res = await ModelRegistry.add({
+                    name, category, version, releaseDate,
+                    changelogUrl, checkUrl: checkUrl || changelogUrl, notes
+                });
+
+                if (res.success) {
+                    resetImportPreview();
+                    if (importUrlInput) importUrlInput.value = '';
+                    if (window.app) {
+                        window.app.rebuildModelDropdown();
+                        window.app.renderConfigModelTable();
+                        window.app.showToast('Model added \u2014 now available in Studio', 'success');
+                    }
+                } else {
+                    if (window.app) window.app.showToast(res.error || 'Failed to add model', 'danger');
+                }
+            });
+        }
+
+        // Last backup display
+        function updateLastBackupDisplay() {
+            const el = document.getElementById('configLastBackup');
+            if (!el) return;
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('promptforge_backup_'));
+            if (keys.length === 0) { el.textContent = 'Last backup: never'; return; }
+            const latest = keys.sort().pop();
+            try {
+                const backup = JSON.parse(localStorage.getItem(latest));
+                if (backup && backup.backupTime) {
+                    const d = new Date(backup.backupTime);
+                    el.textContent = 'Last backup: ' + d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Sync config state when switching to config tab
+        document.querySelectorAll('.pf-nav-pill[data-pf-tab]').forEach(btn => {
+            if (btn.getAttribute('data-pf-tab') === 'config') {
+                btn.addEventListener('click', () => {
+                    updateLastBackupDisplay();
+                    refreshStorageStatus();
+                    if (window.app) {
+                        if (window.app.saveSettings) {
+                            const cb = document.getElementById('configAutoBackup');
+                            if (cb) cb.checked = window.app.saveSettings.backupOnClose || false;
+                        }
+                        window.app.renderConfigModelTable();
+                    }
+                    const badge = btn.querySelector('.pf-nav-badge');
+                    if (badge) badge.remove();
+                });
+            }
+        });
+
         // PWA install prompt
         let deferredPrompt;
         const installButton = document.createElement('button');
-        installButton.className = 'pf-btn pf-btn-outline-light pf-btn-sm fixed';
-        installButton.style.cssText = 'top: 20px; right: 20px; z-index: 1000; display: none;';
+        installButton.className = 'pf-btn pf-btn-sm pf-btn-outline-light';
+        installButton.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: none;';
         installButton.innerHTML = '<i class="bi bi-download"></i> Install App';
         document.body.appendChild(installButton);
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
+            // Keep Chrome from logging noise; stash for our Install button
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show install button
             installButton.style.display = 'block';
         });
 
@@ -856,23 +1902,163 @@
             if (action === 'new' && window.app) {
                 setTimeout(() => window.app.clearForm(), 1000);
             } else if (action === 'library') {
-                // Scroll to prompt library section
                 setTimeout(() => {
-                    const librarySection = document.querySelector('.main-container .pf-card:last-child');
+                    const librarySection = document.querySelector('.pf-card:last-child');
                     if (librarySection) {
                         librarySection.scrollIntoView({ behavior: 'smooth' });
                     }
                 }, 1000);
             } else if (action === 'sref') {
-                // Scroll to sref library section
                 setTimeout(() => {
-                    const srefSection = document.getElementById('srefLibrary')?.closest('.pf-card');
+                    const srefSection = document.getElementById('srefLibrary').closest('.pf-card');
                     if (srefSection) {
                         srefSection.scrollIntoView({ behavior: 'smooth' });
                     }
                 }, 1000);
             }
         });
+
+        // ── Storage health dot: click opens Config ─────
+        const healthDot = document.getElementById('storageHealthDot');
+        if (healthDot) {
+            healthDot.addEventListener('click', () => {
+                const configBtn = document.querySelector('.pf-nav-pill[data-pf-tab="config"]');
+                if (configBtn) configBtn.click();
+            });
+        }
+
+        // ── FS permission banner ──────────────────────
+        (async function checkFSPermission() {
+            if (!window.StorageManager || StorageManager.getMode() !== 'filesystem') return;
+            const perm = await StorageManager.checkPermission();
+            const banner = document.getElementById('fsBanner');
+            if (!banner) return;
+
+            if (perm === 'prompt') {
+                banner.style.display = '';
+            } else if (perm === 'denied') {
+                banner.style.display = '';
+                banner.querySelector('span').textContent =
+                    'Permission denied to your data folder. Using browser storage this session.';
+            }
+        })();
+
+        const fsGrantBtn = document.getElementById('fsGrantBtn');
+        const fsFallbackBtn = document.getElementById('fsFallbackBtn');
+        const fsDismissBtn = document.getElementById('fsDismissBtn');
+        const fsBanner = document.getElementById('fsBanner');
+
+        if (fsGrantBtn) {
+            fsGrantBtn.addEventListener('click', async () => {
+                const ok = await StorageManager.requestPermission();
+                if (ok) {
+                    if (fsBanner) fsBanner.style.display = 'none';
+                    if (window.app) {
+                        window.app.updateStorageHealth();
+                        window.app.showToast('Folder access granted!', 'success');
+                    }
+                } else {
+                    if (window.app) window.app.showToast('Permission not granted', 'warning');
+                }
+            });
+        }
+        if (fsFallbackBtn && fsBanner) {
+            fsFallbackBtn.addEventListener('click', () => {
+                fsBanner.style.display = 'none';
+                if (window.app) window.app.showToast('Using browser storage this session', 'info');
+            });
+        }
+        if (fsDismissBtn && fsBanner) {
+            fsDismissBtn.addEventListener('click', () => { fsBanner.style.display = 'none'; });
+        }
+
+        // ── Export reminder banner ────────────────────
+        (function checkExportReminder() {
+            if (StorageManager.getMode() !== 'localstorage') return;
+            if (localStorage.getItem('pf_export_never') === '1') return;
+
+            const snoozeUntil = localStorage.getItem('pf_export_snooze');
+            if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) return;
+
+            const lastExport = localStorage.getItem('pf_last_export');
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+            if (!lastExport || (Date.now() - new Date(lastExport).getTime()) > sevenDays) {
+                const eBanner = document.getElementById('exportBanner');
+                if (eBanner) eBanner.style.display = '';
+            }
+        })();
+
+        const exportBannerNow = document.getElementById('exportBannerNow');
+        const exportBannerLater = document.getElementById('exportBannerLater');
+        const exportBannerNever = document.getElementById('exportBannerNever');
+        const exportBanner = document.getElementById('exportBanner');
+
+        if (exportBannerNow) {
+            exportBannerNow.addEventListener('click', () => {
+                if (window.app && typeof window.app.exportAllData === 'function') {
+                    window.app.exportAllData('json', true, 'prompt_library_export');
+                    localStorage.setItem('pf_last_export', new Date().toISOString());
+                }
+                if (exportBanner) exportBanner.style.display = 'none';
+            });
+        }
+        if (exportBannerLater && exportBanner) {
+            exportBannerLater.addEventListener('click', () => {
+                localStorage.setItem('pf_export_snooze', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
+                exportBanner.style.display = 'none';
+            });
+        }
+        if (exportBannerNever && exportBanner) {
+            exportBannerNever.addEventListener('click', () => {
+                localStorage.setItem('pf_export_never', '1');
+                exportBanner.style.display = 'none';
+            });
+        }
+
+        // ── Welcome banner (first run) ───────────────────
+        (function checkFirstRun() {
+            if (localStorage.getItem('pf_initialized')) return;
+            const hasData = StorageManager.hasLocalStorageData();
+            if (hasData) {
+                localStorage.setItem('pf_initialized', '1');
+                return;
+            }
+            const wb = document.getElementById('welcomeBanner');
+            if (wb) wb.style.display = '';
+            const folderBtn = document.getElementById('welcomeChooseFolder');
+            if (folderBtn && StorageManager.getMode() !== 'filesystem') {
+                folderBtn.style.display = 'none';
+            }
+        })();
+
+        const welcomeChooseFolder = document.getElementById('welcomeChooseFolder');
+        const welcomeBrowserStorage = document.getElementById('welcomeBrowserStorage');
+        const welcomeBanner = document.getElementById('welcomeBanner');
+
+        if (welcomeChooseFolder) {
+            welcomeChooseFolder.addEventListener('click', async () => {
+                const ok = await StorageManager.chooseFolder();
+                if (ok) {
+                    localStorage.setItem('pf_initialized', '1');
+                    if (welcomeBanner) welcomeBanner.style.display = 'none';
+                    if (window.app) {
+                        window.app.updateStorageHealth();
+                        window.app.showToast('Folder selected! Your data will be saved there.', 'success');
+                    }
+                }
+            });
+        }
+        if (welcomeBrowserStorage && welcomeBanner) {
+            welcomeBrowserStorage.addEventListener('click', () => {
+                localStorage.setItem('pf_initialized', '1');
+                if (welcomeBanner) welcomeBanner.style.display = 'none';
+                if (window.app) {
+                    window.app.updateStorageHealth();
+                    window.app.showToast('Using browser storage. Export backups regularly!', 'info');
+                }
+            });
+        }
     </script>
 </body>
 </html>

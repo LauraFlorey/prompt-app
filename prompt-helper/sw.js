@@ -1,11 +1,13 @@
 // Service Worker for Prompt Forge PWA
-const CACHE_NAME = 'prompt-forge-v4.0.0';
+const CACHE_NAME = 'prompt-forge-v4.1.0';
 const PRECACHE = [
     './',
     './index.html',
     './app.js',
     '../tailwind.css',
     '../styles/app.css',
+    '../styles/fonts.css',
+    '../styles/bootstrap-icons.css',
     './manifest.json',
     './sw.js'
 ];
