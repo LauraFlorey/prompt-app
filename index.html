@@ -102,24 +102,22 @@
                                         <option value="">Select Model</option>
                                         <optgroup label="Image Generation">
                                             <option value="midjourney">Midjourney</option>
+                                            <option value="gpt-image">GPT Image</option>
                                             <option value="dalle3">DALL-E 3</option>
-                                            <option value="stable-diffusion">Stable Diffusion</option>
-                                            <option value="flux1">Flux.1</option>
-                                            <option value="ideogram2">Ideogram 2.0</option>
+                                            <option value="stablediffusion">Stable Diffusion</option>
+                                            <option value="flux1">Flux</option>
+                                            <option value="ideogram">Ideogram</option>
                                             <option value="leonardo-ai">Leonardo AI</option>
-                                            <option value="nano-banana">Nano Banana</option>
                                             <option value="firefly">Adobe Firefly</option>
-                                            <option value="imagen3">Google Imagen 3</option>
+                                            <option value="imagen3">Google Imagen</option>
                                         </optgroup>
                                         <optgroup label="Video Generation">
                                             <option value="sora">OpenAI Sora</option>
-                                            <option value="veo2">Google Veo 2</option>
-                                            <option value="runway">Runway ML</option>
+                                            <option value="veo2">Google Veo</option>
+                                            <option value="runway">Runway</option>
                                             <option value="pika">Pika Labs</option>
                                             <option value="luma-dream">Luma Dream Machine</option>
-                                            <option value="kling-ai">Kling AI</option>
-                                            <option value="hailuo">Hailuo (MiniMax)</option>
-                                            <option value="haiper">Haiper</option>
+                                            <option value="kling">Kling AI</option>
                                         </optgroup>
                                         <optgroup label="Text &amp; Multimodal">
                                             <option value="gpt4">GPT-4</option>
@@ -127,10 +125,11 @@
                                             <option value="gemini">Google Gemini</option>
                                             <option value="llama">Meta Llama</option>
                                         </optgroup>
-                                        <optgroup label="Other">
+                                        <optgroup label="Custom">
                                             <option value="custom">Custom Model</option>
                                         </optgroup>
                                     </select>
+                                    <div id="modelTipPreview" style="display:none; margin-top:8px; font-size:14px; color:var(--pf-text-muted); line-height:1.4;"></div>
                                 </div>
                                 <div class="pf-field">
                                     <label for="promptType">Type of Prompt</label>
@@ -938,7 +937,6 @@
                                             <option value="video">Video</option>
                                             <option value="text">Text</option>
                                             <option value="custom">Custom</option>
-                                            <option value="other">Other</option>
                                         </select></div>
                                     <div class="pf-field"><label>Version</label>
                                         <input class="pf-input" id="importVersion"></div>
@@ -948,8 +946,8 @@
                                         <input class="pf-input" id="importChangelog"></div>
                                     <div class="pf-field"><label>Check URL</label>
                                         <input class="pf-input" id="importCheckUrl"></div>
-                                    <div class="pf-field" style="grid-column:1/-1"><label>Notes</label>
-                                        <textarea class="pf-textarea" id="importNotes" rows="2" placeholder="Optional notes"></textarea></div>
+                                    <div class="pf-field" style="grid-column:1/-1"><label>Prompt tips</label>
+                                        <textarea class="pf-textarea" id="importNotes" rows="2" placeholder="How to prompt this model well…"></textarea></div>
                                 </div>
                                 <div class="pf-url-preview-confidence" id="importConfidenceArea">
                                     Confidence: <span class="pf-confidence-badge" id="importConfidenceBadge"></span>
@@ -981,7 +979,7 @@
                                             <option value="image">Image</option>
                                             <option value="video">Video</option>
                                             <option value="text">Text</option>
-                                            <option value="other">Other</option>
+                                            <option value="custom">Custom</option>
                                         </select>
                                     </div>
                                     <div class="pf-field">
@@ -1001,8 +999,8 @@
                                         <input class="pf-input" id="newModelCheckUrl" placeholder="https://...">
                                     </div>
                                     <div class="pf-field">
-                                        <label>Notes</label>
-                                        <textarea class="pf-textarea" id="newModelNotes" rows="2" placeholder="Optional notes"></textarea>
+                                        <label>Prompt tips</label>
+                                        <textarea class="pf-textarea" id="newModelNotes" rows="2" placeholder="How to prompt this model well…"></textarea>
                                     </div>
                                 </div>
                                 <div class="pf-add-model-hint">This model's prompts will appear in the Model Used dropdown.</div>
@@ -1014,8 +1012,13 @@
                                 </div>
                             </div>
 
-                            <div class="pf-config-note" style="margin-top:14px;">
-                                Visit changelogs and update version numbers manually. Automatic checking is a future feature.
+                            <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                                <button type="button" class="pf-chip" id="refreshBuiltInTipsBtn" title="Reload current built-in prompt tips and versions">
+                                    <i class="bi bi-arrow-repeat"></i> Refresh built-in tips
+                                </button>
+                            </div>
+                            <div class="pf-config-note" style="margin-top:10px;">
+                                <strong>Keep models current:</strong> Use Check for Updates, edit a row to bump the version, or paste docs in Library with “Applies to model” selected. Prompt tips on each model are used when generating.
                             </div>
                         </div>
                     </div>
@@ -1592,6 +1595,24 @@
                         window.app.renderConfigModelTable();
                         window.app._updatePendingBadge();
                     }
+                }
+            });
+        }
+
+        const refreshBuiltInTipsBtn = document.getElementById('refreshBuiltInTipsBtn');
+        if (refreshBuiltInTipsBtn) {
+            refreshBuiltInTipsBtn.addEventListener('click', async () => {
+                try {
+                    await ModelRegistry.refreshBuiltInTips();
+                    if (window.app) {
+                        window.app.rebuildModelDropdown();
+                        window.app.renderConfigModelTable();
+                        window.app.updateModelTipPreview();
+                        window.app.showToast('Built-in model tips and catalogue refreshed', 'success');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    if (window.app) window.app.showToast('Could not refresh tips', 'error');
                 }
             });
         }

@@ -82,6 +82,7 @@ class PromptGenerator {
         await this._loadDismissedMentions();
         this.rebuildModelDropdown();
         this.renderConfigModelTable();
+        this.updateModelTipPreview();
         this.setupEventListeners();
         this.setupLifecycleEvents();
         this.setupAutoSave();
@@ -168,6 +169,7 @@ class PromptGenerator {
         }
 
         if (currentValue) select.value = currentValue;
+        this.updateModelTipPreview();
     }
 
     _getDismissedMentions() {
@@ -499,7 +501,7 @@ class PromptGenerator {
                         `<input class="pf-input" data-ef="changelogUrl" value="${(model.changelogUrl || '').replace(/"/g, '&quot;')}"></div>` +
                     `<div class="pf-field"><label>Check URL</label>` +
                         `<input class="pf-input" data-ef="checkUrl" value="${(model.checkUrl || '').replace(/"/g, '&quot;')}"></div>` +
-                    `<div class="pf-field"><label>Notes</label>` +
+                    `<div class="pf-field"><label>Prompt tips</label>` +
                         `<textarea class="pf-textarea" data-ef="notes" rows="2">${model.notes || ''}</textarea></div>` +
                 `</div>` +
                 `<div class="pf-model-edit-actions">` +
@@ -1070,6 +1072,7 @@ class PromptGenerator {
             modelSelect.addEventListener('change', () => {
                 this.validateModelTypeCombinationRealTime();
                 this.updateFormBasedOnModel();
+                this.updateModelTipPreview();
             });
         }
         
@@ -1331,6 +1334,7 @@ class PromptGenerator {
         if (modelSelect) {
             modelSelect.addEventListener('change', () => {
                 this.applySmartDefaults();
+                this.updateModelTipPreview();
             });
         }
     }
@@ -1430,10 +1434,17 @@ class PromptGenerator {
 
         const defaults = {
             'midjourney': { type: 'text-to-image', quality: 'high-quality' },
+            'gpt-image': { type: 'text-to-image', quality: 'high-quality' },
             'dalle3': { type: 'text-to-image', quality: 'high-quality' },
+            'flux1': { type: 'text-to-image', quality: 'high-quality' },
+            'stablediffusion': { type: 'text-to-image', quality: 'high-quality' },
+            'ideogram': { type: 'text-to-image', quality: 'high-quality' },
+            'sora': { type: 'text-to-video', quality: 'high-quality' },
+            'veo2': { type: 'text-to-video', quality: 'high-quality' },
+            'runway': { type: 'text-to-video', quality: 'high-quality' },
+            'kling': { type: 'text-to-video', quality: 'high-quality' },
             'gpt4': { type: 'text-to-text', quality: 'detailed' },
-            'claude': { type: 'text-to-text', quality: 'detailed' },
-            'sora': { type: 'text-to-video', quality: 'high-quality' }
+            'claude': { type: 'text-to-text', quality: 'detailed' }
         };
 
         const defaultSettings = defaults[model];
@@ -1539,54 +1550,149 @@ class PromptGenerator {
     }
 
     getModelEnhancements(model) {
-        // Check if we have specific enhancements for this model from uploaded documents
-        const modelDoc = this.uploadedDocuments.find(doc => 
-            doc.name.toLowerCase().includes(model.toLowerCase()) ||
-            doc.content.toLowerCase().includes(model.toLowerCase())
+        const resolved = (typeof ModelRegistry !== 'undefined' && ModelRegistry.resolveId)
+            ? ModelRegistry.resolveId(model)
+            : model;
+
+        const parts = [];
+
+        // Prefer docs explicitly tagged for this model
+        const taggedDocs = (this.uploadedDocuments || []).filter(doc =>
+            doc.modelId && (
+                (typeof ModelRegistry !== 'undefined' && ModelRegistry.idsMatch)
+                    ? ModelRegistry.idsMatch(doc.modelId, resolved)
+                    : doc.modelId === resolved || doc.modelId === model
+            )
         );
-        
-        if (modelDoc && modelDoc.enhancements) {
-            // If enhancements is an object, extract the enhancements string property
-            if (typeof modelDoc.enhancements === 'object' && modelDoc.enhancements.enhancements) {
-                return modelDoc.enhancements.enhancements;
+
+        // Fallback: filename / content contains model id or name
+        const fuzzyDocs = taggedDocs.length ? [] : (this.uploadedDocuments || []).filter(doc => {
+            const hay = `${doc.name || ''} ${doc.content || ''}`.toLowerCase();
+            const aliases = [resolved, model];
+            if (typeof ModelRegistry !== 'undefined' && ModelRegistry.getById) {
+                const entry = ModelRegistry.getById(resolved);
+                if (entry?.name) aliases.push(entry.name.toLowerCase());
             }
-            // If it's already a string, return it
-            if (typeof modelDoc.enhancements === 'string') {
-                return modelDoc.enhancements;
+            return aliases.some(a => a && hay.includes(String(a).toLowerCase()));
+        });
+
+        const docs = taggedDocs.length ? taggedDocs : fuzzyDocs;
+        for (const modelDoc of docs) {
+            if (!modelDoc.enhancements) continue;
+            if (typeof modelDoc.enhancements === 'object' && modelDoc.enhancements.enhancements) {
+                parts.push(modelDoc.enhancements.enhancements);
+            } else if (typeof modelDoc.enhancements === 'string') {
+                parts.push(modelDoc.enhancements);
             }
         }
 
-        // Default enhancements based on model type
+        // Built-in / user prompt tips stored on the model (notes)
+        if (typeof ModelRegistry !== 'undefined' && ModelRegistry.getById) {
+            const entry = ModelRegistry.getById(resolved);
+            if (entry?.notes?.trim()) {
+                parts.push(entry.notes.trim());
+            }
+        }
+
+        if (parts.length) {
+            return parts.join('; ');
+        }
+
+        // Compact defaults keyed by canonical + legacy ids
         const defaultEnhancements = {
-            // Image Generation Models
-            'midjourney': 'highly detailed, professional photography, 8k resolution, --style raw --quality 2',
-            'dalle3': 'photorealistic, high quality, detailed, sharp focus, professional lighting',
-            'stable-diffusion': 'masterpiece, best quality, ultra detailed, sharp focus, highly detailed',
-            'flux1': 'high quality, detailed, professional, sharp, vibrant colors',
-            'ideogram2': 'high resolution, detailed, professional design, clean composition',
-            'leonardo-ai': 'cinematic lighting, high quality, detailed, professional photography',
-            'nano-banana': 'natural editing, character consistency, scene preservation, high quality',
-            'firefly': 'professional, high quality, detailed, Adobe quality, commercial grade',
-            'imagen3': 'photorealistic, high quality, detailed, Google quality, sharp focus',
-            
-            // Video Generation Models
-            'sora': 'cinematic, high quality video, smooth motion, professional cinematography, 4k',
-            'veo2': 'high resolution video, smooth motion, professional quality, cinematic',
-            'runway': 'cinematic video, high quality, professional, smooth transitions',
-            'pika': 'creative video, high quality, engaging, smooth motion',
-            'luma-dream': 'dreamy, cinematic, high quality video, smooth motion',
-            'kling-ai': 'high quality video, cinematic, professional, smooth animation',
-            'hailuo': 'cinematic, high quality video, detailed, professional motion',
-            'haiper': 'high quality video, smooth motion, professional, detailed',
-            
-            // Text & Multimodal Models
-            'gpt4': 'detailed, comprehensive, well-structured, professional',
-            'claude': 'thorough, analytical, well-reasoned, detailed',
-            'gemini': 'comprehensive, detailed, multi-faceted analysis',
-            'llama': 'detailed, informative, well-structured'
+            midjourney: 'detailed cinematic description, parameters last (--ar --stylize --sref)',
+            'gpt-image': 'clear natural-language scene description, explicit on-image text if needed',
+            dalle3: 'photorealistic, detailed lighting, natural language only',
+            'stable-diffusion': 'masterpiece, best quality, ultra detailed',
+            stablediffusion: 'masterpiece, best quality, ultra detailed, optional (emphasis:1.2)',
+            flux1: 'natural-language prose, lighting and lens detail, no weight syntax',
+            ideogram: 'poster layout, quote exact text to render',
+            ideogram2: 'poster layout, quote exact text to render',
+            'leonardo-ai': 'cinematic lighting, clear subject and composition',
+            firefly: 'professional commercial-safe description',
+            imagen3: 'photorealistic camera and lighting detail',
+            sora: 'shot-list style: action, camera move, lighting',
+            veo2: 'cinematic camera path, physically plausible motion',
+            runway: 'one clear action, camera direction, subject motion',
+            pika: 'short motion-forward prompt, camera move named',
+            'luma-dream': 'camera path and spatial continuity',
+            kling: 'multi-shot narrative, character consistency, motion path',
+            'kling-ai': 'multi-shot narrative, character consistency, motion path',
+            gpt4: 'detailed, well-structured',
+            claude: 'thorough, well-reasoned',
+            gemini: 'comprehensive, multi-faceted',
+            llama: 'detailed, informative'
         };
 
-        return defaultEnhancements[model] || '';
+        return defaultEnhancements[resolved] || defaultEnhancements[model] || '';
+    }
+
+    getEnhancementSourceSummary(model) {
+        const resolved = (typeof ModelRegistry !== 'undefined' && ModelRegistry.resolveId)
+            ? ModelRegistry.resolveId(model)
+            : model;
+        const tagged = (this.uploadedDocuments || []).filter(doc =>
+            doc.modelId && (
+                (typeof ModelRegistry !== 'undefined' && ModelRegistry.idsMatch)
+                    ? ModelRegistry.idsMatch(doc.modelId, resolved)
+                    : doc.modelId === resolved
+            )
+        );
+        const tip = (typeof ModelRegistry !== 'undefined' && ModelRegistry.getById)
+            ? (ModelRegistry.getById(resolved)?.notes || '')
+            : '';
+        return {
+            docCount: tagged.length,
+            hasTip: !!tip.trim(),
+            tipPreview: tip.trim().slice(0, 140)
+        };
+    }
+
+    updateModelTipPreview() {
+        const model = document.getElementById('modelSelect')?.value;
+        const el = document.getElementById('modelTipPreview');
+        if (!el) return;
+        if (!model) {
+            el.style.display = 'none';
+            el.textContent = '';
+            return;
+        }
+        const summary = this.getEnhancementSourceSummary(model);
+        const bits = [];
+        if (summary.hasTip) bits.push('Built-in prompt tip available');
+        if (summary.docCount > 0) bits.push(`${summary.docCount} linked doc${summary.docCount === 1 ? '' : 's'}`);
+        if (!bits.length) {
+            el.style.display = 'none';
+            el.textContent = '';
+            return;
+        }
+        el.style.display = 'block';
+        el.textContent = `Prompt guidance: ${bits.join(' · ')}.${summary.tipPreview ? ' ' + summary.tipPreview + (summary.tipPreview.length >= 140 ? '…' : '') : ''}`;
+    }
+
+    _buildModelOptionsHtml(selectedId = '', includeAny = true) {
+        const parts = [];
+        if (includeAny) {
+            parts.push(`<option value="">${selectedId === '' ? 'All models / general' : 'Select model (optional)'}</option>`);
+        }
+        if (typeof ModelRegistry === 'undefined' || !ModelRegistry.getForDropdown) {
+            parts.push('<option value="midjourney">Midjourney</option>');
+            parts.push('<option value="gpt-image">GPT Image</option>');
+            parts.push('<option value="flux1">Flux</option>');
+            return parts.join('');
+        }
+        let currentGroup = null;
+        for (const item of ModelRegistry.getForDropdown()) {
+            if (item.groupLabel !== currentGroup) {
+                if (currentGroup) parts.push('</optgroup>');
+                currentGroup = item.groupLabel;
+                parts.push(`<optgroup label="${item.groupLabel}">`);
+            }
+            const sel = item.value === selectedId ? ' selected' : '';
+            parts.push(`<option value="${item.value}"${sel}>${item.label}</option>`);
+        }
+        if (currentGroup) parts.push('</optgroup>');
+        return parts.join('');
     }
 
     formatAsJSON(formData, generatedPrompt) {
@@ -2141,6 +2247,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                     
                     try {
                         const enhancements = await this.extractEnhancements(content, file.name);
+                        const modelId = document.getElementById('docModelId')?.value || '';
                         
                 const documentData = {
                     id: Date.now() + Math.random(),
@@ -2151,19 +2258,23 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                     uploadedAt: new Date().toISOString(),
                     source: 'file',
                             enhancements: enhancements,
-                            analysisDate: new Date().toISOString()
+                            analysisDate: new Date().toISOString(),
+                            modelId: modelId || null
                 };
 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
                 this.updateLibraryCounts();
+                this.updateModelTipPreview();
                         
                         const analysisSource = enhancements?.source || 'basic';
-                        this.showToast(`File "${file.name}" uploaded and analyzed (${analysisSource})!`, 'success');
+                        const linked = modelId ? ` · linked to ${modelId}` : '';
+                        this.showToast(`File "${file.name}" uploaded and analyzed (${analysisSource})${linked}`, 'success');
                     } catch (error) {
                         console.error('Error analyzing file:', error);
                         // Still save the file even if analysis fails
+                        const modelId = document.getElementById('docModelId')?.value || '';
                         const documentData = {
                             id: Date.now() + Math.random(),
                             name: file.name,
@@ -2172,7 +2283,8 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                             content: content,
                             uploadedAt: new Date().toISOString(),
                             source: 'file',
-                            enhancements: null
+                            enhancements: null,
+                            modelId: modelId || null
                         };
 
                         this.uploadedDocuments.push(documentData);
@@ -2220,6 +2332,7 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                 
                 try {
                     const enhancements = await this.extractEnhancements(content, url);
+                    const modelId = document.getElementById('docModelId')?.value || '';
                     
                 const documentData = {
                     id: Date.now() + Math.random(),
@@ -2231,20 +2344,24 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                     uploadedAt: new Date().toISOString(),
                     source: 'web',
                         enhancements: enhancements,
-                        analysisDate: new Date().toISOString()
+                        analysisDate: new Date().toISOString(),
+                        modelId: modelId || null
                 };
 
                 this.uploadedDocuments.push(documentData);
                 this.saveToLocalStorage('uploadedDocuments', this.uploadedDocuments);
                 this.loadUploadedFiles();
                 this.updateLibraryCounts();
+                this.updateModelTipPreview();
                     
                     const analysisSource = enhancements?.source || 'basic';
-                    this.showToast(`Content from "${this.extractTitleFromUrl(url)}" analyzed (${analysisSource})!`, 'success');
+                    const linked = modelId ? ` · linked to ${modelId}` : '';
+                    this.showToast(`Content from "${this.extractTitleFromUrl(url)}" analyzed (${analysisSource})${linked}`, 'success');
                     urlInput.value = '';
                 } catch (error) {
                     console.error('Error analyzing web content:', error);
                     // Still save the content even if analysis fails
+                    const modelId = document.getElementById('docModelId')?.value || '';
                     const documentData = {
                         id: Date.now() + Math.random(),
                         name: this.extractTitleFromUrl(url),
@@ -2254,7 +2371,8 @@ ${formData.srefExplanation ? `- **Description:** ${formData.srefExplanation}` : 
                         url: url,
                         uploadedAt: new Date().toISOString(),
                         source: 'web',
-                        enhancements: null
+                        enhancements: null,
+                        modelId: modelId || null
                     };
 
                     this.uploadedDocuments.push(documentData);
@@ -4099,6 +4217,11 @@ Format your response as JSON:
         switch(type) {
             case 'document':
                 contentDiv.innerHTML = `
+                    <div class="pf-field" style="margin-bottom: 10px;">
+                        <label for="docModelId">Applies to model</label>
+                        <select class="pf-select" id="docModelId">${this._buildModelOptionsHtml()}</select>
+                        <small style="color: var(--pf-text-muted);">Links this guide to a model so prompt generation uses it automatically.</small>
+                    </div>
                     <div class="upload-zone" id="uploadZone">
                         <i class="bi bi-cloud-arrow-up text-primary mb-2"></i>
                         <h6>Drag & Drop Files</h6>
@@ -4114,13 +4237,18 @@ Format your response as JSON:
                 
             case 'website':
                 contentDiv.innerHTML = `
+                    <div class="pf-field" style="margin-bottom: 10px;">
+                        <label for="docModelId">Applies to model</label>
+                        <select class="pf-select" id="docModelId">${this._buildModelOptionsHtml()}</select>
+                        <small style="color: var(--pf-text-muted);">Pick the model this page is about (recommended).</small>
+                    </div>
                     <div class="input-group mb-2">
                         <input type="url" class="pf-input-field" id="urlInput" placeholder="https://example.com/ai-guide">
                         <button class="pf-btn pf-btn-outline-cyan" type="button" id="fetchUrlBtn">
                             <i class="bi bi-download"></i> Fetch
                         </button>
                     </div>
-                    <small class="text-muted">Add AI documentation, tutorials, or guides</small>
+                    <small class="text-muted">Paste official docs, prompting guides, or release notes</small>
                 `;
                 this.setupWebFetch();
                 break;

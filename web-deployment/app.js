@@ -1083,54 +1083,52 @@ class PromptGenerator {
     }
 
     getModelEnhancements(model) {
-        // Check if we have specific enhancements for this model from uploaded documents
-        const modelDoc = this.uploadedDocuments.find(doc => 
-            doc.name.toLowerCase().includes(model.toLowerCase()) ||
-            doc.content.toLowerCase().includes(model.toLowerCase())
-        );
-        
-        if (modelDoc && modelDoc.enhancements) {
-            // If enhancements is an object, extract the enhancements string property
+        const aliases = {
+            'stable-diffusion': 'stablediffusion',
+            'ideogram2': 'ideogram',
+            'kling-ai': 'kling',
+            'gptimage': 'gpt-image'
+        };
+        const resolved = aliases[model] || model;
+
+        const tagged = (this.uploadedDocuments || []).filter(doc => doc.modelId && (doc.modelId === resolved || doc.modelId === model));
+        const fuzzy = tagged.length ? [] : (this.uploadedDocuments || []).filter(doc => {
+            const hay = `${doc.name || ''} ${doc.content || ''}`.toLowerCase();
+            return hay.includes(String(resolved).toLowerCase()) || hay.includes(String(model).toLowerCase());
+        });
+        for (const modelDoc of (tagged.length ? tagged : fuzzy)) {
+            if (!modelDoc.enhancements) continue;
             if (typeof modelDoc.enhancements === 'object' && modelDoc.enhancements.enhancements) {
                 return modelDoc.enhancements.enhancements;
             }
-            // If it's already a string, return it
-            if (typeof modelDoc.enhancements === 'string') {
-                return modelDoc.enhancements;
-            }
+            if (typeof modelDoc.enhancements === 'string') return modelDoc.enhancements;
         }
 
-        // Default enhancements based on model type
         const defaultEnhancements = {
-            // Image Generation Models
-            'midjourney': 'highly detailed, professional photography, 8k resolution, --style raw --quality 2',
-            'dalle3': 'photorealistic, high quality, detailed, sharp focus, professional lighting',
-            'stable-diffusion': 'masterpiece, best quality, ultra detailed, sharp focus, highly detailed',
-            'flux1': 'high quality, detailed, professional, sharp, vibrant colors',
-            'ideogram2': 'high resolution, detailed, professional design, clean composition',
-            'leonardo-ai': 'cinematic lighting, high quality, detailed, professional photography',
-            'nano-banana': 'natural editing, character consistency, scene preservation, high quality',
-            'firefly': 'professional, high quality, detailed, Adobe quality, commercial grade',
-            'imagen3': 'photorealistic, high quality, detailed, Google quality, sharp focus',
-            
-            // Video Generation Models
-            'sora': 'cinematic, high quality video, smooth motion, professional cinematography, 4k',
-            'veo2': 'high resolution video, smooth motion, professional quality, cinematic',
-            'runway': 'cinematic video, high quality, professional, smooth transitions',
-            'pika': 'creative video, high quality, engaging, smooth motion',
-            'luma-dream': 'dreamy, cinematic, high quality video, smooth motion',
-            'kling-ai': 'high quality video, cinematic, professional, smooth animation',
-            'hailuo': 'cinematic, high quality video, detailed, professional motion',
-            'haiper': 'high quality video, smooth motion, professional, detailed',
-            
-            // Text & Multimodal Models
-            'gpt4': 'detailed, comprehensive, well-structured, professional',
-            'claude': 'thorough, analytical, well-reasoned, detailed',
-            'gemini': 'comprehensive, detailed, multi-faceted analysis',
-            'llama': 'detailed, informative, well-structured'
+            midjourney: 'detailed cinematic description, parameters last (--ar --stylize --sref)',
+            'gpt-image': 'clear natural-language scene description, explicit on-image text if needed',
+            dalle3: 'photorealistic, detailed lighting, natural language only',
+            'stable-diffusion': 'masterpiece, best quality, ultra detailed',
+            stablediffusion: 'masterpiece, best quality, ultra detailed, optional (emphasis:1.2)',
+            flux1: 'natural-language prose, lighting and lens detail, no weight syntax',
+            ideogram: 'poster layout, quote exact text to render',
+            ideogram2: 'poster layout, quote exact text to render',
+            'leonardo-ai': 'cinematic lighting, clear subject and composition',
+            firefly: 'professional commercial-safe description',
+            imagen3: 'photorealistic camera and lighting detail',
+            sora: 'shot-list style: action, camera move, lighting',
+            veo2: 'cinematic camera path, physically plausible motion',
+            runway: 'one clear action, camera direction, subject motion',
+            pika: 'short motion-forward prompt, camera move named',
+            'luma-dream': 'camera path and spatial continuity',
+            kling: 'multi-shot narrative, character consistency, motion path',
+            'kling-ai': 'multi-shot narrative, character consistency, motion path',
+            gpt4: 'detailed, well-structured',
+            claude: 'thorough, well-reasoned',
+            gemini: 'comprehensive, multi-faceted',
+            llama: 'detailed, informative'
         };
-
-        return defaultEnhancements[model] || '';
+        return defaultEnhancements[resolved] || defaultEnhancements[model] || '';
     }
 
     formatAsJSON(formData, generatedPrompt) {

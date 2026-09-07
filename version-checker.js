@@ -30,13 +30,19 @@
     const FEED_KEYWORDS = {
         midjourney:       ['midjourney'],
         dalle3:           ['dall-e', 'dall\u00b7e', 'dalle', 'image generation'],
+        'gpt-image':       ['gpt image', 'gpt-image', 'image generation', '4o image'],
         flux1:            ['flux', 'black forest'],
         stablediffusion:  ['stable diffusion', 'sdxl', 'sd3'],
         ideogram:         ['ideogram'],
         sora:             ['sora', 'video generation', 'text to video'],
         veo2:             ['veo'],
-        runway:           ['runway', 'gen-3', 'gen3'],
-        kling:            ['kling']
+        runway:           ['runway', 'gen-3', 'gen-4', 'gen3', 'gen4'],
+        kling:            ['kling'],
+        'leonardo-ai':     ['leonardo'],
+        firefly:          ['firefly'],
+        imagen3:          ['imagen'],
+        pika:             ['pika'],
+        'luma-dream':      ['luma', 'dream machine']
     };
 
     const RATE_LIMIT_PAUSE_MS = 5000;
