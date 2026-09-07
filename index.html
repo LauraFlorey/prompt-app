@@ -1100,11 +1100,31 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then((registration) => {
-                        console.log('SW registered: ', registration);
+                        const askWaitingToActivate = (worker) => {
+                            if (worker) worker.postMessage({ type: 'SKIP_WAITING' });
+                        };
+                        if (registration.waiting) askWaitingToActivate(registration.waiting);
+                        registration.addEventListener('updatefound', () => {
+                            const worker = registration.installing;
+                            if (!worker) return;
+                            worker.addEventListener('statechange', () => {
+                                if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    askWaitingToActivate(worker);
+                                }
+                            });
+                        });
+                        setInterval(() => registration.update().catch(() => {}), 60 * 60 * 1000);
                     })
                     .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
                     });
+
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    refreshing = true;
+                    window.location.reload();
+                });
             });
         }
 
@@ -1850,11 +1870,9 @@
         document.body.appendChild(installButton);
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
+            // Keep Chrome from logging noise; stash for our Install button
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show install button
             installButton.style.display = 'block';
         });
 
