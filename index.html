@@ -1930,6 +1930,7 @@
         // ── FS permission banner ──────────────────────
         (async function checkFSPermission() {
             if (!window.StorageManager || StorageManager.getMode() !== 'filesystem') return;
+            await StorageManager.ready;
             const perm = await StorageManager.checkPermission();
             const banner = document.getElementById('fsBanner');
             if (!banner) return;
@@ -1954,7 +1955,7 @@
                 if (ok) {
                     if (fsBanner) fsBanner.style.display = 'none';
                     if (window.app) {
-                        window.app.updateStorageHealth();
+                        await window.app.reloadFromStorage();
                         window.app.showToast('Folder access granted!', 'success');
                     }
                 } else {

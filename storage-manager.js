@@ -83,7 +83,9 @@
             if (handle) {
                 _dirHandle = handle;
                 _folderName = handle.name;
-                _ready = true;
+                // Permission drops back to 'prompt' after a reload; reads/writes
+                // throw until the user re-grants via a click (see fsGrantBtn).
+                _ready = (await handle.queryPermission({ mode: 'readwrite' })) === 'granted';
             }
         } catch { /* IndexedDB unavailable — stay not-ready */ }
     }
@@ -205,6 +207,7 @@
             if (mode !== 'filesystem' || !_dirHandle) return false;
             try {
                 const perm = await _dirHandle.requestPermission({ mode: 'readwrite' });
+                if (perm === 'granted') _ready = true;
                 return perm === 'granted';
             } catch {
                 return false;
@@ -373,7 +376,8 @@
         console.debug(`StorageManager ready \u2014 mode: ${mode}`);
     }
 
-    init();
+    // Callers await this before the first load/save so the restored handle is in place.
+    StorageManager.ready = init();
 
     window.StorageManager = StorageManager;
 })();

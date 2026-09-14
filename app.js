@@ -100,6 +100,20 @@ class PromptGenerator {
         this._initTimelineTracking();
     }
 
+    // Re-read everything from storage once folder access is granted after startup.
+    async reloadFromStorage() {
+        await ModelRegistry.init();
+        await this.initStorage();
+        await this._loadDismissedMentions();
+        this.rebuildModelDropdown();
+        this.renderConfigModelTable();
+        this.loadPromptLibrary();
+        this.loadSrefLibrary();
+        this.loadCustomOptions();
+        this.updateLibraryCounts();
+        this.updateStorageHealth();
+    }
+
     async initStorage() {
         try {
             const data = await StorageManager.loadAll();
@@ -5252,6 +5266,7 @@ ${this.srefLibrary.map(s => `### ${s.name}\n- **URL:** ${s.url}\n- **Description
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
+    await StorageManager.ready;
     await ModelRegistry.init();
     await VersionChecker.init();
     const app = new PromptGenerator();
