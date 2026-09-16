@@ -8,7 +8,7 @@
     const DATA_KEYS = [
         'promptLibrary', 'srefLibrary', 'manualInformation',
         'textNotes', 'customOptions', 'llmSettings', 'modelRegistry',
-        'versionCheckCache', 'pendingUpdateBadge', 'dismissedMentions'
+        'versionCheckCache', 'pendingUpdateBadge', 'dismissedMentions', 'modelRegistrySeedVersion'
     ];
 
     const FILE_NAME = 'promptforge-data.json';
@@ -83,8 +83,7 @@
             if (handle) {
                 _dirHandle = handle;
                 _folderName = handle.name;
-                // Permission drops back to 'prompt' after a reload; reads/writes
-                // throw until the user re-grants via a click (see fsGrantBtn).
+                // A restored handle may need permission again after a reload.
                 _ready = (await handle.queryPermission({ mode: 'readwrite' })) === 'granted';
             }
         } catch { /* IndexedDB unavailable — stay not-ready */ }
@@ -115,15 +114,16 @@
             _lastSaved = envelope.lastSaved;
             return true;
         } catch (e) {
-            console.warn('StorageManager: filesystem write failed, falling back to localStorage', e);
+            console.warn('StorageManager: filesystem write failed; keeping a browser recovery copy', e);
             try {
                 for (const key of DATA_KEYS) {
                     if (envelope.data && key in envelope.data && envelope.data[key] !== undefined) {
                         localStorage.setItem(key, JSON.stringify(envelope.data[key]));
                     }
                 }
-                _lastSaved = envelope.lastSaved || new Date().toISOString();
-                return true;
+                // The selected folder was not saved. Let callers show failure and
+                // offer Retry, even when the browser recovery copy succeeded.
+                return false;
             } catch (lsErr) {
                 console.error('StorageManager: write error', lsErr);
                 return false;
@@ -207,7 +207,7 @@
             if (mode !== 'filesystem' || !_dirHandle) return false;
             try {
                 const perm = await _dirHandle.requestPermission({ mode: 'readwrite' });
-                if (perm === 'granted') _ready = true;
+                _ready = perm === 'granted';
                 return perm === 'granted';
             } catch {
                 return false;

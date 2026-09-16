@@ -5,6 +5,8 @@
   "main": "electron-main.js",
   "homepage": "./",
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "sync:web": "node scripts/sync-web.mjs",
     "css:build": "tailwindcss -i src/styles.css -o tailwind.css --minify",
     "css:watch": "tailwindcss -i src/styles.css -o tailwind.css --watch",
     "start": "npm run css:build && electron .",

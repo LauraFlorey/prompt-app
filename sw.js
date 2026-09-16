@@ -1,6 +1,6 @@
 // Service Worker for Prompt Forge PWA
 // Network-first for app shell so deployments show up without a hard refresh.
-const CACHE_NAME = 'prompt-forge-v4.1.0';
+const CACHE_NAME = 'prompt-forge-v4.1.1';
 const PRECACHE = [
     './',
     './index.html',
@@ -10,7 +10,9 @@ const PRECACHE = [
     './styles/fonts.css',
     './styles/bootstrap-icons.css',
     './manifest.json',
-    './sw.js'
+    './model-registry.js',
+    './storage-manager.js',
+    './version-checker.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -18,7 +20,10 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => cache.addAll(PRECACHE))
             .then(() => self.skipWaiting())
-            .catch((error) => console.error('Service Worker: precache failed', error))
+            .catch((error) => {
+                console.error('Service Worker: precache failed', error);
+                throw error;
+            })
     );
 });
 
@@ -27,7 +32,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) =>
             Promise.all(
                 cacheNames
-                    .filter((name) => name !== CACHE_NAME)
+                    .filter((name) => name.startsWith('prompt-forge-') && name !== CACHE_NAME)
                     .map((name) => caches.delete(name))
             )
         ).then(() => self.clients.claim())
@@ -76,6 +81,7 @@ self.addEventListener('fetch', (event) => {
     if (!event.request.url.startsWith('http')) return;
 
     const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
 
     // Always get a fresh service worker file
     if (url.pathname.endsWith('/sw.js')) {

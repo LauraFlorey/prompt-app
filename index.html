@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Forge</title>
     <meta name="description" content="A comprehensive AI prompt generation tool for image, video, and text models">
+    <link rel="canonical" href="https://lauraflorey.art/prompt-app/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="Laura Florey Art">
+    <meta property="og:title" content="Prompt Forge">
+    <meta property="og:description" content="A comprehensive AI prompt generation tool for image, video, and text models">
+    <meta property="og:url" content="https://lauraflorey.art/prompt-app/">
+    <meta property="og:image" content="https://lauraflorey.art/images/promptforge.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@LauraFlorey">
+    <meta name="twitter:title" content="Prompt Forge">
+    <meta name="twitter:description" content="A comprehensive AI prompt generation tool for image, video, and text models">
+    <meta name="twitter:image" content="https://lauraflorey.art/images/promptforge.webp">
     <meta name="theme-color" content="#0B0E14">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,9 +37,9 @@
         <div class="main-container">
             <!-- Topbar -->
             <nav class="pf-topbar">
-                <div class="pf-wordmark">
+                <h1 class="pf-wordmark">
                     <span class="wm-prompt">Prompt </span><span class="wm-forge">Forge</span>
-                </div>
+                </h1>
 
                 <div class="pf-topbar-center">
                     <button class="pf-nav-pill active" data-pf-tab="studio">Studio</button>
@@ -1082,6 +1095,17 @@
                 </div>
             </div>
 
+            <footer class="pf-footer">
+                <div class="pf-footer-links">
+                    <a href="privacy.html" target="_blank" rel="noopener"><i class="bi bi-shield-check"></i> Privacy</a>
+                    <span class="pf-footer-sep">&middot;</span>
+                    <a href="tutorial.html" target="_blank" rel="noopener"><i class="bi bi-book"></i> Tutorial</a>
+                </div>
+                <div class="pf-footer-copy">
+                    &copy; 2026 <a href="https://lauraflorey.art" target="_blank" rel="noopener">LauraFlorey.art</a> &mdash; v2.1.0
+                </div>
+            </footer>
+
         </div>
     </div>
 
@@ -1493,7 +1517,7 @@
             saveNowBtn.addEventListener('click', async () => {
                 if (!window.app) return;
                 try {
-                    await StorageManager.saveAll(window.app.getCurrentAppState());
+                    if (!(await StorageManager.saveAll(window.app.getCurrentAppState()))) throw new Error('Could not save to the selected storage.');
                     window.app.markAsSaved();
                     refreshStorageStatus();
                     window.app.showToast('Saved!', 'success');

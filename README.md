@@ -1,5 +1,22 @@
 # PromptForge
 
+## Source and website deployment
+
+The app files at this repository root are the source for `web-deployment/` and the art website at `https://lauraflorey.art/prompt-app/`. The `prompt-helper/` folder and ZIP are legacy packages, not the current website source.
+
+After changing shared app files:
+
+```sh
+npm test
+npm run sync:web -- --site /path/to/laura-florey-art
+npm run sync:web -- --site /path/to/laura-florey-art --check
+```
+
+The sync command copies only its listed app files, preserves other website pages, and does not delete files. Commit and push this repository's current development branch (`2.0.0`) and the website repository's `main` branch. Cloudflare publishes the website after the latter push. Verify that deployment and the public app before calling the release live.
+
+When changing app code, update the cache version in `sw.js` before syncing. The app gets fresh code online and retains its cached files for offline use. A failed folder save keeps a browser recovery copy but still reports a failure; retry the folder save or export your data before closing.
+
+
 Build, refine, and save prompts for modern AI models — **static, local-first, and Bootstrap 5–based**.
 
 A comprehensive web application for generating, managing, and optimizing prompts for various AI models. Features style references (sref), 20+ AI models, local LLM integration, advanced search, and professional prompt generation capabilities.

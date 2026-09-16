@@ -196,7 +196,7 @@ class PromptGenerator {
         dismissed[modelId] = mentionUrl;
         this._dismissedMentions = dismissed;
         try {
-            await StorageManager.save('dismissedMentions', dismissed);
+            if (!(await StorageManager.save('dismissedMentions', dismissed))) throw new Error('Could not save to the selected storage.');
         } catch { /* non-critical */ }
         this.renderConfigModelTable();
         this._updatePendingBadge();
@@ -2742,7 +2742,7 @@ Format your response as JSON:
         const manualInfo = document.getElementById('manualInfo').value;
         this.manualInformation = manualInfo;
         try {
-            await StorageManager.save('manualInformation', manualInfo);
+            if (!(await StorageManager.save('manualInformation', manualInfo))) throw new Error('Could not save to the selected storage.');
             this.showToast('Document notes saved!', 'success');
         } catch (e) {
             console.error('saveManualInformation failed:', e);
@@ -2765,7 +2765,7 @@ Format your response as JSON:
         const smKeys = ['promptLibrary', 'srefLibrary', 'manualInformation', 'textNotes', 'customOptions', 'llmSettings', 'modelRegistry'];
         if (smKeys.includes(key)) {
             try {
-                await StorageManager.save(key, data);
+                if (!(await StorageManager.save(key, data))) throw new Error('Could not save to the selected storage.');
             } catch (e) {
                 console.error(`StorageManager.save('${key}') failed:`, e);
                 this._lastSaveFailed = true;
@@ -2835,7 +2835,7 @@ Format your response as JSON:
 
     async _executeSave() {
         try {
-            await StorageManager.saveAll(this.getCurrentAppState());
+            if (!(await StorageManager.saveAll(this.getCurrentAppState()))) throw new Error('Could not save to the selected storage.');
             try { localStorage.setItem('uploadedDocuments', JSON.stringify(this.uploadedDocuments)); } catch { /* quota */ }
             try { localStorage.setItem('saveSettings', JSON.stringify(this.saveSettings)); } catch { /* non-critical */ }
             this._lastSaveFailed = false;
@@ -4208,7 +4208,7 @@ Format your response as JSON:
         };
 
         try {
-            await StorageManager.save('llmSettings', this.llmSettings);
+            if (!(await StorageManager.save('llmSettings', this.llmSettings))) throw new Error('Could not save to the selected storage.');
             this.showToast('LLM settings saved!', 'success');
         } catch (e) {
             console.error('saveLLMSettings failed:', e);
@@ -4673,7 +4673,7 @@ Format your response as JSON:
             this.manualInformation = '';
 
             try {
-                await StorageManager.saveAll(this.getCurrentAppState());
+                if (!(await StorageManager.saveAll(this.getCurrentAppState()))) throw new Error('Could not save to the selected storage.');
             } catch (e) {
                 console.error('clearAllLibrary save failed:', e);
                 this._lastSaveFailed = true;

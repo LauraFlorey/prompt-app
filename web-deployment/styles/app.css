@@ -78,8 +78,11 @@ body {
 }
 
 .pf-wordmark {
+    margin: 0;
+    font-family: inherit;
     font-size: 27px;
     font-weight: 700;
+    line-height: 1;
     letter-spacing: -0.3px;
     white-space: nowrap;
 }
@@ -1297,6 +1300,47 @@ mark {
     .upload-zone {
         padding: 20px;
     }
+}
+
+/* ── Footer ─────────────────────────────────── */
+
+.pf-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--pf-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.pf-footer-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pf-footer-links a {
+    color: var(--pf-text-muted);
+    font-size: 11px;
+    text-decoration: none;
+    transition: color var(--pf-transition-fast);
+}
+.pf-footer-links a:hover {
+    color: var(--pf-accent);
+}
+.pf-footer-sep {
+    color: var(--pf-text-ghost);
+    font-size: 11px;
+}
+.pf-footer-copy {
+    font-size: 11px;
+    color: var(--pf-text-ghost);
+}
+.pf-footer-copy a {
+    color: var(--pf-text-muted);
+    text-decoration: none;
+}
+.pf-footer-copy a:hover {
+    color: var(--pf-accent);
 }
 
 /* Prompt-helper / web-deployment: validation states on pf-input-field */
